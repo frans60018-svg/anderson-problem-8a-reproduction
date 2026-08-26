@@ -1,0 +1,31 @@
+# Lean/Lake build cache. This is several GB and can be regenerated.
+.lake/
+
+# Local editor/agent internals not needed for advisor review.
+.claude/
+.learnings/
+.DS_Store
+
+# Archon generated logs and prompt templates are noisy; keep status docs instead.
+.archon/logs/
+.archon/prompts/
+.archon/prover-modes/
+.archon/subagents/
+.archon/config.json
+.archon/task_done.md
+.archon/task_pending.md
+.archon/USER_HINTS.md
+.archon/AGENTS.md
+
+# Do not publish downloaded papers or extracted full text.
+references/*.pdf
+references/*.txt
+references/*.html
+
+# Keep public citation/provenance summaries.
+!references/README.md
+!references/REFERENCE_INDEX.md
+!references/SOURCE_AUDIT.md
+!references/MISSING_SOURCES.md
+!references/RETRIEVAL_LOG.md
+!references/*_extract.md

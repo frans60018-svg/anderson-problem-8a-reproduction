@@ -1,0 +1,2 @@
+- The citation gate needs original local copies of Jensen (2006), Farley (2016), Loepp (1997), Heitmann (1993), and the Anderson source chapter under `references/`; sandboxed retrieval could not save them, so the Jensen/Farley construction blocks remain explicitly marked “no local reference available.”
+- `hello` is unrelated starter scaffolding. It is intentionally left isolated for removal with the first mathematical Lean scaffold, rather than being connected to `thm:main` by a false dependency.

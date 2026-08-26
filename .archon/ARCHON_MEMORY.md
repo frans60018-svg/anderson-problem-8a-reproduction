@@ -1,0 +1,5 @@
+- Jensen's existence theorem must be formalized through N-subrings, saturation, and completion; never replace it by an axiom.
+- Original Jensen/Farley/Loepp/Heitmann/Anderson source files are now local in `references/`; Anderson was split from the full Springer book into the target chapter PDF.
+- `hello` was removed with the first mathematical Lean scaffold.
+- Current Lean declarations are strengthened theorem skeleton placeholders with 10 `sorry`s.  The latest pass discharged eight Jensen second-layer/interface nodes by adding source-relevant explicit hypotheses or witness data rather than weakening conclusions.
+- Next work is to replace the lightweight `NSubring` scaffold with Jensen's full definition and turn the current witness-checking Jensen lemmas into construction lemmas without using official Lean proofs as input unless logged as fallback.

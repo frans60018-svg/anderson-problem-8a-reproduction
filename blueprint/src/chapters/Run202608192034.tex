@@ -1,0 +1,690 @@
+% archon:covers Run202608192034.lean
+\chapter{The Anderson counterexample}
+
+\section{The complete local node}
+
+\begin{definition}[The node ring]
+  \label{def:node_ring}
+  \lean{Run202608192034.TODO.nodeRing}
+  Let
+  \[
+    S=\mathbb C[[x,y,z]],\qquad
+    T=S/(x^2-yz),
+  \]
+  and let \(\mathfrak M=(x,y,z)T\), where the letters also denote their
+  residue classes.
+\end{definition}
+
+\begin{proof}
+  This is a definition.
+\end{proof}
+
+\begin{definition}[The distinguished prime candidate]
+  \label{def:node_prime}
+  \lean{Run202608192034.TODO.nodePrime}
+  \uses{def:node_ring}
+  In \(T\), set \(Q=(x,y)T\).
+\end{definition}
+
+\begin{proof}
+  This is a definition.
+\end{proof}
+
+\begin{lemma}[Normal form in the node ring]
+  \label{lem:node_normal_form}
+  \lean{Run202608192034.TODO.node_normal_form}
+  \uses{def:node_ring}
+  Every element of \(S\) has a unique expression
+  \[
+    A(y,z)+xB(y,z)+(x^2-yz)H(x,y,z)
+  \]
+  with \(A,B\in\mathbb C[[y,z]]\) and \(H\in S\).
+\end{lemma}
+
+\begin{proof}
+  Regard \(x^2-yz\) as a monic polynomial in \(x\) over the complete
+  coefficient ring \(\mathbb C[[y,z]]\).  Formal division by this monic
+  polynomial gives a remainder of degree below two, hence the displayed
+  expression.  If two such remainders differ by a multiple of the monic
+  quadratic, comparing the \(x\)-degree below two forces both coefficients
+  of the difference to vanish, proving uniqueness.
+\end{proof}
+
+\begin{lemma}[The node ring is a domain]
+  \label{lem:node_domain}
+  \lean{Run202608192034.TODO.nodeRing_isDomain}
+  \uses{def:node_ring,lem:node_normal_form}
+  The ring \(T\) is an integral domain.
+\end{lemma}
+
+\begin{proof}
+  Map \(S\) continuously to \(\mathbb C[[u,v]]\) by
+  \(x\mapsto uv\), \(y\mapsto u^2\), and \(z\mapsto v^2\).
+  The relation \(x^2-yz\) maps to zero.  By
+  \cref{lem:node_normal_form}, an element of the kernel has remainder
+  \(A(y,z)+xB(y,z)\), whose image is
+  \(A(u^2,v^2)+uvB(u^2,v^2)\).  The first summand contains only monomials
+  with both exponents even and the second only monomials with both exponents
+  odd.  They cannot cancel, so both vanish.  Thus the kernel is exactly
+  \((x^2-yz)\), embedding \(T\) into the domain \(\mathbb C[[u,v]]\).
+\end{proof}
+
+\begin{lemma}[Completeness, dimension, and depth]
+  \label{lem:node_complete_cm_dim}
+  \lean{Run202608192034.TODO.node_complete_cm_dim}
+  \uses{def:node_ring,lem:node_domain}
+  The local ring \((T,\mathfrak M)\) is complete, Noetherian,
+  two-dimensional, and Cohen--Macaulay of depth two.
+\end{lemma}
+
+\begin{proof}
+  The power-series ring \(S\) is a complete regular local ring of dimension
+  three.  By \cref{lem:node_domain}, the nonzero element \(x^2-yz\) is a
+  nonzerodivisor.  A quotient of a complete Noetherian local ring is complete
+  and Noetherian; quotienting a Cohen--Macaulay ring by a nonzerodivisor
+  lowers both dimension and depth by one.  Hence \(T\) is a complete
+  Cohen--Macaulay local ring of dimension and depth two.
+\end{proof}
+
+\begin{lemma}[Cardinality of the node ring]
+  \label{lem:node_cardinality}
+  \lean{Run202608192034.TODO.node_cardinality}
+  \uses{def:node_ring}
+  One has
+  \[
+    |T|=|T/\mathfrak M|=|\mathbb C|.
+  \]
+\end{lemma}
+
+\begin{proof}
+  There are countably many monomials in three variables, so
+  \(|S|=|\mathbb C|^{\aleph_0}\).  Since
+  \(|\mathbb C|=2^{\aleph_0}\), cardinal exponentiation gives
+  \((2^{\aleph_0})^{\aleph_0}=2^{\aleph_0}\).  Constants inject into \(T\)
+  and \(T\) is a quotient of \(S\), so Cantor--Schroeder--Bernstein gives
+  \(|T|=|\mathbb C|\).  Finally \(T/\mathfrak M\cong\mathbb C\).
+\end{proof}
+
+\begin{lemma}[The distinguished ideal is prime of height one]
+  \label{lem:node_prime_height}
+  \lean{Run202608192034.TODO.nodePrime_prime_height}
+  \uses{def:node_ring,def:node_prime,lem:node_domain,lem:node_complete_cm_dim}
+  The ideal \(Q\) is a nonzero, nonmaximal prime ideal of \(T\) of height one.
+\end{lemma}
+
+\begin{proof}
+  Setting \(x=y=0\) identifies \(T/Q\) with \(\mathbb C[[z]]\), so \(Q\)
+  is prime.  It is nonzero because \(x\neq0\) in the domain \(T\), and it is
+  nonmaximal because \(z\notin Q\).  Thus
+  \((0)\subsetneq Q\subsetneq\mathfrak M\).  Since \(T\) has dimension two,
+  the height of the intermediate prime is exactly one.
+\end{proof}
+
+\begin{lemma}[The distinguished prime is not principal]
+  \label{lem:node_prime_nonprincipal}
+  \lean{Run202608192034.TODO.nodePrime_not_principal}
+  \uses{def:node_ring,def:node_prime,lem:node_prime_height}
+  The ideal \(Q\) is not principal.
+\end{lemma}
+
+\begin{proof}
+  The defining equation lies in the square of the maximal ideal, so the
+  residue classes of \(x,y,z\) form a basis of
+  \(\mathfrak M/\mathfrak M^2\) over \(\mathbb C\).  Since
+  \(\mathfrak M Q\subseteq\mathfrak M^2\), the classes of \(x\) and \(y\)
+  in \(Q/\mathfrak M Q\) are linearly independent.  Nakayama's lemma
+  therefore shows that \(Q\) needs at least two generators, whereas a
+  principal ideal needs at most one.
+\end{proof}
+
+\begin{lemma}[Complete domain package]
+  \label{lem:complete_domain_choice}
+  \lean{Run202608192034.TODO.completeDomainChoice}
+  \uses{lem:node_domain,lem:node_complete_cm_dim,lem:node_cardinality,lem:node_prime_height,lem:node_prime_nonprincipal}
+  The pair \((T,\mathfrak M)\) is a complete two-dimensional
+  Cohen--Macaulay local domain with \(|T|=|T/\mathfrak M|\), and \(Q\) is a
+  nonprincipal height-one prime of \(T\).
+\end{lemma}
+
+\begin{proof}
+  Combine \cref{lem:node_domain,lem:node_complete_cm_dim,lem:node_cardinality,
+  lem:node_prime_height,lem:node_prime_nonprincipal}.
+\end{proof}
+
+\section{The Jensen construction}
+
+\begin{definition}[N-subring]
+  \label{def:n_subring}
+  \lean{Run202608192034.TODO.NSubring}
+  % SOURCE: references/jensen_2006_fulltext.txt, lines 188--194.
+  \textit{Source: D.~Jensen, Definition~1,
+  references/jensen\_2006\_fulltext.txt, lines 188--194,
+  DOI 10.1080/00927870500346321.}
+  Let \((T,\mathfrak M)\) be complete local.  An N-subring is a quasi-local
+  UFD \(R\subseteq T\) such that its cardinality is at most
+  \(\max(\aleph_0,|T/\mathfrak M|)\), equality being allowed only when the
+  residue field is countable; every associated prime of \(T\) contracts to
+  zero in \(R\); and, for every regular \(t\in T\) and every
+  \(P\in\operatorname{Ass}(T/tT)\), the prime \(P\cap R\) has height at most
+  one.
+\end{definition}
+
+\begin{proof}
+  This is the auxiliary definition used to preserve unique factorization
+  during the transfinite construction.
+\end{proof}
+
+\begin{lemma}[Cardinal prime avoidance]
+  \label{lem:cardinal_prime_avoidance}
+  \lean{Run202608192034.TODO.cardinal_prime_avoidance}
+  % SOURCE: references/loepp_1997_fulltext.txt, lines 153--167; references/heitmann_1993_fulltext.txt, lines 98--138.
+  \textit{Source: S.~Loepp, Lemmas~2--4,
+  references/loepp\_1997\_fulltext.txt, lines 153--167,
+  DOI 10.1006/jabr.1997.6768; R.~C. Heitmann, Lemmas~2--3,
+  references/heitmann\_1993\_fulltext.txt, lines 98--138,
+  DOI 10.1090/S0002-9947-1993-1102888-9.}
+  Let \((T,\mathfrak M)\) be a complete local ring, let \(C\) be a family of
+  nonmaximal prime ideals, and for each \(P\in C\) let \(D_P\) be a set of
+  forbidden coset representatives in \(T/P\).  If an ideal \(J\) is
+  contained in no member of \(C\) and the set of pairs
+  \(\{(P,d):P\in C,\ d\in D_P\}\) has cardinality strictly below
+  \(|T/\mathfrak M|\), then \(J\) contains an element outside every coset
+  \(P+d\).
+\end{lemma}
+
+\begin{proof}
+  As \(T\) is Noetherian, write \(J=(x_1,\ldots,x_n)\).  For every controlled
+  prime \(P\), let \(i(P)\) be the least index with \(x_{i(P)}\notin P\).
+  Choose residue classes \(a_n,\ldots,a_1\in T/\mathfrak M\) in descending
+  order.  When \(a_i\) is chosen, consider the forbidden pairs with
+  \(i(P)=i\).  The already fixed terms have larger index, while every term
+  of smaller index lies in \(P\).  A given pair \((P,d)\) rules out at most
+  one residue class for \(a_i\): two distinct choices would differ by a unit
+  times \(x_i\), forcing \(x_i\in P\).  Fewer than
+  \(|T/\mathfrak M|\) classes are forbidden, so a permissible class exists.
+  After lifting the \(a_i\) to \(T\), the element
+  \(\sum_i a_i x_i\in J\) avoids every prescribed coset.
+\end{proof}
+
+\begin{lemma}[The Jensen residue field is uncountable]
+  \label{lem:jensen_residue_uncountable}
+  \lean{Run202608192034.TODO.jensen_residueField_uncountable}
+  Let \((T,\mathfrak M)\) be a complete local ring of positive depth.  If
+  \(|T|=|T/\mathfrak M|\), then the residue field \(T/\mathfrak M\) is
+  uncountable.
+\end{lemma}
+
+\begin{proof}
+  Choose a regular element \(x\in\mathfrak M\).  After choosing one lift in
+  \(T\) of every residue class, completeness assigns to each sequence
+  \((a_n)_{n\geq0}\) in the residue field the convergent series
+  \(\sum_{n\geq0}\widetilde a_nx^n\).  This assignment is injective.  Indeed,
+  at the first index where two sequences differ, their difference is
+  \(x^n(u+xv)\), where \(u\) is a unit; regularity of \(x\) makes this
+  nonzero.  Thus \(|T|\geq|T/\mathfrak M|^{\aleph_0}\).  A finite or countably
+  infinite field has uncountably many sequences, contradicting the assumed
+  equality.  Hence the residue field is uncountable.
+\end{proof}
+
+\begin{lemma}[Initial N-subring]
+  \label{lem:initial_n_subring}
+  \lean{Run202608192034.TODO.initialNSubring}
+  \uses{def:n_subring}
+  % SOURCE: references/jensen_2006_fulltext.txt, lines 245--293; references/loepp_1997_fulltext.txt, lines 997--1003.
+  \textit{Source: D.~Jensen, proof of Theorem~2.2,
+  references/jensen\_2006\_fulltext.txt, lines 245--293,
+  DOI 10.1080/00927870500346321; S.~Loepp, proof of Theorem~16,
+  references/loepp\_1997\_fulltext.txt, lines 997--1003,
+  DOI 10.1006/jabr.1997.6768.}
+  Let \((T,\mathfrak M)\) and \(G\) satisfy the hypotheses of the Jensen
+  semilocal generic-fiber construction: in particular, every member of
+  \(G\) meets the prime subring in zero, \(G\) contains
+  \(\operatorname{Ass}T\), and \(G\) contains every prime \(P\) for which
+  \(\operatorname{ht}P>\operatorname{depth}T_P=1\).  Then the prime subring
+  of \(T\), localized at its intersection with \(\mathfrak M\), is an
+  N-subring and has zero intersection with every prime in \(G\).
+\end{lemma}
+
+\begin{proof}
+  The localized prime subring is a countable quasi-local UFD and avoids
+  \(G\) by the prime-subring hypothesis.  Since \(G\) contains
+  \(\operatorname{Ass}T\), associated primes contract to zero.  For regular
+  \(t\) and \(P\in\operatorname{Ass}(T/tT)\), localization gives
+  \(\operatorname{depth}T_P=1\).  If \(\operatorname{ht}P>1\), the hypotheses
+  place \(P\) in \(G\), so its contraction is zero; otherwise its contraction
+  has height at most one.  Thus the localized prime subring itself satisfies
+  every N-subring condition and has the asserted contractions.
+\end{proof}
+
+\begin{lemma}[N-subring prime-hitting extension]
+  \label{lem:n_subring_prime_extension}
+  \lean{Run202608192034.TODO.nSubring_prime_extension}
+  \uses{def:n_subring,lem:cardinal_prime_avoidance}
+  % SOURCE: references/jensen_2006_fulltext.txt, lines 201--233.
+  \textit{Source: D.~Jensen, Lemma~2.1,
+  references/jensen\_2006\_fulltext.txt, lines 201--233,
+  DOI 10.1080/00927870500346321.}
+  Let \((T,\mathfrak M)\) be complete local of dimension at least two, and let
+  \(G\subseteq\operatorname{Spec}T\) be downward closed, with finitely
+  many nonmaximal maximal elements, containing \(\operatorname{Ass}T\) and
+  every prime \(J\) with
+  \(\operatorname{ht}J>\operatorname{depth}T_J=1\).  If an N-subring \(R\)
+  contracts every member of \(G\) to zero and \(Q\) is a prime outside
+  \(G\), then there is
+  an N-subring \(S\) containing \(R\) such that \(Q\cap S\neq0\), every
+  member of \(G\) still contracts to zero, the required cardinal bound is
+  preserved, and prime elements of \(R\) remain prime in \(S\).
+\end{lemma}
+
+\begin{proof}
+  Form the cardinality-controlled family \(C\) consisting of the maximal
+  members of \(G\) and the associated primes of \(T/rT\) for nonzero
+  \(r\in R\).  If \(Q\in C\), then \(Q\notin G\) forces
+  \(Q\in\operatorname{Ass}(T/rT)\) for some nonzero \(r\in R\), and already
+  \(0\neq r\in Q\cap R\), so take \(S=R\).  Otherwise \(Q\) is contained in
+  no member of \(C\): downward closure handles maximal members of \(G\); and
+  an associated prime of \(T/rT\) is either in \(G\), or has height one by
+  the N-subring and depth hypotheses, in which case a strictly smaller prime
+  is minimal, hence associated to \(T\) and therefore lies in \(G\).
+
+  For each member of \(C\), forbid the cosets algebraic over the
+  corresponding image of \(R\).  Their total cardinality obeys the N-subring
+  bound, so \cref{lem:cardinal_prime_avoidance} supplies
+  \(t\in Q\) transcendental modulo every forbidden prime.  Localize
+  \(R[t]\) at its intersection with \(\mathfrak M\).  Transcendence gives
+  zero contraction for every maximal member of \(G\), hence for all of
+  \(G\); it also preserves the N-subring conditions and old prime elements,
+  while \(t\) makes the new ring meet \(Q\) nontrivially.
+\end{proof}
+
+\begin{lemma}[N-subring ideal-solving extension]
+  \label{lem:n_subring_ideal_extension}
+  \lean{Run202608192034.TODO.nSubring_ideal_extension}
+  \uses{def:n_subring,lem:cardinal_prime_avoidance}
+  % SOURCE: references/heitmann_1993_fulltext.txt, lines 145--148 and 304--331; references/loepp_1997_fulltext.txt, lines 907--977.
+  \textit{Source: R.~C. Heitmann, Lemma~4 and Lemma~7,
+  references/heitmann\_1993\_fulltext.txt, lines 145--148 and 304--331,
+  DOI 10.1090/S0002-9947-1993-1102888-9; S.~Loepp, Lemma~15,
+  references/loepp\_1997\_fulltext.txt, lines 907--977,
+  DOI 10.1006/jabr.1997.6768.}
+  Under the same avoidance hypotheses, let \(I\) be a finitely generated
+  ideal of an N-subring \(R\), and let \(c\in IT\cap R\).  There is an
+  N-subring extension \(S\) which preserves avoidance and old prime elements
+  and in which \(c\in IS\).  Likewise, any prescribed coset of
+  \(T/\mathfrak M^2\) can be represented by an element of such an extension.
+\end{lemma}
+
+\begin{proof}
+  Write \(c\) as a \(T\)-linear combination of fixed generators of \(I\).
+  Adjoin the finitely many required coefficients one at a time, perturbing
+  each by an element of a high power of \(\mathfrak M\).  At every step,
+  \cref{lem:cardinal_prime_avoidance} chooses the perturbation so that its
+  residue remains transcendental modulo all controlled primes.  The resulting
+  localized polynomial extension remains an N-subring, realizes
+  \(c\in IS\), and preserves all contractions and prime elements.  The same
+  argument with a chosen representative solves a prescribed coset modulo
+  \(\mathfrak M^2\).
+\end{proof}
+
+\begin{definition}[Jensen saturation chain]
+  \label{def:jensen_saturation_chain}
+  \lean{Run202608192034.TODO.jensenSaturationChain}
+  \uses{lem:n_subring_prime_extension,lem:n_subring_ideal_extension}
+  % SOURCE: references/loepp_1997_fulltext.txt, lines 802--1033; references/heitmann_1993_fulltext.txt, lines 264--331.
+  \textit{Source: S.~Loepp, Lemmas~13--15 and Theorem~16,
+  references/loepp\_1997\_fulltext.txt, lines 802--1033,
+  DOI 10.1006/jabr.1997.6768; R.~C. Heitmann, Lemmas~6--7,
+  references/heitmann\_1993\_fulltext.txt, lines 264--331,
+  DOI 10.1090/S0002-9947-1993-1102888-9.}
+  Fix well-orderings of the cosets of \(T/\mathfrak M^2\), the primes outside
+  \(G\), and all pairs \((I,c)\) which arise with \(I\) finitely generated in
+  a stage ring and \(c\in IT\) belonging to that stage.  A Jensen saturation
+  chain is a continuous transfinite chain of N-subrings which applies the
+  appropriate extension lemma cofinally often to every item in these
+  well-orderings.
+\end{definition}
+
+\begin{proof}
+  Transfinite recursion constructs the chain.  At successor stages use
+  \cref{lem:n_subring_prime_extension} for the next prime and
+  \cref{lem:n_subring_ideal_extension} for the next coset or ideal equation.
+  At a limit stage take the directed union and localize at its intersection
+  with \(\mathfrak M\).  The cardinal bounds and zero-contraction conditions
+  are preserved under such unions, and the repeated bookkeeping ensures that
+  every task appearing at any stage is handled later.
+\end{proof}
+
+\begin{lemma}[The saturated union is a UFD]
+  \label{lem:jensen_union_ufd}
+  \lean{Run202608192034.TODO.jensenUnion_isUFD}
+  \uses{def:jensen_saturation_chain,def:n_subring}
+  The union \(A\) of a Jensen saturation chain is a quasi-local UFD, and every
+  prime in \(G\) has zero contraction to \(A\).
+\end{lemma}
+
+\begin{proof}
+  Every nonzero nonunit of \(A\) lies in some stage, where it factors into
+  prime elements because that stage is a UFD.  Successor extensions preserve
+  those prime elements, so the same factorization is prime in every later
+  stage and in the union.  Thus \(A\) is a UFD.  Quasi-locality follows
+  because all stages use the maximal ideal induced by \(\mathfrak M\).
+  Each stage avoids every prime in \(G\), and hence their union does too.
+\end{proof}
+
+\begin{lemma}[Completion criterion for the saturated union]
+  \label{lem:jensen_completion_criterion}
+  \lean{Run202608192034.TODO.jensen_completion_criterion}
+  \uses{def:jensen_saturation_chain,lem:jensen_union_ufd}
+  % SOURCE: references/loepp_1997_fulltext.txt, lines 141--144 and 1024--1033; references/heitmann_1993_fulltext.txt, lines 332--353.
+  \textit{Source: S.~Loepp, Proposition~1 and proof of Theorem~16,
+  references/loepp\_1997\_fulltext.txt, lines 141--144 and 1024--1033,
+  DOI 10.1006/jabr.1997.6768; R.~C. Heitmann, Theorem~8,
+  references/heitmann\_1993\_fulltext.txt, lines 332--353,
+  DOI 10.1090/S0002-9947-1993-1102888-9.}
+  Let \(A\subseteq T\) be the saturated union.  If
+  \(A\to T/\mathfrak M^2\) is onto and \(IT\cap A=I\) for every finitely
+  generated ideal \(I\) of \(A\), then \(A\) is Noetherian and local, and the
+  natural map from its completion to \(T\) is an isomorphism.
+\end{lemma}
+
+\begin{proof}
+  Surjectivity modulo \(\mathfrak M^2\) first identifies the maximal ideal of
+  \(A\) and its cotangent space with those induced from \(T\).  The contraction
+  identities imply exactness after extending every finitely generated ideal
+  to \(T\); in particular, finitely generated subideals which generate the
+  same extended ideal already generate the original ideal.  For an arbitrary
+  ideal \(J\subseteq A\), Noetherianity of \(T\) supplies
+  \(j_1,\ldots,j_r\in J\) whose extensions generate \(JT\).  Put
+  \(I=(j_1,\ldots,j_r)A\).  The contraction hypothesis gives
+  \(J\subseteq JT\cap A=IT\cap A=I\subseteq J\), hence \(J=I\).  Thus every
+  ideal of \(A\) is finitely generated and \(A\) is Noetherian.
+  Inductively, the same identities identify
+  \(A/\mathfrak m_A^n\) with \(T/\mathfrak M^n\) for all \(n\).  Taking inverse
+  limits gives \(\widehat A\cong T\).
+\end{proof}
+
+\begin{theorem}[Jensen semilocal generic-fiber construction]
+  \label{thm:jensen_semilocal_generic_fiber}
+  \lean{Run202608192034.TODO.jensen_semilocal_genericFiber}
+  \uses{def:n_subring,lem:initial_n_subring,lem:n_subring_prime_extension,lem:n_subring_ideal_extension,def:jensen_saturation_chain,lem:jensen_union_ufd,lem:jensen_completion_criterion,def:generic_formal_fiber}
+  % SOURCE: references/jensen_2006_fulltext.txt, lines 245--293.
+  \textit{Source: D.~Jensen, Theorem~2.2,
+  references/jensen\_2006\_fulltext.txt, lines 245--293,
+  DOI 10.1080/00927870500346321.}
+  Let \((T,\mathfrak M)\) be complete local with
+  \(|T/\mathfrak M|=|T|\).  Let \(G\) be a nonempty downward-closed subset of
+  \(\operatorname{Spec}T\) with finitely many maximal elements.  Assume that
+  \(\mathfrak M\notin G\), that \(G\) contains \(\operatorname{Ass}T\), that
+  every member of \(G\) meets the prime subring only in zero, and that every
+  prime \(J\) with
+  \(\operatorname{ht}J>\operatorname{depth}T_J=1\) belongs to \(G\).
+  Then there is a Noetherian local UFD \(A\) whose completion is \(T\) and
+  whose generic formal fiber consists exactly of \(G\).
+\end{theorem}
+
+\begin{proof}
+  Start with the localized prime subring supplied by
+  \cref{lem:initial_n_subring}.  Build the saturation chain of
+  \cref{def:jensen_saturation_chain}.  Its union is a UFD avoiding every
+  member of \(G\) by \cref{lem:jensen_union_ufd}.  The cofinal coset and
+  ideal-solving tasks give the hypotheses of
+  \cref{lem:jensen_completion_criterion}, so the union is Noetherian local
+  and completes to \(T\).  Each prime outside \(G\) is assigned a
+  prime-hitting stage and therefore has nonzero contraction, while every
+  prime in \(G\) has zero contraction.  By the prime description of
+  \cref{def:generic_formal_fiber}, the generic formal fiber is exactly \(G\).
+\end{proof}
+
+\begin{corollary}[Jensen local generic-fiber criterion]
+  \label{cor:jensen_local_generic_fiber}
+  \lean{Run202608192034.TODO.jensen_local_genericFiber}
+  \uses{thm:jensen_semilocal_generic_fiber,lem:jensen_residue_uncountable}
+  % SOURCE: references/jensen_2006_fulltext.txt, lines 336--342.
+  \textit{Source: D.~Jensen, Corollary~2.4,
+  references/jensen\_2006\_fulltext.txt, lines 336--342,
+  DOI 10.1080/00927870500346321.}
+  Let \((T,\mathfrak M)\) be complete local with
+  \(|T/\mathfrak M|=|T|\), and let \(P\) be prime.  If \(T\) has depth at
+  least two, \(P\) is nonmaximal and contains every associated prime of
+  \(T\), \(P\) meets the prime subring only in zero, and every prime \(J\)
+  satisfying \(\operatorname{ht}J>\operatorname{depth}T_J=1\) is contained
+  in \(P\), then there is a local UFD \(A\) completing to \(T\) whose generic
+  formal fiber is local with maximal prime \(P\).
+\end{corollary}
+
+\begin{proof}
+  Apply \cref{thm:jensen_semilocal_generic_fiber} to
+  \(G=\{Q\in\operatorname{Spec}T:Q\subseteq P\}\).  This set is nonempty,
+  downward closed, and has the unique maximal element \(P\).  The stated
+  hypotheses are precisely the remaining hypotheses of that theorem.
+\end{proof}
+
+\begin{lemma}[The node satisfies Jensen's hypotheses]
+  \label{lem:node_jensen_hypotheses}
+  \lean{Run202608192034.TODO.node_jensen_hypotheses}
+  \uses{lem:complete_domain_choice,cor:jensen_local_generic_fiber}
+  The ring \(T\) and the prime \(P=(0)\) satisfy all hypotheses of
+  \cref{cor:jensen_local_generic_fiber}.
+\end{lemma}
+
+\begin{proof}
+  Completeness, the cardinal equality, and depth two are part of
+  \cref{lem:complete_domain_choice}.  Since \(T\) is a domain,
+  \(\operatorname{Ass}T=\{(0)\}\); the zero prime is nonmaximal and has zero
+  intersection with the prime subring.  Every localization of the
+  Cohen--Macaulay ring \(T\) is Cohen--Macaulay.  Thus for every prime \(J\),
+  \(\operatorname{depth}T_J=\dim T_J=\operatorname{ht}J\), so no prime
+  satisfies \(\operatorname{ht}J>\operatorname{depth}T_J=1\).
+\end{proof}
+
+\begin{lemma}[Jensen special case]
+  \label{lem:jensen_special_case}
+  \lean{Run202608192034.TODO.jensenSpecialCase}
+  \uses{cor:jensen_local_generic_fiber,lem:node_jensen_hypotheses,lem:complete_domain_choice}
+  There exists a two-dimensional Noetherian local UFD \(A\) with
+  \(\widehat A\cong T\) such that the only prime ideal of \(T\) contracting
+  to zero in \(A\) is \((0)\).
+\end{lemma}
+
+\begin{proof}
+  Apply \cref{cor:jensen_local_generic_fiber} using
+  \cref{lem:node_jensen_hypotheses}.  A generic formal fiber local with
+  maximal prime \((0)\) contains no other prime, because \((0)\) is contained
+  in every prime.  Completion preserves Krull dimension, so the resulting
+  ring has dimension \(\dim T=2\).
+\end{proof}
+
+\section{The bad quotient}
+
+\begin{definition}[The counterexample candidate]
+  \label{def:counterexample_ring}
+  \lean{Run202608192034.TODO.counterexampleRing}
+  \uses{lem:jensen_special_case}
+  Fix a ring \(A\), a maximal ideal \(\mathfrak m_A\), and a completion
+  isomorphism \(\widehat A\cong T\) supplied by
+  \cref{lem:jensen_special_case}.
+\end{definition}
+
+\begin{proof}
+  The preceding existence lemma supplies a witness; fix one such witness for
+  the remainder of the construction.
+\end{proof}
+
+\begin{lemma}[Properties of the counterexample candidate]
+  \label{lem:counterexample_ring_properties}
+  \lean{Run202608192034.TODO.counterexampleRing_properties}
+  \uses{def:counterexample_ring,lem:jensen_special_case}
+  The ring \(A\) is a two-dimensional Noetherian local UFD and a domain, its
+  completion is identified with \(T\), and every nonzero prime of \(T\) has
+  nonzero contraction to \(A\).  Moreover, the completion map embeds \(A\)
+  into \(T\).
+\end{lemma}
+
+\begin{proof}
+  The structural properties and contraction assertion come from the chosen
+  witness.  A UFD is a domain.  The kernel of the completion map is
+  \(\bigcap_{n\geq1}\mathfrak m_A^n\), which is zero by the Krull intersection
+  theorem for the Noetherian local domain \(A\).  Hence the completion
+  isomorphism lets us regard \(A\) as a subring of \(T\).
+\end{proof}
+
+\begin{lemma}[The candidate is weakly quasi-complete]
+  \label{lem:counterexample_ring_weak}
+  \lean{Run202608192034.TODO.counterexampleRing_weaklyQuasiComplete}
+  \uses{lem:counterexample_ring_properties,lem:farley_completion_criterion}
+  The ring \(A\) is weakly quasi-complete.
+\end{lemma}
+
+\begin{proof}
+  By \cref{lem:counterexample_ring_properties}, every nonzero prime of
+  \(\widehat A\cong T\) contracts nontrivially to \(A\).  Apply
+  \cref{lem:farley_completion_criterion}.
+\end{proof}
+
+\begin{definition}[Contraction of the distinguished prime]
+  \label{def:contracted_prime}
+  \lean{Run202608192034.TODO.contractedPrime}
+  \uses{def:counterexample_ring,def:node_prime,lem:counterexample_ring_properties}
+  Under the fixed embedding \(A\subseteq T\), define \(q=Q\cap A\).
+\end{definition}
+
+\begin{proof}
+  This is a definition.
+\end{proof}
+
+\begin{lemma}[Height of the contracted prime]
+  \label{lem:contracted_prime_height}
+  \lean{Run202608192034.TODO.contractedPrime_nonzero_height_one}
+  \uses{def:contracted_prime,lem:counterexample_ring_properties,lem:node_prime_height}
+  The ideal \(q\) is a nonzero prime ideal of \(A\) of height one.
+\end{lemma}
+
+\begin{proof}
+  Contraction preserves primality.  Since \(Q\neq(0)\) and the zero prime is
+  the only prime of \(T\) contracting to zero, \(q\neq(0)\).  The completion
+  map is faithfully flat, so going-down gives
+  \(\operatorname{ht}q\leq\operatorname{ht}Q=1\).  A nonzero prime in the
+  domain \(A\) has height at least one, hence equality holds.
+\end{proof}
+
+\begin{definition}[A prime generator]
+  \label{def:prime_generator}
+  \lean{Run202608192034.TODO.primeGenerator}
+  \uses{lem:contracted_prime_height,lem:counterexample_ring_properties}
+  Choose a prime element \(a\in A\) for which \(q=aA\).
+\end{definition}
+
+\begin{proof}
+  Every height-one prime of the UFD \(A\) is principal and generated by a
+  prime element, so \cref{lem:contracted_prime_height} supplies such \(a\).
+\end{proof}
+
+\begin{lemma}[The extended principal ideal is not prime]
+  \label{lem:extended_principal_not_prime}
+  \lean{Run202608192034.TODO.extendedPrincipal_not_prime}
+  \uses{def:prime_generator,lem:counterexample_ring_properties,lem:node_prime_height,lem:node_prime_nonprincipal}
+  The ideal \(aT\) is a proper nonprime ideal of \(T\).
+\end{lemma}
+
+\begin{proof}
+  The embedding \(A\subseteq T\) shows \(a\neq0\), and
+  \(a\in q\subseteq Q\) gives \(aT\subseteq Q\).  If \(aT\) were prime, the
+  principal ideal theorem would give height at most one, while nonzeroness in
+  the domain \(T\) gives height at least one.  Thus \(aT\) and \(Q\) would be
+  nested height-one primes, hence equal.  This contradicts
+  \cref{lem:node_prime_nonprincipal}.  Therefore \(aT\) is not prime.
+\end{proof}
+
+\begin{definition}[The bad quotient]
+  \label{def:bad_quotient}
+  \lean{Run202608192034.TODO.badQuotient}
+  \uses{def:counterexample_ring,def:prime_generator}
+  Set \(B=A/aA\).
+\end{definition}
+
+\begin{proof}
+  This is a definition.
+\end{proof}
+
+\begin{lemma}[Dimension and domain properties of the bad quotient]
+  \label{lem:bad_quotient_dimension_domain}
+  \lean{Run202608192034.TODO.badQuotient_dimension_domain}
+  \uses{def:bad_quotient,def:prime_generator,lem:contracted_prime_height,lem:counterexample_ring_properties}
+  The ring \(B\) is a one-dimensional Noetherian local domain.
+\end{lemma}
+
+\begin{proof}
+  The ideal \(aA=q\) is prime, so the quotient is a domain; quotients of
+  Noetherian local rings are Noetherian and local.  The chain
+  \(q\subsetneq\mathfrak m_A\) gives dimension at least one.  A longer prime
+  chain above \(q\), preceded by \((0)\subsetneq q\), would have length above
+  two in \(A\), contrary to \(\dim A=2\).  Hence \(\dim B=1\).
+\end{proof}
+
+\begin{lemma}[The completed bad quotient is not a domain]
+  \label{lem:bad_quotient_completion}
+  \lean{Run202608192034.TODO.badQuotient_completion_not_domain}
+  \uses{def:bad_quotient,lem:counterexample_ring_properties,lem:extended_principal_not_prime}
+  The completion of \(B\) is isomorphic to \(T/aT\), and is not a domain.
+\end{lemma}
+
+\begin{proof}
+  Completion of a Noetherian local ring commutes with quotient by a finitely
+  generated ideal.  Thus
+  \[
+    \widehat B\cong\widehat A/a\widehat A\cong T/aT.
+  \]
+  By \cref{lem:extended_principal_not_prime}, \(aT\) is not prime, so this
+  quotient is not a domain.
+\end{proof}
+
+\begin{lemma}[The bad quotient is not weakly quasi-complete]
+  \label{lem:bad_quotient_not_weak}
+  \lean{Run202608192034.TODO.badQuotient_not_weaklyQuasiComplete}
+  \uses{lem:bad_quotient_dimension_domain,lem:bad_quotient_completion,lem:dimension_one_weak_criterion,def:analytically_irreducible}
+  The quotient \(B=A/aA\) is not weakly quasi-complete.
+\end{lemma}
+
+\begin{proof}
+  By \cref{lem:bad_quotient_dimension_domain}, \(B\) is a one-dimensional
+  Noetherian local domain.  By \cref{lem:bad_quotient_completion}, its
+  completion is not a domain, so \(B\) is not analytically irreducible.
+  Apply \cref{lem:dimension_one_weak_criterion}.
+\end{proof}
+
+\begin{lemma}[Weak candidate with a bad quotient]
+  \label{lem:a_is_weak_and_has_bad_quotient}
+  \lean{Run202608192034.TODO.counterexampleRing_weak_and_bad_quotient}
+  \uses{lem:counterexample_ring_weak,def:prime_generator,lem:bad_quotient_dimension_domain,lem:bad_quotient_not_weak}
+  The Noetherian local domain \(A\) is weakly quasi-complete, and it has a
+  prime element \(a\) such that \(A/aA\) is a one-dimensional Noetherian
+  local domain which is not weakly quasi-complete.
+\end{lemma}
+
+\begin{proof}
+  Weak quasi-completeness is \cref{lem:counterexample_ring_weak}; the chosen
+  prime element and the asserted quotient properties are
+  \cref{def:prime_generator,lem:bad_quotient_dimension_domain,
+  lem:bad_quotient_not_weak}.
+\end{proof}
+
+\begin{theorem}[Anderson Problem 8a]
+  \label{thm:main}
+  \lean{Run202608192034.TODO.andersonProblem8a}
+  \uses{lem:a_is_weak_and_has_bad_quotient,lem:quotient_weak_characterization,def:quasi_complete,def:weakly_quasi_complete}
+  % SOURCE: references/anderson_2014_fulltext.txt, lines 307--339; references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: D.~D. Anderson, Corollary~2 and the quotient criterion
+  around Theorem~4, references/anderson\_2014\_fulltext.txt, lines 307--339;
+  J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63.}
+  There exists a Noetherian local ring which is weakly quasi-complete but not
+  quasi-complete.
+\end{theorem}
+
+\begin{proof}
+  Take the ring \(A\) from
+  \cref{lem:a_is_weak_and_has_bad_quotient}.  It is weakly quasi-complete, and
+  it has a quotient \(A/aA\) which is not weakly quasi-complete.  By the
+  quotient characterization \cref{lem:quotient_weak_characterization}, \(A\)
+  cannot be quasi-complete.  Thus \(A\) has the required two properties.
+\end{proof}

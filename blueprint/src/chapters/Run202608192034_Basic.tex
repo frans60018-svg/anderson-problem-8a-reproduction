@@ -1,0 +1,157 @@
+% archon:covers Run202608192034/Basic.lean
+\chapter{Quasi-completeness and completion criteria}
+
+\begin{definition}[Quasi-complete local ring]
+  \label{def:quasi_complete}
+  \lean{Run202608192034.TODO.QuasiComplete}
+  % SOURCE: references/anderson_2014_fulltext.txt, lines 68--76.
+  \textit{Source: D.~D. Anderson, Definition~1,
+  references/anderson\_2014\_fulltext.txt, lines 68--76,
+  DOI 10.1007/978-1-4939-0925-4\_2.}
+  Let \((R,\mathfrak m)\) be a Noetherian local ring.  It is
+  \emph{quasi-complete} if, for every decreasing sequence
+  \[
+    I_1\supseteq I_2\supseteq\cdots
+  \]
+  of ideals and every integer \(k\geq 1\), there is an index \(s\) for which
+  \[
+    I_s\subseteq \left(\bigcap_{n\geq 1}I_n\right)+\mathfrak m^k.
+  \]
+\end{definition}
+
+\begin{proof}
+  This is a definition.  The intersection is the infimum of the sequence in
+  the lattice of ideals, and the sum and power are the usual ideal operations.
+\end{proof}
+
+\begin{definition}[Weakly quasi-complete local ring]
+  \label{def:weakly_quasi_complete}
+  \lean{Run202608192034.TODO.WeaklyQuasiComplete}
+  \uses{def:quasi_complete}
+  % SOURCE: references/anderson_2014_fulltext.txt, lines 68--76.
+  \textit{Source: D.~D. Anderson, Definition~1,
+  references/anderson\_2014\_fulltext.txt, lines 68--76,
+  DOI 10.1007/978-1-4939-0925-4\_2.}
+  Let \((R,\mathfrak m)\) be a Noetherian local ring.  It is \emph{weakly
+  quasi-complete} if every decreasing sequence of ideals with zero
+  intersection eventually lies in each prescribed power of \(\mathfrak m\):
+  for every \(k\geq 1\), some \(s\) satisfies \(I_s\subseteq\mathfrak m^k\).
+\end{definition}
+
+\begin{proof}
+  This is a definition, obtained from \cref{def:quasi_complete} by restricting
+  to chains whose intersection is the zero ideal.
+\end{proof}
+
+\begin{definition}[Generic formal fiber]
+  \label{def:generic_formal_fiber}
+  \lean{Run202608192034.TODO.genericFormalFiber}
+  Let \((A,\mathfrak m)\) be a Noetherian local domain, let
+  \(K=\operatorname{Frac}(A)\), and let \(\widehat A\) be the
+  \(\mathfrak m\)-adic completion.  The generic formal fiber is
+  \[
+    \operatorname{Spec}(\widehat A\otimes_A K).
+  \]
+  Equivalently, its points are the prime ideals \(P\) of \(\widehat A\) with
+  \(P\cap A=(0)\).
+\end{definition}
+
+\begin{proof}
+  Localization at the nonzero elements of \(A\) identifies
+  \(\widehat A\otimes_A K\) with that localization of \(\widehat A\).
+  Prime ideals of a localization correspond exactly to primes disjoint from
+  the localized multiplicative set, which here says \(P\cap A=(0)\).
+\end{proof}
+
+\begin{definition}[Analytic irreducibility]
+  \label{def:analytically_irreducible}
+  \lean{Run202608192034.TODO.AnalyticallyIrreducible}
+  A Noetherian local domain \(A\) is \emph{analytically irreducible} when its
+  adic completion \(\widehat A\) is an integral domain.
+\end{definition}
+
+\begin{proof}
+  This is a definition.
+\end{proof}
+
+\begin{lemma}[Quotient characterization of quasi-completeness]
+  \label{lem:quotient_weak_characterization}
+  \lean{Run202608192034.TODO.quasiComplete_iff_all_quotients_weak}
+  \uses{def:quasi_complete,def:weakly_quasi_complete}
+  % SOURCE: references/anderson_2014_fulltext.txt, lines 160--167 and 170--262.
+  \textit{Source: D.~D. Anderson, discussion before Theorem~4 and
+  Theorem~4, references/anderson\_2014\_fulltext.txt, lines 160--167 and
+  170--262, DOI 10.1007/978-1-4939-0925-4\_2.}
+  A Noetherian local ring \(R\) is quasi-complete if and only if every quotient
+  \(R/J\) is weakly quasi-complete.
+\end{lemma}
+
+\begin{proof}
+  Suppose first that \(R\) is quasi-complete.  A decreasing zero-intersection
+  chain in \(R/J\) pulls back to a decreasing chain \((I_n)\) of ideals of
+  \(R\) whose intersection is \(J\).  Quasi-completeness gives
+  \(I_s\subseteq J+\mathfrak m^k\); passing to the quotient gives the required
+  containment in the \(k\)-th power of the maximal ideal of \(R/J\).
+
+  Conversely, given a decreasing chain \((I_n)\) in \(R\), put
+  \(J=\bigcap_n I_n\).  The images \(I_n/J\) have zero intersection in \(R/J\).
+  Weak quasi-completeness of this quotient gives
+  \(I_s/J\subseteq(\mathfrak m/J)^k\).  Powers commute with passage to the
+  quotient, so lifting the containment yields
+  \(I_s\subseteq J+\mathfrak m^k\), which is quasi-completeness of \(R\).
+\end{proof}
+
+\begin{lemma}[Completion-prime criterion]
+  \label{lem:farley_completion_criterion}
+  \lean{Run202608192034.TODO.weaklyQuasiComplete_iff_completion_primes}
+  \uses{def:weakly_quasi_complete,def:generic_formal_fiber}
+  % SOURCE: references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63,
+  DOI 10.4134/BKMS.b140895.}
+  A Noetherian local domain \(A\) is weakly quasi-complete if and only if every
+  nonzero prime ideal \(P\) of \(\widehat A\) has nonzero contraction to \(A\).
+  Equivalently, its generic formal fiber consists only of the zero prime.
+\end{lemma}
+
+\begin{proof}
+  The proof is the completion criterion underlying Farley's proposition.
+  For the forward implication, a nonzero completion prime with zero
+  contraction gives, by successive approximation modulo
+  \(\mathfrak m^n\widehat A\), a decreasing chain of contraction ideals in
+  \(A\) with zero intersection which never enters a fixed power of
+  \(\mathfrak m\), contradicting weak quasi-completeness.  For the reverse
+  implication, failure of weak quasi-completeness supplies such a chain;
+  extend the corresponding proper ideal in the completion to a prime.
+  Krull intersection makes its contraction zero, while the failed fixed-power
+  containment makes the completion prime nonzero.  The localization
+  description in \cref{def:generic_formal_fiber} gives the equivalent
+  formulation.
+\end{proof}
+
+\begin{lemma}[Dimension-one analytic criterion]
+  \label{lem:dimension_one_weak_criterion}
+  \lean{Run202608192034.TODO.dimensionOne_weaklyQuasiComplete_iff}
+  \uses{lem:farley_completion_criterion,def:analytically_irreducible}
+  % SOURCE: references/anderson_2014_fulltext.txt, lines 307--339.
+  \textit{Source: D.~D. Anderson, Corollary~2,
+  references/anderson\_2014\_fulltext.txt, lines 307--339,
+  DOI 10.1007/978-1-4939-0925-4\_2.}
+  A one-dimensional Noetherian local domain is weakly quasi-complete if and
+  only if it is analytically irreducible.
+\end{lemma}
+
+\begin{proof}
+  Completion is faithfully flat, local, and dimension-preserving.  If
+  \(\widehat A\) is a domain and \(P\neq(0)\) is prime in \(\widehat A\), then
+  \(P\) has positive height; since \(\dim\widehat A=1\), it is the maximal
+  ideal.  Its contraction is therefore the nonzero maximal ideal of \(A\), and
+  \cref{lem:farley_completion_criterion} proves weak quasi-completeness.
+
+  If \(\widehat A\) is not a domain, choose a minimal prime \(P\) of
+  \(\widehat A\).  It is nonzero, because the zero ideal is not prime.
+  Faithful flatness and going-down show that \(P\cap A\) is a minimal prime of
+  the domain \(A\), hence is zero.  The completion-prime criterion then shows
+  that \(A\) is not weakly quasi-complete.  This proves the equivalence with
+  \cref{def:analytically_irreducible}.
+\end{proof}

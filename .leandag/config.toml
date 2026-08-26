@@ -1,0 +1,3 @@
+[leandag]
+entry     = "blueprint/src/content.tex"
+lean_root = "."

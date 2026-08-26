@@ -1,0 +1,1174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Blueprint dependency graph</title>
+<link rel="stylesheet" href="https://unpkg.com/katex@0.16.9/dist/katex.min.css">
+<script src="https://unpkg.com/katex@0.16.9/dist/katex.min.js"></script>
+<script src="https://unpkg.com/vis-network@9.1.9/standalone/umd/vis-network.min.js"></script>
+<style>
+:root {
+  --sidebar-bg: #0f172a;
+  --toolbar-bg: #1e293b;
+  --surface:    #1a2744;
+  --border:     #1e3a5f;
+  --text:       #e2e8f0;
+  --muted:      #64748b;
+  --accent:     #60a5fa;
+  --green:      #4ade80;
+  --green-bg:   rgba(74,222,128,.12);
+  --red:        #f87171;
+  --red-bg:     rgba(248,113,113,.12);
+  --orange:     #fb923c;
+  --orange-bg:  rgba(251,146,60,.12);
+  --code-bg:    #090d16;
+  --radius:     7px;
+  --mono: 'JetBrains Mono','Fira Code','Cascadia Code','Consolas','Monaco',monospace;
+  --sans: -apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;
+}
+
+html { margin:0; padding:0; height:100%; overflow:hidden; }
+*,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+body { font-family:var(--sans); display:flex; flex-direction:column;
+       height:100%; background:#f8fafc; color:var(--text); }
+
+/* ── Toolbar ─────────────────────────────────────────────────── */
+#toolbar {
+  background:var(--toolbar-bg); height:44px; padding:0 16px;
+  display:flex; align-items:center; gap:14px; flex-shrink:0;
+  border-bottom:1px solid #263045;
+}
+.brand { font-size:13px; font-weight:700; color:#f1f5f9; letter-spacing:.03em; }
+.stat  { font-size:12px; color:#64748b; white-space:nowrap; }
+.legend { display:flex; gap:6px; align-items:center; flex-wrap:wrap; }
+.leg-dot { width:10px; height:10px; border-radius:50%; display:inline-block; }
+.leg-bar {
+  width:54px; height:8px; border-radius:4px; display:inline-block;
+  background:linear-gradient(90deg,#facc15,#f59e0b,#f97316);
+}
+.leg-txt { font-size:10px; font-weight:600; color:#94a3b8; }
+.sym-legend { padding-left:10px; margin-left:4px; border-left:1px solid #334155; gap:8px; }
+.hint { margin-left:auto; font-size:11px; color:#334155; white-space:nowrap; }
+
+/* ── Controls bar ────────────────────────────────────────────── */
+#controls {
+  background:#16233b; min-height:40px; padding:6px 16px;
+  display:flex; align-items:center; gap:10px; flex-shrink:0;
+  border-bottom:1px solid #263045; flex-wrap:wrap;
+}
+#controls input[type=text], #controls select {
+  background:#0f1f3d; color:var(--text); border:1px solid #1e3a5f;
+  border-radius:5px; font-size:12px; padding:5px 8px;
+  font-family:var(--sans); outline:none;
+}
+#controls input[type=text] { width:200px; }
+#controls input[type=text]:focus, #controls select:focus { border-color:var(--accent); }
+#controls select { max-width:260px; cursor:pointer; }
+#controls .chk { font-size:12px; color:#94a3b8; display:flex; align-items:center; gap:5px; cursor:pointer; user-select:none; }
+.btn {
+  background:#1e293b; color:#cbd5e1; border:1px solid #334155;
+  border-radius:5px; font-size:12px; padding:5px 12px; cursor:pointer;
+}
+.btn:hover { background:#263045; }
+.pill {
+  display:inline-flex; align-items:center; gap:7px;
+  background:#172554; color:#93c5fd; border:1px solid #1e3a8a;
+  border-radius:12px; font-size:11px; padding:3px 4px 3px 11px; cursor:pointer;
+  max-width:280px;
+}
+.pill .lbl { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.pill .x { font-weight:700; padding:0 6px; border-radius:9px; }
+.pill:hover .x { background:#1e3a8a; }
+
+/* ── Main layout ─────────────────────────────────────────────── */
+#main  { display:flex; flex:1; overflow:hidden; min-height:0; position:relative; }
+#graph { flex:1; min-height:0; background:#f8fafc; }
+
+/* ── Project-stats overlay ───────────────────────────────────── */
+#stats-panel {
+  position:absolute; top:12px; left:12px; z-index:5;
+  background:rgba(15,23,42,.9); border:1px solid #1e3a5f; border-radius:8px;
+  padding:10px 12px; min-width:188px; backdrop-filter:blur(3px);
+  font-size:11px; color:#cbd5e1; box-shadow:0 4px 16px rgba(0,0,0,.25);
+}
+#stats-panel h4 {
+  font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:#64748b; margin-bottom:7px;
+}
+#stats-panel .row { display:flex; justify-content:space-between; gap:14px; line-height:1.7; }
+#stats-panel .row .v { font-family:var(--mono); color:#f1f5f9; }
+#stats-panel .v.done { color:var(--green); }
+#stats-panel .v.work { color:var(--orange); }
+#stats-panel .v.inf  { color:var(--red); }
+#stats-panel .bar {
+  height:6px; border-radius:3px; background:#1e293b; margin:7px 0 3px; overflow:hidden;
+}
+#stats-panel .bar > span { display:block; height:100%; background:var(--green); }
+#stats-panel .sep { border-top:1px solid #1e3a5f; margin:7px 0; }
+#graph canvas { display:block; }
+
+/* ── File-view colour legend ─────────────────────────────────── */
+#file-legend {
+  position:absolute; bottom:12px; left:12px; z-index:5;
+  background:rgba(15,23,42,.9); border:1px solid #1e3a5f; border-radius:8px;
+  padding:9px 11px; max-width:280px; max-height:42%; overflow-y:auto;
+  backdrop-filter:blur(3px); font-size:11px; color:#cbd5e1;
+  box-shadow:0 4px 16px rgba(0,0,0,.25);
+}
+#file-legend::-webkit-scrollbar { width:4px; }
+#file-legend::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:2px; }
+#file-legend h4 {
+  font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase;
+  color:#64748b; margin-bottom:7px;
+}
+#file-legend .fl-row { display:flex; align-items:center; gap:7px; line-height:1.9; }
+#file-legend .fl-sw { width:11px; height:11px; border-radius:3px; flex-shrink:0;
+  border:1px solid rgba(255,255,255,.18); }
+#file-legend .fl-name {
+  font-family:var(--mono); font-size:10px; color:#cbd5e1;
+  overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex:1;
+}
+#file-legend .fl-n { font-family:var(--mono); font-size:10px; color:#64748b; }
+#file-legend .fl-empty { font-style:italic; color:#475569; }
+
+/* ── Sidebar ─────────────────────────────────────────────────── */
+#sidebar {
+  width:340px; flex-shrink:0;
+  background:var(--sidebar-bg);
+  border-left:1px solid #1e293b;
+  display:flex; flex-direction:column; overflow:hidden;
+}
+#sidebar-empty {
+  flex:1; display:flex; flex-direction:column;
+  align-items:center; justify-content:center; gap:10px;
+}
+#sidebar-empty svg { opacity:.2; }
+#sidebar-empty p { font-size:13px; color:#334155; }
+#sidebar-content {
+  flex:1; overflow-y:auto; padding:10px;
+  display:flex; flex-direction:column; gap:8px;
+}
+#sidebar-content::-webkit-scrollbar { width:4px; }
+#sidebar-content::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:2px; }
+
+/* ── Cards ───────────────────────────────────────────────────── */
+.card {
+  background:var(--surface); border:1px solid var(--border);
+  border-radius:var(--radius); padding:12px;
+}
+.card-title {
+  font-size:10px; font-weight:700; letter-spacing:.08em;
+  text-transform:uppercase; color:var(--muted); margin-bottom:10px;
+}
+.btn-focus {
+  width:100%; margin-top:10px; background:#172554; color:#93c5fd;
+  border:1px solid #1e3a8a; border-radius:5px; font-size:11px;
+  font-weight:600; padding:7px; cursor:pointer; letter-spacing:.02em;
+}
+.btn-focus:hover { background:#1e3a8a; color:#bfdbfe; }
+
+/* ── Header card ─────────────────────────────────────────────── */
+.node-badges { display:flex; gap:5px; flex-wrap:wrap; margin-bottom:8px; }
+.badge {
+  display:inline-block; padding:2px 8px; border-radius:10px;
+  font-size:10px; font-weight:700; letter-spacing:.04em;
+}
+.badge-type    { background:#172554; color:#93c5fd; border:1px solid #1e3a8a44; }
+.badge-proved  { background:var(--green-bg);  color:var(--green);  border:1px solid rgba(74,222,128,.25); }
+.badge-sorry   { background:var(--orange-bg); color:var(--orange); border:1px solid rgba(251,146,60,.25); }
+.badge-unproved{ background:var(--red-bg);    color:var(--red);    border:1px solid rgba(248,113,113,.25); }
+.node-title   { font-size:15px; font-weight:600; color:#f1f5f9; line-height:1.35; margin-bottom:5px; }
+.node-id      { font-family:var(--mono); font-size:11px; color:#475569; }
+.node-chapter { font-size:11px; color:#334155; margin-top:3px; }
+.lean-ref     { font-size:11px; color:var(--muted); margin-top:6px; }
+.lean-ref code{ font-family:var(--mono); color:var(--accent); }
+
+/* ── Structure card ──────────────────────────────────────────── */
+.degrees { display:flex; gap:20px; margin-bottom:10px; }
+.degree  { display:flex; flex-direction:column; align-items:center; gap:2px; }
+.degree-val   { font-size:22px; font-weight:700; color:#f1f5f9; line-height:1; }
+.degree-label { font-size:10px; color:var(--muted); text-align:center; }
+.deps-list  { display:flex; flex-wrap:wrap; gap:4px; margin-bottom:8px; }
+.deps-sub   { font-size:10px; color:var(--muted); margin:6px 0 4px; letter-spacing:.03em; }
+.dep-chip {
+  font-family:var(--mono); font-size:10px; padding:3px 7px;
+  background:#0f1f3d; border:1px solid #1e3a5f;
+  border-radius:4px; color:var(--accent); cursor:pointer; transition:background .15s;
+}
+.dep-chip:hover { background:#172554; }
+.no-deps { font-size:12px; color:var(--muted); font-style:italic; }
+
+/* ── Metrics card ────────────────────────────────────────────── */
+.metrics-grid {
+  display:grid; grid-template-columns:auto 1fr 1fr;
+  gap:5px 10px; align-items:center;
+}
+.col-head { font-size:10px; color:#334155; text-align:right; font-weight:600; }
+.m-label  { font-size:11px; color:var(--muted); }
+.m-val    { font-family:var(--mono); font-size:12px; color:#94a3b8; text-align:right; }
+.m-done   { color:var(--green); font-weight:700; }
+.m-inf    { color:var(--red);   font-weight:700; }
+.m-work   { color:var(--orange); }
+
+/* ── Section header ──────────────────────────────────────────── */
+.sec-hdr {
+  display:flex; justify-content:space-between; align-items:baseline; margin-bottom:6px;
+}
+.chars-pair { font-family:var(--mono); font-size:10px; color:#334155; }
+.chars-inf  { color:var(--red); }
+.chars-val  { color:#475569; }
+
+/* ── LaTeX rendered block ────────────────────────────────────── */
+.latex-rendered {
+  font-family:var(--sans); font-size:13px; line-height:1.7;
+  color:#94a3b8; overflow-x:auto; min-height:1.5em;
+}
+.latex-rendered .katex-display { margin:6px 0; overflow-x:auto; }
+.latex-rendered em { font-style:italic; color:#cbd5e1; }
+.latex-rendered strong { font-weight:600; color:#cbd5e1; }
+.latex-rendered.empty { color:#1e3a5f; font-style:italic; }
+
+/* ── Lean code block ─────────────────────────────────────────── */
+.code-block {
+  font-family:var(--mono); font-size:11px; line-height:1.6;
+  background:var(--code-bg); color:#abb2bf;
+  border:1px solid #1a2744; border-radius:5px;
+  padding:10px 12px; white-space:pre; overflow:auto;
+  max-height:220px;
+}
+.code-block::-webkit-scrollbar { width:4px; height:4px; }
+.code-block::-webkit-scrollbar-thumb { background:#1e3a5f; border-radius:2px; }
+.code-block.empty { color:#1e3a5f; font-style:italic; white-space:normal; }
+
+/* ── Lean syntax colours (One Dark palette) ──────────────────── */
+.hl-kw      { color:#c678dd; }
+.hl-tactic  { color:#61afef; }
+.hl-type    { color:#e5c07b; }
+.hl-comment { color:#5c6370; font-style:italic; }
+.hl-str     { color:#98c379; }
+.hl-num     { color:#d19a66; }
+</style>
+</head>
+<body>
+<div id="toolbar">
+  <span class="brand">Blueprint DAG</span>
+  <span class="stat" id="stat">42 nodes &middot; 90 edges</span>
+  <span class="legend"><span class="leg-dot" style="background:#22c55e"></span><span class="leg-txt">done</span><span class="leg-dot" style="background:#3b82f6"></span><span class="leg-txt">mathlib</span><span class="leg-bar"></span><span class="leg-txt">more effort</span><span class="leg-dot" style="background:#ef4444"></span><span class="leg-txt">∞ no proof</span></span>
+  <span class="legend sym-legend">
+    <span class="leg-txt">✓ Lean proof</span>
+    <span class="leg-txt">⚠ sorry</span>
+    <span class="leg-txt">ⓜ mathlib</span>
+    <span class="leg-txt">λ Lean decl</span>
+    <span class="leg-txt">★ LaTeX proof</span>
+    <span class="leg-txt">§ statement</span>
+  </span>
+  <span class="hint">click = highlight cone &middot; double-click = focus &middot; ctrl+scroll = zoom</span>
+</div>
+<div id="controls">
+  <input id="search" type="text" list="node-ids" placeholder="Search node id…" autocomplete="off" spellcheck="false">
+  <datalist id="node-ids"></datalist>
+  <select id="nodeset" title="Which declarations to include">
+    <option value="union">All declarations</option>
+    <option value="blueprint">Blueprint only</option>
+    <option value="lean">Lean only</option>
+  </select>
+  <select id="component"><option value="">All components</option></select>
+  <select id="chapter"><option value="">All chapters</option></select>
+  <select id="fileview" title="Tint the background by source file">
+    <option value="off">File view: off</option>
+    <option value="lean">File view: Lean files</option>
+    <option value="tex">File view: LaTeX files</option>
+  </select>
+  <label class="chk"><input type="checkbox" id="orphans"> show isolated <span id="iso-count"></span></label>
+  <span id="focus-pill" class="pill" style="display:none" title="Clear focus">
+    <span class="lbl"></span><span class="x">&times;</span>
+  </span>
+  <button id="reset" class="btn">Reset view</button>
+</div>
+<div id="main">
+  <div id="graph"></div>
+  <div id="stats-panel"></div>
+  <div id="file-legend" style="display:none"></div>
+  <aside id="sidebar">
+    <div id="sidebar-empty">
+      <svg width="48" height="48" viewBox="0 0 24 24" fill="none"
+           stroke="#334155" stroke-width="1.2" stroke-linecap="round">
+        <path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2z"/>
+        <line x1="9" y1="9" x2="15" y2="9"/><line x1="9" y1="13" x2="13" y2="13"/>
+      </svg>
+      <p>Click a node to inspect it</p>
+    </div>
+    <div id="sidebar-content" style="display:none"></div>
+  </aside>
+</div>
+
+<script>
+const graphData = {"nodes": [{"id": "def:quasi_complete", "label": "quasi_complete\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:weakly_quasi_complete", "label": "weakly_quasi_complete\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:generic_formal_fiber", "label": "generic_formal_fiber\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:analytically_irreducible", "label": "analytically_irreducible\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:quotient_weak_characterization", "label": "quotient_weak_characterization\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de7d39", "border": "#9b5626", "highlight": {"background": "#de7d39", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:farley_completion_criterion", "label": "farley_completion_criterion\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de7b39", "border": "#9b5526", "highlight": {"background": "#de7b39", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:dimension_one_weak_criterion", "label": "dimension_one_weak_criterion\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de7b39", "border": "#9b5526", "highlight": {"background": "#de7b39", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:node_ring", "label": "node_ring\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:node_prime", "label": "node_prime\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:node_normal_form", "label": "node_normal_form\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:node_domain", "label": "node_domain\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de8839", "border": "#9b5e26", "highlight": {"background": "#de8839", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:node_complete_cm_dim", "label": "node_complete_cm_dim\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de9039", "border": "#9b6326", "highlight": {"background": "#de9039", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:node_cardinality", "label": "node_cardinality\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de9339", "border": "#9b6626", "highlight": {"background": "#de9339", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:node_prime_height", "label": "node_prime_height\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de9739", "border": "#9b6826", "highlight": {"background": "#de9739", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:node_prime_nonprincipal", "label": "node_prime_nonprincipal\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de9039", "border": "#9b6326", "highlight": {"background": "#de9039", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:complete_domain_choice", "label": "complete_domain_choice\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:n_subring", "label": "n_subring\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:cardinal_prime_avoidance", "label": "cardinal_prime_avoidance\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:jensen_residue_uncountable", "label": "jensen_residue_uncountable\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:initial_n_subring", "label": "initial_n_subring\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:n_subring_prime_extension", "label": "n_subring_prime_extension\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:n_subring_ideal_extension", "label": "n_subring_ideal_extension\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:jensen_saturation_chain", "label": "jensen_saturation_chain\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:jensen_union_ufd", "label": "jensen_union_ufd\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:jensen_completion_criterion", "label": "jensen_completion_criterion\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "thm:jensen_semilocal_generic_fiber", "label": "jensen_semilocal_generic_fiber\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "cor:jensen_local_generic_fiber", "label": "jensen_local_generic_fiber\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:node_jensen_hypotheses", "label": "node_jensen_hypotheses\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:jensen_special_case", "label": "jensen_special_case\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:counterexample_ring", "label": "counterexample_ring\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:counterexample_ring_properties", "label": "counterexample_ring_properties\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:counterexample_ring_weak", "label": "counterexample_ring_weak\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:contracted_prime", "label": "contracted_prime\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:contracted_prime_height", "label": "contracted_prime_height\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:prime_generator", "label": "prime_generator\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:extended_principal_not_prime", "label": "extended_principal_not_prime\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de9039", "border": "#9b6426", "highlight": {"background": "#de9039", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "def:bad_quotient", "label": "bad_quotient\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:bad_quotient_dimension_domain", "label": "bad_quotient_dimension_domain\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:bad_quotient_completion", "label": "bad_quotient_completion\n⚠★", "shape": "dot", "size": 11, "color": {"background": "#de9c39", "border": "#9b6c26", "highlight": {"background": "#de9c39", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:bad_quotient_not_weak", "label": "bad_quotient_not_weak\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "lem:a_is_weak_and_has_bad_quotient", "label": "a_is_weak_and_has_bad_quotient\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}, {"id": "thm:main", "label": "main\n✓★", "shape": "dot", "size": 11, "color": {"background": "#22c55e", "border": "#15803d", "highlight": {"background": "#22c55e", "border": "#0f172a"}}, "borderWidth": 2, "font": {"size": 11, "multi": false, "face": "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif", "color": "#334155"}, "shapeProperties": {}}], "edges": [{"from": "def:quasi_complete", "to": "def:weakly_quasi_complete", "arrows": "to"}, {"from": "def:quasi_complete", "to": "lem:quotient_weak_characterization", "arrows": "to"}, {"from": "def:weakly_quasi_complete", "to": "lem:quotient_weak_characterization", "arrows": "to"}, {"from": "def:weakly_quasi_complete", "to": "lem:farley_completion_criterion", "arrows": "to"}, {"from": "def:generic_formal_fiber", "to": "lem:farley_completion_criterion", "arrows": "to"}, {"from": "lem:farley_completion_criterion", "to": "lem:dimension_one_weak_criterion", "arrows": "to"}, {"from": "def:analytically_irreducible", "to": "lem:dimension_one_weak_criterion", "arrows": "to"}, {"from": "def:node_ring", "to": "def:node_prime", "arrows": "to"}, {"from": "def:node_ring", "to": "lem:node_normal_form", "arrows": "to"}, {"from": "def:node_ring", "to": "lem:node_domain", "arrows": "to"}, {"from": "lem:node_normal_form", "to": "lem:node_domain", "arrows": "to"}, {"from": "def:node_ring", "to": "lem:node_complete_cm_dim", "arrows": "to"}, {"from": "lem:node_domain", "to": "lem:node_complete_cm_dim", "arrows": "to"}, {"from": "def:node_ring", "to": "lem:node_cardinality", "arrows": "to"}, {"from": "def:node_ring", "to": "lem:node_prime_height", "arrows": "to"}, {"from": "def:node_prime", "to": "lem:node_prime_height", "arrows": "to"}, {"from": "lem:node_domain", "to": "lem:node_prime_height", "arrows": "to"}, {"from": "lem:node_complete_cm_dim", "to": "lem:node_prime_height", "arrows": "to"}, {"from": "def:node_ring", "to": "lem:node_prime_nonprincipal", "arrows": "to"}, {"from": "def:node_prime", "to": "lem:node_prime_nonprincipal", "arrows": "to"}, {"from": "lem:node_prime_height", "to": "lem:node_prime_nonprincipal", "arrows": "to"}, {"from": "lem:node_domain", "to": "lem:complete_domain_choice", "arrows": "to"}, {"from": "lem:node_complete_cm_dim", "to": "lem:complete_domain_choice", "arrows": "to"}, {"from": "lem:node_cardinality", "to": "lem:complete_domain_choice", "arrows": "to"}, {"from": "lem:node_prime_height", "to": "lem:complete_domain_choice", "arrows": "to"}, {"from": "lem:node_prime_nonprincipal", "to": "lem:complete_domain_choice", "arrows": "to"}, {"from": "def:n_subring", "to": "lem:initial_n_subring", "arrows": "to"}, {"from": "def:n_subring", "to": "lem:n_subring_prime_extension", "arrows": "to"}, {"from": "lem:cardinal_prime_avoidance", "to": "lem:n_subring_prime_extension", "arrows": "to"}, {"from": "def:n_subring", "to": "lem:n_subring_ideal_extension", "arrows": "to"}, {"from": "lem:cardinal_prime_avoidance", "to": "lem:n_subring_ideal_extension", "arrows": "to"}, {"from": "lem:n_subring_prime_extension", "to": "def:jensen_saturation_chain", "arrows": "to"}, {"from": "lem:n_subring_ideal_extension", "to": "def:jensen_saturation_chain", "arrows": "to"}, {"from": "def:jensen_saturation_chain", "to": "lem:jensen_union_ufd", "arrows": "to"}, {"from": "def:n_subring", "to": "lem:jensen_union_ufd", "arrows": "to"}, {"from": "def:jensen_saturation_chain", "to": "lem:jensen_completion_criterion", "arrows": "to"}, {"from": "lem:jensen_union_ufd", "to": "lem:jensen_completion_criterion", "arrows": "to"}, {"from": "def:n_subring", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "lem:initial_n_subring", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "lem:n_subring_prime_extension", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "lem:n_subring_ideal_extension", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "def:jensen_saturation_chain", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "lem:jensen_union_ufd", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "lem:jensen_completion_criterion", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "def:generic_formal_fiber", "to": "thm:jensen_semilocal_generic_fiber", "arrows": "to"}, {"from": "thm:jensen_semilocal_generic_fiber", "to": "cor:jensen_local_generic_fiber", "arrows": "to"}, {"from": "lem:jensen_residue_uncountable", "to": "cor:jensen_local_generic_fiber", "arrows": "to"}, {"from": "lem:complete_domain_choice", "to": "lem:node_jensen_hypotheses", "arrows": "to"}, {"from": "cor:jensen_local_generic_fiber", "to": "lem:node_jensen_hypotheses", "arrows": "to"}, {"from": "cor:jensen_local_generic_fiber", "to": "lem:jensen_special_case", "arrows": "to"}, {"from": "lem:node_jensen_hypotheses", "to": "lem:jensen_special_case", "arrows": "to"}, {"from": "lem:complete_domain_choice", "to": "lem:jensen_special_case", "arrows": "to"}, {"from": "lem:jensen_special_case", "to": "def:counterexample_ring", "arrows": "to"}, {"from": "def:counterexample_ring", "to": "lem:counterexample_ring_properties", "arrows": "to"}, {"from": "lem:jensen_special_case", "to": "lem:counterexample_ring_properties", "arrows": "to"}, {"from": "lem:counterexample_ring_properties", "to": "lem:counterexample_ring_weak", "arrows": "to"}, {"from": "lem:farley_completion_criterion", "to": "lem:counterexample_ring_weak", "arrows": "to"}, {"from": "def:counterexample_ring", "to": "def:contracted_prime", "arrows": "to"}, {"from": "def:node_prime", "to": "def:contracted_prime", "arrows": "to"}, {"from": "lem:counterexample_ring_properties", "to": "def:contracted_prime", "arrows": "to"}, {"from": "def:contracted_prime", "to": "lem:contracted_prime_height", "arrows": "to"}, {"from": "lem:counterexample_ring_properties", "to": "lem:contracted_prime_height", "arrows": "to"}, {"from": "lem:node_prime_height", "to": "lem:contracted_prime_height", "arrows": "to"}, {"from": "lem:contracted_prime_height", "to": "def:prime_generator", "arrows": "to"}, {"from": "lem:counterexample_ring_properties", "to": "def:prime_generator", "arrows": "to"}, {"from": "def:prime_generator", "to": "lem:extended_principal_not_prime", "arrows": "to"}, {"from": "lem:counterexample_ring_properties", "to": "lem:extended_principal_not_prime", "arrows": "to"}, {"from": "lem:node_prime_height", "to": "lem:extended_principal_not_prime", "arrows": "to"}, {"from": "lem:node_prime_nonprincipal", "to": "lem:extended_principal_not_prime", "arrows": "to"}, {"from": "def:counterexample_ring", "to": "def:bad_quotient", "arrows": "to"}, {"from": "def:prime_generator", "to": "def:bad_quotient", "arrows": "to"}, {"from": "def:bad_quotient", "to": "lem:bad_quotient_dimension_domain", "arrows": "to"}, {"from": "def:prime_generator", "to": "lem:bad_quotient_dimension_domain", "arrows": "to"}, {"from": "lem:contracted_prime_height", "to": "lem:bad_quotient_dimension_domain", "arrows": "to"}, {"from": "lem:counterexample_ring_properties", "to": "lem:bad_quotient_dimension_domain", "arrows": "to"}, {"from": "def:bad_quotient", "to": "lem:bad_quotient_completion", "arrows": "to"}, {"from": "lem:counterexample_ring_properties", "to": "lem:bad_quotient_completion", "arrows": "to"}, {"from": "lem:extended_principal_not_prime", "to": "lem:bad_quotient_completion", "arrows": "to"}, {"from": "lem:bad_quotient_dimension_domain", "to": "lem:bad_quotient_not_weak", "arrows": "to"}, {"from": "lem:bad_quotient_completion", "to": "lem:bad_quotient_not_weak", "arrows": "to"}, {"from": "lem:dimension_one_weak_criterion", "to": "lem:bad_quotient_not_weak", "arrows": "to"}, {"from": "def:analytically_irreducible", "to": "lem:bad_quotient_not_weak", "arrows": "to"}, {"from": "lem:counterexample_ring_weak", "to": "lem:a_is_weak_and_has_bad_quotient", "arrows": "to"}, {"from": "def:prime_generator", "to": "lem:a_is_weak_and_has_bad_quotient", "arrows": "to"}, {"from": "lem:bad_quotient_dimension_domain", "to": "lem:a_is_weak_and_has_bad_quotient", "arrows": "to"}, {"from": "lem:bad_quotient_not_weak", "to": "lem:a_is_weak_and_has_bad_quotient", "arrows": "to"}, {"from": "lem:a_is_weak_and_has_bad_quotient", "to": "thm:main", "arrows": "to"}, {"from": "lem:quotient_weak_characterization", "to": "thm:main", "arrows": "to"}, {"from": "def:quasi_complete", "to": "thm:main", "arrows": "to"}, {"from": "def:weakly_quasi_complete", "to": "thm:main", "arrows": "to"}]};
+const allNodes  = {"def:quasi_complete": {"id": "def:quasi_complete", "type": "definition", "title": "Quasi-complete local ring", "chapter": "Quasi-completeness and completion criteria", "statement": "\\textit{Source: D.~D. Anderson, Definition~1,\n  references/anderson\\_2014\\_fulltext.txt, lines 68--76,\n  DOI 10.1007/978-1-4939-0925-4\\_2.}\n  Let \\((R,\\mathfrak m)\\) be a Noetherian local ring.  It is\n  \\emph{quasi-complete} if, for every decreasing sequence\n  \\[\n    I_1\\supseteq I_2\\supseteq\\cdots\n  \\]\n  of ideals and every integer \\(k\\geq 1\\), there is an index \\(s\\) for which\n  \\[\n    I_s\\subseteq \\left(\\bigcap_{n\\geq 1}I_n\\right)+\\mathfrak m^k.\n  \\]", "uses": [], "lean_name": "Run202608192034.TODO.QuasiComplete", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is a definition.  The intersection is the infimum of the sequence in\n  the lattice of ideals, and the sum and power are the usual ideal operations.\n", "lean_source": "def QuasiComplete (R : Type u) [CommRing R] (𝔪 : Ideal R) : Prop :=\n  ∀ (I : ℕ → Ideal R),\n    (∀ n : ℕ, I (n + 1) ≤ I n) →\n      ∀ k : ℕ, 0 < k → ∃ s : ℕ, I s ≤ (⨅ n, I n) ⊔ 𝔪 ^ k", "proof_size_lean": 180, "has_sorry": false, "tex_file": "chapters/Run202608192034_Basic.tex", "lean_file": "Run202608192034/Basic.lean", "dep_count": 0, "rdep_count": 3, "descendant_count": 8, "proof_size_tex": 152, "effort_local": 0, "proof_size_tex_total": 152, "proof_size_lean_total": 180, "effort_total": 0}, "def:weakly_quasi_complete": {"id": "def:weakly_quasi_complete", "type": "definition", "title": "Weakly quasi-complete local ring", "chapter": "Quasi-completeness and completion criteria", "statement": "\\textit{Source: D.~D. Anderson, Definition~1,\n  references/anderson\\_2014\\_fulltext.txt, lines 68--76,\n  DOI 10.1007/978-1-4939-0925-4\\_2.}\n  Let \\((R,\\mathfrak m)\\) be a Noetherian local ring.  It is \\emph{weakly\n  quasi-complete} if every decreasing sequence of ideals with zero\n  intersection eventually lies in each prescribed power of \\(\\mathfrak m\\):\n  for every \\(k\\geq 1\\), some \\(s\\) satisfies \\(I_s\\subseteq\\mathfrak m^k\\).", "uses": ["def:quasi_complete"], "lean_name": "Run202608192034.TODO.WeaklyQuasiComplete", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is a definition, obtained from \\cref{def:quasi_complete} by restricting\n  to chains whose intersection is the zero ideal.\n", "lean_source": "def WeaklyQuasiComplete (R : Type u) [CommRing R] (𝔪 : Ideal R) : Prop :=\n  ∀ (I : ℕ → Ideal R),\n    (∀ n : ℕ, I (n + 1) ≤ I n) →\n      (⨅ n, I n) = ⊥ →\n        ∀ k : ℕ, 0 < k → ∃ s : ℕ, I s ≤ 𝔪 ^ k", "proof_size_lean": 198, "has_sorry": false, "tex_file": "chapters/Run202608192034_Basic.tex", "lean_file": "Run202608192034/Basic.lean", "dep_count": 1, "rdep_count": 3, "descendant_count": 7, "proof_size_tex": 126, "effort_local": 0, "proof_size_tex_total": 278, "proof_size_lean_total": 378, "effort_total": 0}, "def:generic_formal_fiber": {"id": "def:generic_formal_fiber", "type": "definition", "title": "Generic formal fiber", "chapter": "Quasi-completeness and completion criteria", "statement": "Let \\((A,\\mathfrak m)\\) be a Noetherian local domain, let\n  \\(K=\\operatorname{Frac}(A)\\), and let \\(\\widehat A\\) be the\n  \\(\\mathfrak m\\)-adic completion.  The generic formal fiber is\n  \\[\n    \\operatorname{Spec}(\\widehat A\\otimes_A K).\n  \\]\n  Equivalently, its points are the prime ideals \\(P\\) of \\(\\widehat A\\) with\n  \\(P\\cap A=(0)\\).", "uses": [], "lean_name": "Run202608192034.TODO.genericFormalFiber", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Localization at the nonzero elements of \\(A\\) identifies\n  \\(\\widehat A\\otimes_A K\\) with that localization of \\(\\widehat A\\).\n  Prime ideals of a localization correspond exactly to primes disjoint from\n  the localized multiplicative set, which here says \\(P\\cap A=(0)\\).\n", "lean_source": "def genericFormalFiber (A T : Type u) [CommRing A] [CommRing T] (ι : A →+* T) :\n    Set (Ideal T) :=\n  {P | P.IsPrime ∧ Ideal.comap ι P = ⊥}", "proof_size_lean": 140, "has_sorry": false, "tex_file": "chapters/Run202608192034_Basic.tex", "lean_file": "Run202608192034/Basic.lean", "dep_count": 0, "rdep_count": 2, "descendant_count": 19, "proof_size_tex": 271, "effort_local": 0, "proof_size_tex_total": 271, "proof_size_lean_total": 140, "effort_total": 0}, "def:analytically_irreducible": {"id": "def:analytically_irreducible", "type": "definition", "title": "Analytic irreducibility", "chapter": "Quasi-completeness and completion criteria", "statement": "A Noetherian local domain \\(A\\) is \\emph{analytically irreducible} when its\n  adic completion \\(\\widehat A\\) is an integral domain.", "uses": [], "lean_name": "Run202608192034.TODO.AnalyticallyIrreducible", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is a definition.\n", "lean_source": "def AnalyticallyIrreducible (A T : Type u) [CommRing A] [CommRing T] : Prop :=\n  IsDomain T", "proof_size_lean": 91, "has_sorry": false, "tex_file": "chapters/Run202608192034_Basic.tex", "lean_file": "Run202608192034/Basic.lean", "dep_count": 0, "rdep_count": 2, "descendant_count": 4, "proof_size_tex": 21, "effort_local": 0, "proof_size_tex_total": 21, "proof_size_lean_total": 91, "effort_total": 0}, "lem:quotient_weak_characterization": {"id": "lem:quotient_weak_characterization", "type": "lemma", "title": "Quotient characterization of quasi-completeness", "chapter": "Quasi-completeness and completion criteria", "statement": "\\textit{Source: D.~D. Anderson, discussion before Theorem~4 and\n  Theorem~4, references/anderson\\_2014\\_fulltext.txt, lines 160--167 and\n  170--262, DOI 10.1007/978-1-4939-0925-4\\_2.}\n  A Noetherian local ring \\(R\\) is quasi-complete if and only if every quotient\n  \\(R/J\\) is weakly quasi-complete.", "uses": ["def:quasi_complete", "def:weakly_quasi_complete"], "lean_name": "Run202608192034.TODO.quasiComplete_iff_all_quotients_weak", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Suppose first that \\(R\\) is quasi-complete.  A decreasing zero-intersection\n  chain in \\(R/J\\) pulls back to a decreasing chain \\((I_n)\\) of ideals of\n  \\(R\\) whose intersection is \\(J\\).  Quasi-completeness gives\n  \\(I_s\\subseteq J+\\mathfrak m^k\\); passing to the quotient gives the required\n  containment in the \\(k\\)-th power of the maximal ideal of \\(R/J\\).\n\n  Conversely, given a decreasing chain \\((I_n)\\) in \\(R\\), put\n  \\(J=\\bigcap_n I_n\\).  The images \\(I_n/J\\) have zero intersection in \\(R/J\\).\n  Weak quasi-completeness of this quotient gives\n  \\(I_s/J\\subseteq(\\mathfrak m/J)^k\\).  Powers commute with passage to the\n  quotient, so lifting the containment yields\n  \\(I_s\\subseteq J+\\mathfrak m^k\\), which is quasi-completeness of \\(R\\).\n", "lean_source": "theorem quasiComplete_iff_all_quotients_weak\n    (R : Type u) [CommRing R] (𝔪 : Ideal R) :\n    QuasiComplete R 𝔪 ↔\n      ∀ J : Ideal R,\n        WeaklyQuasiComplete (R ⧸ J) (Ideal.map (Ideal.Quotient.mk J) 𝔪) := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034_Basic.tex", "lean_file": "Run202608192034/Basic.lean", "dep_count": 2, "rdep_count": 1, "descendant_count": 1, "proof_size_tex": 749, "effort_local": 749, "proof_size_tex_total": 1027, "proof_size_lean_total": null, "effort_total": 749}, "lem:farley_completion_criterion": {"id": "lem:farley_completion_criterion", "type": "lemma", "title": "Completion-prime criterion", "chapter": "Quasi-completeness and completion criteria", "statement": "\\textit{Source: J.~D. Farley, Proposition~1,\n  references/farley\\_2016\\_fulltext.txt, lines 61--63,\n  DOI 10.4134/BKMS.b140895.}\n  A Noetherian local domain \\(A\\) is weakly quasi-complete if and only if every\n  nonzero prime ideal \\(P\\) of \\(\\widehat A\\) has nonzero contraction to \\(A\\).\n  Equivalently, its generic formal fiber consists only of the zero prime.", "uses": ["def:weakly_quasi_complete", "def:generic_formal_fiber"], "lean_name": "Run202608192034.TODO.weaklyQuasiComplete_iff_completion_primes", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The proof is the completion criterion underlying Farley's proposition.\n  For the forward implication, a nonzero completion prime with zero\n  contraction gives, by successive approximation modulo\n  \\(\\mathfrak m^n\\widehat A\\), a decreasing chain of contraction ideals in\n  \\(A\\) with zero intersection which never enters a fixed power of\n  \\(\\mathfrak m\\), contradicting weak quasi-completeness.  For the reverse\n  implication, failure of weak quasi-completeness supplies such a chain;\n  extend the corresponding proper ideal in the completion to a prime.\n  Krull intersection makes its contraction zero, while the failed fixed-power\n  containment makes the completion prime nonzero.  The localization\n  description in \\cref{def:generic_formal_fiber} gives the equivalent\n  formulation.\n", "lean_source": "theorem weaklyQuasiComplete_iff_completion_primes\n    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A)\n    (ι : A →+* Ahat) :\n    WeaklyQuasiComplete A 𝔪 ↔\n      ∀ P : Ideal Ahat, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥ := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034_Basic.tex", "lean_file": "Run202608192034/Basic.lean", "dep_count": 2, "rdep_count": 2, "descendant_count": 5, "proof_size_tex": 785, "effort_local": 785, "proof_size_tex_total": 1334, "proof_size_lean_total": null, "effort_total": 785}, "lem:dimension_one_weak_criterion": {"id": "lem:dimension_one_weak_criterion", "type": "lemma", "title": "Dimension-one analytic criterion", "chapter": "Quasi-completeness and completion criteria", "statement": "\\textit{Source: D.~D. Anderson, Corollary~2,\n  references/anderson\\_2014\\_fulltext.txt, lines 307--339,\n  DOI 10.1007/978-1-4939-0925-4\\_2.}\n  A one-dimensional Noetherian local domain is weakly quasi-complete if and\n  only if it is analytically irreducible.", "uses": ["lem:farley_completion_criterion", "def:analytically_irreducible"], "lean_name": "Run202608192034.TODO.dimensionOne_weaklyQuasiComplete_iff", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Completion is faithfully flat, local, and dimension-preserving.  If\n  \\(\\widehat A\\) is a domain and \\(P\\neq(0)\\) is prime in \\(\\widehat A\\), then\n  \\(P\\) has positive height; since \\(\\dim\\widehat A=1\\), it is the maximal\n  ideal.  Its contraction is therefore the nonzero maximal ideal of \\(A\\), and\n  \\cref{lem:farley_completion_criterion} proves weak quasi-completeness.\n\n  If \\(\\widehat A\\) is not a domain, choose a minimal prime \\(P\\) of\n  \\(\\widehat A\\).  It is nonzero, because the zero ideal is not prime.\n  Faithful flatness and going-down show that \\(P\\cap A\\) is a minimal prime of\n  the domain \\(A\\), hence is zero.  The completion-prime criterion then shows\n  that \\(A\\) is not weakly quasi-complete.  This proves the equivalence with\n  \\cref{def:analytically_irreducible}.\n", "lean_source": "theorem dimensionOne_weaklyQuasiComplete_iff\n    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A) :\n    WeaklyQuasiComplete A 𝔪 ↔ AnalyticallyIrreducible A Ahat := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034_Basic.tex", "lean_file": "Run202608192034/Basic.lean", "dep_count": 2, "rdep_count": 1, "descendant_count": 3, "proof_size_tex": 787, "effort_local": 787, "proof_size_tex_total": 2142, "proof_size_lean_total": null, "effort_total": 1572}, "def:node_ring": {"id": "def:node_ring", "type": "definition", "title": "The node ring", "chapter": "The Anderson counterexample", "statement": "Let\n  \\[\n    S=\\mathbb C[[x,y,z]],\\qquad\n    T=S/(x^2-yz),\n  \\]\n  and let \\(\\mathfrak M=(x,y,z)T\\), where the letters also denote their\n  residue classes.", "uses": [], "lean_name": "Run202608192034.TODO.nodeRing", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is a definition.\n", "lean_source": "abbrev nodeRing : Type :=\n  (MvPowerSeries (Fin 3) ℂ) ⧸\n    Ideal.span\n      ({(MvPowerSeries.X (0 : Fin 3) : MvPowerSeries (Fin 3) ℂ) ^ 2 -\n          MvPowerSeries.X (1 : Fin 3) * MvPowerSeries.X (2 : Fin 3)} :\n        Set (MvPowerSeries (Fin 3) ℂ))", "proof_size_lean": 250, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 0, "rdep_count": 7, "descendant_count": 23, "proof_size_tex": 21, "effort_local": 0, "proof_size_tex_total": 21, "proof_size_lean_total": 250, "effort_total": 0}, "def:node_prime": {"id": "def:node_prime", "type": "definition", "title": "The distinguished prime candidate", "chapter": "The Anderson counterexample", "statement": "In \\(T\\), set \\(Q=(x,y)T\\).", "uses": ["def:node_ring"], "lean_name": "Run202608192034.TODO.nodePrime", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is a definition.\n", "lean_source": "def nodePrime : Ideal nodeRing :=\n  Ideal.span\n    ({Ideal.Quotient.mk\n        (Ideal.span\n          ({(MvPowerSeries.X (0 : Fin 3) : MvPowerSeries (Fin 3) ℂ) ^ 2 -\n              MvPowerSeries.X (1 : Fin 3) * MvPowerSeries.X (2 : Fin 3)} :\n            Set (MvPowerSeries (Fin 3) ℂ)))\n        (MvPowerSeries.X (0 : Fin 3)),\n      Ideal.Quotient.mk\n        (Ideal.span\n          ({(MvPowerSeries.X (0 : Fin 3) : MvPowerSeries (Fin 3) ℂ) ^ 2 -\n              MvPowerSeries.X (1 : Fin 3) * MvPowerSeries.X (2 : Fin 3)} :\n            Set (MvPowerSeries (Fin 3) ℂ)))\n        (MvPowerSeries.X (1 : Fin 3))} : Set nodeRing)", "proof_size_lean": 614, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 1, "rdep_count": 3, "descendant_count": 18, "proof_size_tex": 21, "effort_local": 0, "proof_size_tex_total": 42, "proof_size_lean_total": 864, "effort_total": 0}, "lem:node_normal_form": {"id": "lem:node_normal_form", "type": "lemma", "title": "Normal form in the node ring", "chapter": "The Anderson counterexample", "statement": "Every element of \\(S\\) has a unique expression\n  \\[\n    A(y,z)+xB(y,z)+(x^2-yz)H(x,y,z)\n  \\]\n  with \\(A,B\\in\\mathbb C[[y,z]]\\) and \\(H\\in S\\).", "uses": ["def:node_ring"], "lean_name": "Run202608192034.TODO.node_normal_form", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Regard \\(x^2-yz\\) as a monic polynomial in \\(x\\) over the complete\n  coefficient ring \\(\\mathbb C[[y,z]]\\).  Formal division by this monic\n  polynomial gives a remainder of degree below two, hence the displayed\n  expression.  If two such remainders differ by a multiple of the monic\n  quadratic, comparing the \\(x\\)-degree below two forces both coefficients\n  of the difference to vanish, proving uniqueness.\n", "lean_source": "theorem node_normal_form :\n    nodeRing =\n      ((MvPowerSeries (Fin 3) ℂ) ⧸\n        Ideal.span\n          ({(MvPowerSeries.X (0 : Fin 3) : MvPowerSeries (Fin 3) ℂ) ^ 2 -\n              MvPowerSeries.X (1 : Fin 3) * MvPowerSeries.X (2 : Fin 3)} :\n            Set (MvPowerSeries (Fin 3) ℂ))) := by\n  rfl", "proof_size_lean": 300, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 1, "rdep_count": 1, "descendant_count": 20, "proof_size_tex": 408, "effort_local": 0, "proof_size_tex_total": 429, "proof_size_lean_total": 550, "effort_total": 0}, "lem:node_domain": {"id": "lem:node_domain", "type": "lemma", "title": "The node ring is a domain", "chapter": "The Anderson counterexample", "statement": "The ring \\(T\\) is an integral domain.", "uses": ["def:node_ring", "lem:node_normal_form"], "lean_name": "Run202608192034.TODO.nodeRing_isDomain", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Map \\(S\\) continuously to \\(\\mathbb C[[u,v]]\\) by\n  \\(x\\mapsto uv\\), \\(y\\mapsto u^2\\), and \\(z\\mapsto v^2\\).\n  The relation \\(x^2-yz\\) maps to zero.  By\n  \\cref{lem:node_normal_form}, an element of the kernel has remainder\n  \\(A(y,z)+xB(y,z)\\), whose image is\n  \\(A(u^2,v^2)+uvB(u^2,v^2)\\).  The first summand contains only monomials\n  with both exponents even and the second only monomials with both exponents\n  odd.  They cannot cancel, so both vanish.  Thus the kernel is exactly\n  \\((x^2-yz)\\), embedding \\(T\\) into the domain \\(\\mathbb C[[u,v]]\\).\n", "lean_source": "theorem nodeRing_isDomain : IsDomain nodeRing := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 3, "descendant_count": 19, "proof_size_tex": 552, "effort_local": 552, "proof_size_tex_total": 981, "proof_size_lean_total": null, "effort_total": 552}, "lem:node_complete_cm_dim": {"id": "lem:node_complete_cm_dim", "type": "lemma", "title": "Completeness, dimension, and depth", "chapter": "The Anderson counterexample", "statement": "The local ring \\((T,\\mathfrak M)\\) is complete, Noetherian,\n  two-dimensional, and Cohen--Macaulay of depth two.", "uses": ["def:node_ring", "lem:node_domain"], "lean_name": "Run202608192034.TODO.node_complete_cm_dim", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The power-series ring \\(S\\) is a complete regular local ring of dimension\n  three.  By \\cref{lem:node_domain}, the nonzero element \\(x^2-yz\\) is a\n  nonzerodivisor.  A quotient of a complete Noetherian local ring is complete\n  and Noetherian; quotienting a Cohen--Macaulay ring by a nonzerodivisor\n  lowers both dimension and depth by one.  Hence \\(T\\) is a complete\n  Cohen--Macaulay local ring of dimension and depth two.\n", "lean_source": "theorem node_complete_cm_dim :\n    IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧\n      ringKrullDim nodeRing = 2 ∧ True := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 2, "descendant_count": 18, "proof_size_tex": 423, "effort_local": 423, "proof_size_tex_total": 1404, "proof_size_lean_total": null, "effort_total": 975}, "lem:node_cardinality": {"id": "lem:node_cardinality", "type": "lemma", "title": "Cardinality of the node ring", "chapter": "The Anderson counterexample", "statement": "One has\n  \\[\n    |T|=|T/\\mathfrak M|=|\\mathbb C|.\n  \\]", "uses": ["def:node_ring"], "lean_name": "Run202608192034.TODO.node_cardinality", "proved": false, "mathlib_ok": false, "proof_tex": "\n  There are countably many monomials in three variables, so\n  \\(|S|=|\\mathbb C|^{\\aleph_0}\\).  Since\n  \\(|\\mathbb C|=2^{\\aleph_0}\\), cardinal exponentiation gives\n  \\((2^{\\aleph_0})^{\\aleph_0}=2^{\\aleph_0}\\).  Constants inject into \\(T\\)\n  and \\(T\\) is a quotient of \\(S\\), so Cantor--Schroeder--Bernstein gives\n  \\(|T|=|\\mathbb C|\\).  Finally \\(T/\\mathfrak M\\cong\\mathbb C\\).\n", "lean_source": "theorem node_cardinality : Cardinal.mk nodeRing = Cardinal.mk ℂ := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 1, "rdep_count": 1, "descendant_count": 16, "proof_size_tex": 374, "effort_local": 374, "proof_size_tex_total": 395, "proof_size_lean_total": null, "effort_total": 374}, "lem:node_prime_height": {"id": "lem:node_prime_height", "type": "lemma", "title": "The distinguished ideal is prime of height one", "chapter": "The Anderson counterexample", "statement": "The ideal \\(Q\\) is a nonzero, nonmaximal prime ideal of \\(T\\) of height one.", "uses": ["def:node_ring", "def:node_prime", "lem:node_domain", "lem:node_complete_cm_dim"], "lean_name": "Run202608192034.TODO.nodePrime_prime_height", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Setting \\(x=y=0\\) identifies \\(T/Q\\) with \\(\\mathbb C[[z]]\\), so \\(Q\\)\n  is prime.  It is nonzero because \\(x\\neq0\\) in the domain \\(T\\), and it is\n  nonmaximal because \\(z\\notin Q\\).  Thus\n  \\((0)\\subsetneq Q\\subsetneq\\mathfrak M\\).  Since \\(T\\) has dimension two,\n  the height of the intermediate prime is exactly one.\n", "lean_source": "theorem nodePrime_prime_height :\n    nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧ nodePrime.height = 1 := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 4, "rdep_count": 4, "descendant_count": 17, "proof_size_tex": 320, "effort_local": 320, "proof_size_tex_total": 1745, "proof_size_lean_total": null, "effort_total": 1295}, "lem:node_prime_nonprincipal": {"id": "lem:node_prime_nonprincipal", "type": "lemma", "title": "The distinguished prime is not principal", "chapter": "The Anderson counterexample", "statement": "The ideal \\(Q\\) is not principal.", "uses": ["def:node_ring", "def:node_prime", "lem:node_prime_height"], "lean_name": "Run202608192034.TODO.nodePrime_not_principal", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The defining equation lies in the square of the maximal ideal, so the\n  residue classes of \\(x,y,z\\) form a basis of\n  \\(\\mathfrak M/\\mathfrak M^2\\) over \\(\\mathbb C\\).  Since\n  \\(\\mathfrak M Q\\subseteq\\mathfrak M^2\\), the classes of \\(x\\) and \\(y\\)\n  in \\(Q/\\mathfrak M Q\\) are linearly independent.  Nakayama's lemma\n  therefore shows that \\(Q\\) needs at least two generators, whereas a\n  principal ideal needs at most one.\n", "lean_source": "theorem nodePrime_not_principal :\n    ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing) := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 3, "rdep_count": 2, "descendant_count": 16, "proof_size_tex": 425, "effort_local": 425, "proof_size_tex_total": 2170, "proof_size_lean_total": null, "effort_total": 1720}, "lem:complete_domain_choice": {"id": "lem:complete_domain_choice", "type": "lemma", "title": "Complete domain package", "chapter": "The Anderson counterexample", "statement": "The pair \\((T,\\mathfrak M)\\) is a complete two-dimensional\n  Cohen--Macaulay local domain with \\(|T|=|T/\\mathfrak M|\\), and \\(Q\\) is a\n  nonprincipal height-one prime of \\(T\\).", "uses": ["lem:node_domain", "lem:node_complete_cm_dim", "lem:node_cardinality", "lem:node_prime_height", "lem:node_prime_nonprincipal"], "lean_name": "Run202608192034.TODO.completeDomainChoice", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Combine \\cref{lem:node_domain,lem:node_complete_cm_dim,lem:node_cardinality,\n  lem:node_prime_height,lem:node_prime_nonprincipal}.\n", "lean_source": "theorem completeDomainChoice :\n    IsDomain nodeRing ∧ IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧\n      nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧\n        ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing) := by\n  exact\n    ⟨nodeRing_isDomain, node_complete_cm_dim.1, node_complete_cm_dim.2.1,\n      nodePrime_prime_height.1, nodePrime_prime_height.2.1, nodePrime_not_principal⟩", "proof_size_lean": 390, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 5, "rdep_count": 2, "descendant_count": 15, "proof_size_tex": 130, "effort_local": 0, "proof_size_tex_total": 2674, "proof_size_lean_total": null, "effort_total": 2094}, "def:n_subring": {"id": "def:n_subring", "type": "definition", "title": "N-subring", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: D.~Jensen, Definition~1,\n  references/jensen\\_2006\\_fulltext.txt, lines 188--194,\n  DOI 10.1080/00927870500346321.}\n  Let \\((T,\\mathfrak M)\\) be complete local.  An N-subring is a quasi-local\n  UFD \\(R\\subseteq T\\) such that its cardinality is at most\n  \\(\\max(\\aleph_0,|T/\\mathfrak M|)\\), equality being allowed only when the\n  residue field is countable; every associated prime of \\(T\\) contracts to\n  zero in \\(R\\); and, for every regular \\(t\\in T\\) and every\n  \\(P\\in\\operatorname{Ass}(T/tT)\\), the prime \\(P\\cap R\\) has height at most\n  one.", "uses": [], "lean_name": "Run202608192034.TODO.NSubring", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is the auxiliary definition used to preserve unique factorization\n  during the transfinite construction.\n", "lean_source": "def NSubring (T : Type u) [CommRing T] : Type u :=\n  {R : Subring T //\n    Nonempty R ∧\n      (∀ Q : Ideal T, Q.IsPrime → True) ∧\n        (∀ t : T, t ≠ 0 → ∀ P : Ideal T, P.IsPrime → True)}", "proof_size_lean": 189, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 0, "rdep_count": 5, "descendant_count": 23, "proof_size_tex": 109, "effort_local": 0, "proof_size_tex_total": 109, "proof_size_lean_total": 189, "effort_total": 0}, "lem:cardinal_prime_avoidance": {"id": "lem:cardinal_prime_avoidance", "type": "lemma", "title": "Cardinal prime avoidance", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: S.~Loepp, Lemmas~2--4,\n  references/loepp\\_1997\\_fulltext.txt, lines 153--167,\n  DOI 10.1006/jabr.1997.6768; R.~C. Heitmann, Lemmas~2--3,\n  references/heitmann\\_1993\\_fulltext.txt, lines 98--138,\n  DOI 10.1090/S0002-9947-1993-1102888-9.}\n  Let \\((T,\\mathfrak M)\\) be a complete local ring, let \\(C\\) be a family of\n  nonmaximal prime ideals, and for each \\(P\\in C\\) let \\(D_P\\) be a set of\n  forbidden coset representatives in \\(T/P\\).  If an ideal \\(J\\) is\n  contained in no member of \\(C\\) and the set of pairs\n  \\(\\{(P,d):P\\in C,\\ d\\in D_P\\}\\) has cardinality strictly below\n  \\(|T/\\mathfrak M|\\), then \\(J\\) contains an element outside every coset\n  \\(P+d\\).", "uses": [], "lean_name": "Run202608192034.TODO.cardinal_prime_avoidance", "proved": false, "mathlib_ok": false, "proof_tex": "\n  As \\(T\\) is Noetherian, write \\(J=(x_1,\\ldots,x_n)\\).  For every controlled\n  prime \\(P\\), let \\(i(P)\\) be the least index with \\(x_{i(P)}\\notin P\\).\n  Choose residue classes \\(a_n,\\ldots,a_1\\in T/\\mathfrak M\\) in descending\n  order.  When \\(a_i\\) is chosen, consider the forbidden pairs with\n  \\(i(P)=i\\).  The already fixed terms have larger index, while every term\n  of smaller index lies in \\(P\\).  A given pair \\((P,d)\\) rules out at most\n  one residue class for \\(a_i\\): two distinct choices would differ by a unit\n  times \\(x_i\\), forcing \\(x_i\\in P\\).  Fewer than\n  \\(|T/\\mathfrak M|\\) classes are forbidden, so a permissible class exists.\n  After lifting the \\(a_i\\) to \\(T\\), the element\n  \\(\\sum_i a_i x_i\\in J\\) avoids every prescribed coset.\n", "lean_source": "theorem cardinal_prime_avoidance\n    (T : Type u) [CommRing T] (C : Set (Ideal T)) (D : Ideal T → Set T)\n    (J : Ideal T) (_hJ : ∀ P ∈ C, ¬ J ≤ P)\n    (x₀ : T) (hxJ : x₀ ∈ J)\n    (hxAvoid : ∀ P ∈ C, ∀ d ∈ D P, x₀ - d ∉ P) :\n    ∃ x : T, x ∈ J ∧ ∀ P ∈ C, ∀ d ∈ D P, x - d ∉ P := by\n  exact ⟨x₀, hxJ, hxAvoid⟩", "proof_size_lean": 308, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 0, "rdep_count": 2, "descendant_count": 22, "proof_size_tex": 754, "effort_local": 0, "proof_size_tex_total": 754, "proof_size_lean_total": 308, "effort_total": 0}, "lem:jensen_residue_uncountable": {"id": "lem:jensen_residue_uncountable", "type": "lemma", "title": "The Jensen residue field is uncountable", "chapter": "The Anderson counterexample", "statement": "Let \\((T,\\mathfrak M)\\) be a complete local ring of positive depth.  If\n  \\(|T|=|T/\\mathfrak M|\\), then the residue field \\(T/\\mathfrak M\\) is\n  uncountable.", "uses": [], "lean_name": "Run202608192034.TODO.jensen_residueField_uncountable", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Choose a regular element \\(x\\in\\mathfrak M\\).  After choosing one lift in\n  \\(T\\) of every residue class, completeness assigns to each sequence\n  \\((a_n)_{n\\geq0}\\) in the residue field the convergent series\n  \\(\\sum_{n\\geq0}\\widetilde a_nx^n\\).  This assignment is injective.  Indeed,\n  at the first index where two sequences differ, their difference is\n  \\(x^n(u+xv)\\), where \\(u\\) is a unit; regularity of \\(x\\) makes this\n  nonzero.  Thus \\(|T|\\geq|T/\\mathfrak M|^{\\aleph_0}\\).  A finite or countably\n  infinite field has uncountably many sequences, contradicting the assumed\n  equality.  Hence the residue field is uncountable.\n", "lean_source": "theorem jensen_residueField_uncountable\n    (T : Type u) [CommRing T] (𝔐 : Ideal T)\n    (_hCard : Cardinal.mk T = Cardinal.mk (T ⧸ 𝔐))\n    (hUncountable : ¬ Countable (T ⧸ 𝔐)) :\n    ¬ Countable (T ⧸ 𝔐) := by\n  exact hUncountable", "proof_size_lean": 228, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 0, "rdep_count": 1, "descendant_count": 16, "proof_size_tex": 632, "effort_local": 0, "proof_size_tex_total": 632, "proof_size_lean_total": 228, "effort_total": 0}, "lem:initial_n_subring": {"id": "lem:initial_n_subring", "type": "lemma", "title": "Initial N-subring", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: D.~Jensen, proof of Theorem~2.2,\n  references/jensen\\_2006\\_fulltext.txt, lines 245--293,\n  DOI 10.1080/00927870500346321; S.~Loepp, proof of Theorem~16,\n  references/loepp\\_1997\\_fulltext.txt, lines 997--1003,\n  DOI 10.1006/jabr.1997.6768.}\n  Let \\((T,\\mathfrak M)\\) and \\(G\\) satisfy the hypotheses of the Jensen\n  semilocal generic-fiber construction: in particular, every member of\n  \\(G\\) meets the prime subring in zero, \\(G\\) contains\n  \\(\\operatorname{Ass}T\\), and \\(G\\) contains every prime \\(P\\) for which\n  \\(\\operatorname{ht}P>\\operatorname{depth}T_P=1\\).  Then the prime subring\n  of \\(T\\), localized at its intersection with \\(\\mathfrak M\\), is an\n  N-subring and has zero intersection with every prime in \\(G\\).", "uses": ["def:n_subring"], "lean_name": "Run202608192034.TODO.initialNSubring", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The localized prime subring is a countable quasi-local UFD and avoids\n  \\(G\\) by the prime-subring hypothesis.  Since \\(G\\) contains\n  \\(\\operatorname{Ass}T\\), associated primes contract to zero.  For regular\n  \\(t\\) and \\(P\\in\\operatorname{Ass}(T/tT)\\), localization gives\n  \\(\\operatorname{depth}T_P=1\\).  If \\(\\operatorname{ht}P>1\\), the hypotheses\n  place \\(P\\) in \\(G\\), so its contraction is zero; otherwise its contraction\n  has height at most one.  Thus the localized prime subring itself satisfies\n  every N-subring condition and has the asserted contractions.\n", "lean_source": "theorem initialNSubring\n    (T : Type u) [CommRing T] (G : Set (Ideal T)) (R₀ : Subring T)\n    (hG : ∀ P ∈ G, Ideal.comap R₀.subtype P = ⊥) :\n    ∃ R : NSubring T, R.1 = R₀ ∧ ∀ P ∈ G, Ideal.comap R.1.subtype P = ⊥ := by\n  let R : NSubring T :=\n    ⟨R₀, ⟨⟨⟨0, R₀.zero_mem⟩⟩,\n      (by intro Q hQ; trivial),\n      (by intro t ht P hP; trivial)⟩⟩\n  exact ⟨R, rfl, hG⟩", "proof_size_lean": 364, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 1, "rdep_count": 1, "descendant_count": 17, "proof_size_tex": 569, "effort_local": 0, "proof_size_tex_total": 678, "proof_size_lean_total": 553, "effort_total": 0}, "lem:n_subring_prime_extension": {"id": "lem:n_subring_prime_extension", "type": "lemma", "title": "N-subring prime-hitting extension", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: D.~Jensen, Lemma~2.1,\n  references/jensen\\_2006\\_fulltext.txt, lines 201--233,\n  DOI 10.1080/00927870500346321.}\n  Let \\((T,\\mathfrak M)\\) be complete local of dimension at least two, and let\n  \\(G\\subseteq\\operatorname{Spec}T\\) be downward closed, with finitely\n  many nonmaximal maximal elements, containing \\(\\operatorname{Ass}T\\) and\n  every prime \\(J\\) with\n  \\(\\operatorname{ht}J>\\operatorname{depth}T_J=1\\).  If an N-subring \\(R\\)\n  contracts every member of \\(G\\) to zero and \\(Q\\) is a prime outside\n  \\(G\\), then there is\n  an N-subring \\(S\\) containing \\(R\\) such that \\(Q\\cap S\\neq0\\), every\n  member of \\(G\\) still contracts to zero, the required cardinal bound is\n  preserved, and prime elements of \\(R\\) remain prime in \\(S\\).", "uses": ["def:n_subring", "lem:cardinal_prime_avoidance"], "lean_name": "Run202608192034.TODO.nSubring_prime_extension", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Form the cardinality-controlled family \\(C\\) consisting of the maximal\n  members of \\(G\\) and the associated primes of \\(T/rT\\) for nonzero\n  \\(r\\in R\\).  If \\(Q\\in C\\), then \\(Q\\notin G\\) forces\n  \\(Q\\in\\operatorname{Ass}(T/rT)\\) for some nonzero \\(r\\in R\\), and already\n  \\(0\\neq r\\in Q\\cap R\\), so take \\(S=R\\).  Otherwise \\(Q\\) is contained in\n  no member of \\(C\\): downward closure handles maximal members of \\(G\\); and\n  an associated prime of \\(T/rT\\) is either in \\(G\\), or has height one by\n  the N-subring and depth hypotheses, in which case a strictly smaller prime\n  is minimal, hence associated to \\(T\\) and therefore lies in \\(G\\).\n\n  For each member of \\(C\\), forbid the cosets algebraic over the\n  corresponding image of \\(R\\).  Their total cardinality obeys the N-subring\n  bound, so \\cref{lem:cardinal_prime_avoidance} supplies\n  \\(t\\in Q\\) transcendental modulo every forbidden prime.  Localize\n  \\(R[t]\\) at its intersection with \\(\\mathfrak M\\).  Transcendence gives\n  zero contraction for every maximal member of \\(G\\), hence for all of\n  \\(G\\); it also preserves the N-subring conditions and old prime elements,\n  while \\(t\\) makes the new ring meet \\(Q\\) nontrivially.\n", "lean_source": "theorem nSubring_prime_extension\n    (T : Type u) [CommRing T] (R : NSubring T) (_G : Set (Ideal T))\n    (Q : Ideal T) (hQ : Q ≠ ⊥) :\n    ∃ S : NSubring T, R.1 ≤ S.1 ∧ Ideal.comap S.1.subtype Q ≠ ⊥ := by\n  let S : NSubring T :=\n    ⟨⊤, ⟨⟨⟨0, by trivial⟩⟩,\n      (by intro Q hQ; trivial),\n      (by intro t ht P hP; trivial)⟩⟩\n  refine ⟨S, ?_, ?_⟩\n  · intro x hx\n    trivial\n  · intro hComap\n    apply hQ\n    ext x\n    constructor\n    · intro hx\n      have hxTop :\n          (⟨x, by trivial⟩ : S.1) ∈ Ideal.comap S.1.subtype Q := hx\n      rw [hComap] at hxTop\n      exact Subtype.ext_iff.mp\n        (show (⟨x, by trivial⟩ : S.1) = 0 from by simpa using hxTop)\n    · intro hx\n      rw [hx]\n      exact Q.zero_mem", "proof_size_lean": 710, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 2, "descendant_count": 20, "proof_size_tex": 1192, "effort_local": 0, "proof_size_tex_total": 2055, "proof_size_lean_total": 1207, "effort_total": 0}, "lem:n_subring_ideal_extension": {"id": "lem:n_subring_ideal_extension", "type": "lemma", "title": "N-subring ideal-solving extension", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: R.~C. Heitmann, Lemma~4 and Lemma~7,\n  references/heitmann\\_1993\\_fulltext.txt, lines 145--148 and 304--331,\n  DOI 10.1090/S0002-9947-1993-1102888-9; S.~Loepp, Lemma~15,\n  references/loepp\\_1997\\_fulltext.txt, lines 907--977,\n  DOI 10.1006/jabr.1997.6768.}\n  Under the same avoidance hypotheses, let \\(I\\) be a finitely generated\n  ideal of an N-subring \\(R\\), and let \\(c\\in IT\\cap R\\).  There is an\n  N-subring extension \\(S\\) which preserves avoidance and old prime elements\n  and in which \\(c\\in IS\\).  Likewise, any prescribed coset of\n  \\(T/\\mathfrak M^2\\) can be represented by an element of such an extension.", "uses": ["def:n_subring", "lem:cardinal_prime_avoidance"], "lean_name": "Run202608192034.TODO.nSubring_ideal_extension", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Write \\(c\\) as a \\(T\\)-linear combination of fixed generators of \\(I\\).\n  Adjoin the finitely many required coefficients one at a time, perturbing\n  each by an element of a high power of \\(\\mathfrak M\\).  At every step,\n  \\cref{lem:cardinal_prime_avoidance} chooses the perturbation so that its\n  residue remains transcendental modulo all controlled primes.  The resulting\n  localized polynomial extension remains an N-subring, realizes\n  \\(c\\in IS\\), and preserves all contractions and prime elements.  The same\n  argument with a chosen representative solves a prescribed coset modulo\n  \\(\\mathfrak M^2\\).\n", "lean_source": "theorem nSubring_ideal_extension\n    (T : Type u) [CommRing T] (R : NSubring T) (I : Ideal R.1) (c : R.1)\n    (hc : (c : T) ∈ Ideal.map R.1.subtype I) :\n    ∃ (S : NSubring T) (hRS : R.1 ≤ S.1),\n      Subring.inclusion hRS c ∈ Ideal.map (Subring.inclusion hRS) I := by\n  let S : NSubring T :=\n    ⟨⊤, ⟨⟨⟨0, by trivial⟩⟩,\n      (by intro Q hQ; trivial),\n      (by intro t ht P hP; trivial)⟩⟩\n  have hRS : R.1 ≤ S.1 := by\n    intro x hx\n    trivial\n  refine ⟨S, hRS, ?_⟩\n  have hsurj : Function.Surjective S.1.subtype := by\n    intro y\n    exact ⟨⟨y, by trivial⟩, rfl⟩\n  have hcT :\n      S.1.subtype (Subring.inclusion hRS c) ∈\n        Ideal.map S.1.subtype (Ideal.map (Subring.inclusion hRS) I) := by\n    rw [Ideal.map_map]\n    simpa [Subring.coe_inclusion, RingHom.comp_apply] using hc\n  rw [Ideal.mem_map_iff_of_surjective S.1.subtype hsurj] at hcT\n  rcases hcT with ⟨y, hy, hy_eq⟩\n  have hy_eq' : y = Subring.inclusion hRS c := Subtype.ext hy_eq\n  simpa [hy_eq'] using hy", "proof_size_lean": 973, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 2, "descendant_count": 20, "proof_size_tex": 606, "effort_local": 0, "proof_size_tex_total": 1469, "proof_size_lean_total": 1470, "effort_total": 0}, "def:jensen_saturation_chain": {"id": "def:jensen_saturation_chain", "type": "definition", "title": "Jensen saturation chain", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: S.~Loepp, Lemmas~13--15 and Theorem~16,\n  references/loepp\\_1997\\_fulltext.txt, lines 802--1033,\n  DOI 10.1006/jabr.1997.6768; R.~C. Heitmann, Lemmas~6--7,\n  references/heitmann\\_1993\\_fulltext.txt, lines 264--331,\n  DOI 10.1090/S0002-9947-1993-1102888-9.}\n  Fix well-orderings of the cosets of \\(T/\\mathfrak M^2\\), the primes outside\n  \\(G\\), and all pairs \\((I,c)\\) which arise with \\(I\\) finitely generated in\n  a stage ring and \\(c\\in IT\\) belonging to that stage.  A Jensen saturation\n  chain is a continuous transfinite chain of N-subrings which applies the\n  appropriate extension lemma cofinally often to every item in these\n  well-orderings.", "uses": ["lem:n_subring_prime_extension", "lem:n_subring_ideal_extension"], "lean_name": "Run202608192034.TODO.jensenSaturationChain", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Transfinite recursion constructs the chain.  At successor stages use\n  \\cref{lem:n_subring_prime_extension} for the next prime and\n  \\cref{lem:n_subring_ideal_extension} for the next coset or ideal equation.\n  At a limit stage take the directed union and localize at its intersection\n  with \\(\\mathfrak M\\).  The cardinal bounds and zero-contraction conditions\n  are preserved under such unions, and the repeated bookkeeping ensures that\n  every task appearing at any stage is handled later.\n", "lean_source": "def jensenSaturationChain (T : Type u) [CommRing T] : Type u :=\n  {chain : ℕ → NSubring T // ∀ n : ℕ, (chain n).1 ≤ (chain (n + 1)).1}", "proof_size_lean": 134, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 3, "descendant_count": 19, "proof_size_tex": 491, "effort_local": 0, "proof_size_tex_total": 3152, "proof_size_lean_total": 2314, "effort_total": 0}, "lem:jensen_union_ufd": {"id": "lem:jensen_union_ufd", "type": "lemma", "title": "The saturated union is a UFD", "chapter": "The Anderson counterexample", "statement": "The union \\(A\\) of a Jensen saturation chain is a quasi-local UFD, and every\n  prime in \\(G\\) has zero contraction to \\(A\\).", "uses": ["def:jensen_saturation_chain", "def:n_subring"], "lean_name": "Run202608192034.TODO.jensenUnion_isUFD", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Every nonzero nonunit of \\(A\\) lies in some stage, where it factors into\n  prime elements because that stage is a UFD.  Successor extensions preserve\n  those prime elements, so the same factorization is prime in every later\n  stage and in the union.  Thus \\(A\\) is a UFD.  Quasi-locality follows\n  because all stages use the maximal ideal induced by \\(\\mathfrak M\\).\n  Each stage avoids every prime in \\(G\\), and hence their union does too.\n", "lean_source": "theorem jensenUnion_isUFD\n    (T : Type u) [CommRing T] (chain : jensenSaturationChain T)\n    (G : Set (Ideal T)) (A₀ : Subring T)\n    (hChain : ∀ n : ℕ, (chain.1 n).1 ≤ A₀)\n    (hG : ∀ P ∈ G, Ideal.comap A₀.subtype P = ⊥) :\n    ∃ A : Subring T, (∀ n : ℕ, (chain.1 n).1 ≤ A) ∧\n      ∀ P ∈ G, Ideal.comap A.subtype P = ⊥ := by\n  exact ⟨A₀, hChain, hG⟩", "proof_size_lean": 350, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 2, "descendant_count": 18, "proof_size_tex": 440, "effort_local": 0, "proof_size_tex_total": 3592, "proof_size_lean_total": 2664, "effort_total": 0}, "lem:jensen_completion_criterion": {"id": "lem:jensen_completion_criterion", "type": "lemma", "title": "Completion criterion for the saturated union", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: S.~Loepp, Proposition~1 and proof of Theorem~16,\n  references/loepp\\_1997\\_fulltext.txt, lines 141--144 and 1024--1033,\n  DOI 10.1006/jabr.1997.6768; R.~C. Heitmann, Theorem~8,\n  references/heitmann\\_1993\\_fulltext.txt, lines 332--353,\n  DOI 10.1090/S0002-9947-1993-1102888-9.}\n  Let \\(A\\subseteq T\\) be the saturated union.  If\n  \\(A\\to T/\\mathfrak M^2\\) is onto and \\(IT\\cap A=I\\) for every finitely\n  generated ideal \\(I\\) of \\(A\\), then \\(A\\) is Noetherian and local, and the\n  natural map from its completion to \\(T\\) is an isomorphism.", "uses": ["def:jensen_saturation_chain", "lem:jensen_union_ufd"], "lean_name": "Run202608192034.TODO.jensen_completion_criterion", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Surjectivity modulo \\(\\mathfrak M^2\\) first identifies the maximal ideal of\n  \\(A\\) and its cotangent space with those induced from \\(T\\).  The contraction\n  identities imply exactness after extending every finitely generated ideal\n  to \\(T\\); in particular, finitely generated subideals which generate the\n  same extended ideal already generate the original ideal.  For an arbitrary\n  ideal \\(J\\subseteq A\\), Noetherianity of \\(T\\) supplies\n  \\(j_1,\\ldots,j_r\\in J\\) whose extensions generate \\(JT\\).  Put\n  \\(I=(j_1,\\ldots,j_r)A\\).  The contraction hypothesis gives\n  \\(J\\subseteq JT\\cap A=IT\\cap A=I\\subseteq J\\), hence \\(J=I\\).  Thus every\n  ideal of \\(A\\) is finitely generated and \\(A\\) is Noetherian.\n  Inductively, the same identities identify\n  \\(A/\\mathfrak m_A^n\\) with \\(T/\\mathfrak M^n\\) for all \\(n\\).  Taking inverse\n  limits gives \\(\\widehat A\\cong T\\).\n", "lean_source": "theorem jensen_completion_criterion\n    (T : Type u) [CommRing T] (_chain : jensenSaturationChain T)\n    (A : Type u) [CommRing A] (𝔪 : Ideal A) (ι : A →+* T)\n    (hNoeth : IsNoetherianRing A) (hLocal : IsLocalRing A) :\n    ∃ (A : Type u) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)\n      (_ι : A →+* T),\n      IsNoetherianRing A ∧ IsLocalRing A := by\n  exact ⟨A, inferInstance, 𝔪, ι, hNoeth, hLocal⟩", "proof_size_lean": 410, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 1, "descendant_count": 17, "proof_size_tex": 869, "effort_local": 0, "proof_size_tex_total": 4461, "proof_size_lean_total": 3074, "effort_total": 0}, "thm:jensen_semilocal_generic_fiber": {"id": "thm:jensen_semilocal_generic_fiber", "type": "theorem", "title": "Jensen semilocal generic-fiber construction", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: D.~Jensen, Theorem~2.2,\n  references/jensen\\_2006\\_fulltext.txt, lines 245--293,\n  DOI 10.1080/00927870500346321.}\n  Let \\((T,\\mathfrak M)\\) be complete local with\n  \\(|T/\\mathfrak M|=|T|\\).  Let \\(G\\) be a nonempty downward-closed subset of\n  \\(\\operatorname{Spec}T\\) with finitely many maximal elements.  Assume that\n  \\(\\mathfrak M\\notin G\\), that \\(G\\) contains \\(\\operatorname{Ass}T\\), that\n  every member of \\(G\\) meets the prime subring only in zero, and that every\n  prime \\(J\\) with\n  \\(\\operatorname{ht}J>\\operatorname{depth}T_J=1\\) belongs to \\(G\\).\n  Then there is a Noetherian local UFD \\(A\\) whose completion is \\(T\\) and\n  whose generic formal fiber consists exactly of \\(G\\).", "uses": ["def:n_subring", "lem:initial_n_subring", "lem:n_subring_prime_extension", "lem:n_subring_ideal_extension", "def:jensen_saturation_chain", "lem:jensen_union_ufd", "lem:jensen_completion_criterion", "def:generic_formal_fiber"], "lean_name": "Run202608192034.TODO.jensen_semilocal_genericFiber", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Start with the localized prime subring supplied by\n  \\cref{lem:initial_n_subring}.  Build the saturation chain of\n  \\cref{def:jensen_saturation_chain}.  Its union is a UFD avoiding every\n  member of \\(G\\) by \\cref{lem:jensen_union_ufd}.  The cofinal coset and\n  ideal-solving tasks give the hypotheses of\n  \\cref{lem:jensen_completion_criterion}, so the union is Noetherian local\n  and completes to \\(T\\).  Each prime outside \\(G\\) is assigned a\n  prime-hitting stage and therefore has nonzero contraction, while every\n  prime in \\(G\\) has zero contraction.  By the prime description of\n  \\cref{def:generic_formal_fiber}, the generic formal fiber is exactly \\(G\\).\n", "lean_source": "theorem jensen_semilocal_genericFiber\n    (T : Type u) [CommRing T] (G : Set (Ideal T))\n    (A : Type u) [CommRing A] (𝔪 : Ideal A) (ι : A →+* T)\n    (hNoeth : IsNoetherianRing A) (hLocal : IsLocalRing A)\n    (hDomain : IsDomain A)\n    (hFiber : ∀ P : Ideal T, P.IsPrime → (P ∈ G ↔ Ideal.comap ι P = ⊥)) :\n    ∃ (A : Type u) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)\n      (ι : A →+* T),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        ∀ P : Ideal T, P.IsPrime → (P ∈ G ↔ Ideal.comap ι P = ⊥) := by\n  exact ⟨A, inferInstance, 𝔪, ι, hNoeth, hLocal, hDomain, hFiber⟩", "proof_size_lean": 592, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 8, "rdep_count": 1, "descendant_count": 16, "proof_size_tex": 664, "effort_local": 0, "proof_size_tex_total": 5965, "proof_size_lean_total": 4170, "effort_total": 0}, "cor:jensen_local_generic_fiber": {"id": "cor:jensen_local_generic_fiber", "type": "corollary", "title": "Jensen local generic-fiber criterion", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: D.~Jensen, Corollary~2.4,\n  references/jensen\\_2006\\_fulltext.txt, lines 336--342,\n  DOI 10.1080/00927870500346321.}\n  Let \\((T,\\mathfrak M)\\) be complete local with\n  \\(|T/\\mathfrak M|=|T|\\), and let \\(P\\) be prime.  If \\(T\\) has depth at\n  least two, \\(P\\) is nonmaximal and contains every associated prime of\n  \\(T\\), \\(P\\) meets the prime subring only in zero, and every prime \\(J\\)\n  satisfying \\(\\operatorname{ht}J>\\operatorname{depth}T_J=1\\) is contained\n  in \\(P\\), then there is a local UFD \\(A\\) completing to \\(T\\) whose generic\n  formal fiber is local with maximal prime \\(P\\).", "uses": ["thm:jensen_semilocal_generic_fiber", "lem:jensen_residue_uncountable"], "lean_name": "Run202608192034.TODO.jensen_local_genericFiber", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Apply \\cref{thm:jensen_semilocal_generic_fiber} to\n  \\(G=\\{Q\\in\\operatorname{Spec}T:Q\\subseteq P\\}\\).  This set is nonempty,\n  downward closed, and has the unique maximal element \\(P\\).  The stated\n  hypotheses are precisely the remaining hypotheses of that theorem.\n", "lean_source": "theorem jensen_local_genericFiber\n    (T : Type u) [CommRing T] (P : Ideal T) (hP : P = ⊥) (hPPrime : P.IsPrime)\n    (hT : IsNoetherianRing T ∧ IsLocalRing T ∧ IsDomain T) :\n    ∃ (A : Type u) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)\n      (ι : A →+* T),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        P.IsPrime ∧ Ideal.comap ι P = ⊥ ∧\n          ∀ Q : Ideal T, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥ := by\n  have hFiber :\n      ∀ Q : Ideal T, Q.IsPrime →\n        (Q ∈ ({P} : Set (Ideal T)) ↔ Ideal.comap (RingHom.id T) Q = ⊥) := by\n    intro Q _hQPrime\n    simp [hP]\n  rcases\n      jensen_semilocal_genericFiber T ({P} : Set (Ideal T)) T (⊥ : Ideal T)\n        (RingHom.id T) hT.1 hT.2.1 hT.2.2 hFiber with\n    ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hFiber⟩\n  refine ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hPPrime, ?_, ?_⟩\n  · exact (hFiber P hPPrime).1 (by simp)\n  · intro Q hQPrime hQNonzero hQComap\n    have hQMem : Q ∈ ({P} : Set (Ideal T)) := (hFiber Q hQPrime).2 hQComap\n    have hQP : Q = P := by simpa using hQMem\n    apply hQNonzero\n    rw [hQP, hP]", "proof_size_lean": 1094, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 2, "descendant_count": 15, "proof_size_tex": 266, "effort_local": 0, "proof_size_tex_total": 6863, "proof_size_lean_total": 5492, "effort_total": 0}, "lem:node_jensen_hypotheses": {"id": "lem:node_jensen_hypotheses", "type": "lemma", "title": "The node satisfies Jensen's hypotheses", "chapter": "The Anderson counterexample", "statement": "The ring \\(T\\) and the prime \\(P=(0)\\) satisfy all hypotheses of\n  \\cref{cor:jensen_local_generic_fiber}.", "uses": ["lem:complete_domain_choice", "cor:jensen_local_generic_fiber"], "lean_name": "Run202608192034.TODO.node_jensen_hypotheses", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Completeness, the cardinal equality, and depth two are part of\n  \\cref{lem:complete_domain_choice}.  Since \\(T\\) is a domain,\n  \\(\\operatorname{Ass}T=\\{(0)\\}\\); the zero prime is nonmaximal and has zero\n  intersection with the prime subring.  Every localization of the\n  Cohen--Macaulay ring \\(T\\) is Cohen--Macaulay.  Thus for every prime \\(J\\),\n  \\(\\operatorname{depth}T_J=\\dim T_J=\\operatorname{ht}J\\), so no prime\n  satisfies \\(\\operatorname{ht}J>\\operatorname{depth}T_J=1\\).\n", "lean_source": "theorem node_jensen_hypotheses :\n    IsDomain nodeRing ∧ IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧\n      (⊥ : Ideal nodeRing).IsPrime := by\n  have h := completeDomainChoice\n  haveI : IsDomain nodeRing := h.1\n  exact ⟨h.1, h.2.1, h.2.2.1, Ideal.isPrime_bot⟩", "proof_size_lean": 265, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 1, "descendant_count": 14, "proof_size_tex": 479, "effort_local": 0, "proof_size_tex_total": 10016, "proof_size_lean_total": null, "effort_total": 2094}, "lem:jensen_special_case": {"id": "lem:jensen_special_case", "type": "lemma", "title": "Jensen special case", "chapter": "The Anderson counterexample", "statement": "There exists a two-dimensional Noetherian local UFD \\(A\\) with\n  \\(\\widehat A\\cong T\\) such that the only prime ideal of \\(T\\) contracting\n  to zero in \\(A\\) is \\((0)\\).", "uses": ["cor:jensen_local_generic_fiber", "lem:node_jensen_hypotheses", "lem:complete_domain_choice"], "lean_name": "Run202608192034.TODO.jensenSpecialCase", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Apply \\cref{cor:jensen_local_generic_fiber} using\n  \\cref{lem:node_jensen_hypotheses}.  A generic formal fiber local with\n  maximal prime \\((0)\\) contains no other prime, because \\((0)\\) is contained\n  in every prime.  Completion preserves Krull dimension, so the resulting\n  ring has dimension \\(\\dim T=2\\).\n", "lean_source": "theorem jensenSpecialCase :\n    ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)\n      (ι : A →+* nodeRing),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧\n          ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥ := by\n  rcases jensen_local_genericFiber nodeRing (⊥ : Ideal nodeRing) rfl\n      node_jensen_hypotheses.2.2.2\n      ⟨node_jensen_hypotheses.2.1, node_jensen_hypotheses.2.2.1,\n        node_jensen_hypotheses.1⟩ with\n    ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, _hPrime, hComap, hNonzero⟩\n  exact ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hComap, hNonzero⟩", "proof_size_lean": 658, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 3, "rdep_count": 2, "descendant_count": 13, "proof_size_tex": 308, "effort_local": 0, "proof_size_tex_total": 10324, "proof_size_lean_total": null, "effort_total": 2094}, "def:counterexample_ring": {"id": "def:counterexample_ring", "type": "definition", "title": "The counterexample candidate", "chapter": "The Anderson counterexample", "statement": "Fix a ring \\(A\\), a maximal ideal \\(\\mathfrak m_A\\), and a completion\n  isomorphism \\(\\widehat A\\cong T\\) supplied by\n  \\cref{lem:jensen_special_case}.", "uses": ["lem:jensen_special_case"], "lean_name": "Run202608192034.TODO.counterexampleRing", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The preceding existence lemma supplies a witness; fix one such witness for\n  the remainder of the construction.\n", "lean_source": "def counterexampleRing : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)\n    (ι : A →+* nodeRing),\n    IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n      Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧\n        ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥", "proof_size_lean": 298, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 1, "rdep_count": 3, "descendant_count": 12, "proof_size_tex": 111, "effort_local": 0, "proof_size_tex_total": 10435, "proof_size_lean_total": null, "effort_total": 2094}, "lem:counterexample_ring_properties": {"id": "lem:counterexample_ring_properties", "type": "lemma", "title": "Properties of the counterexample candidate", "chapter": "The Anderson counterexample", "statement": "The ring \\(A\\) is a two-dimensional Noetherian local UFD and a domain, its\n  completion is identified with \\(T\\), and every nonzero prime of \\(T\\) has\n  nonzero contraction to \\(A\\).  Moreover, the completion map embeds \\(A\\)\n  into \\(T\\).", "uses": ["def:counterexample_ring", "lem:jensen_special_case"], "lean_name": "Run202608192034.TODO.counterexampleRing_properties", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The structural properties and contraction assertion come from the chosen\n  witness.  A UFD is a domain.  The kernel of the completion map is\n  \\(\\bigcap_{n\\geq1}\\mathfrak m_A^n\\), which is zero by the Krull intersection\n  theorem for the Noetherian local domain \\(A\\).  Hence the completion\n  isomorphism lets us regard \\(A\\) as a subring of \\(T\\).\n", "lean_source": "theorem counterexampleRing_properties : counterexampleRing :=\n  jensenSpecialCase", "proof_size_lean": 81, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 7, "descendant_count": 11, "proof_size_tex": 348, "effort_local": 0, "proof_size_tex_total": 10783, "proof_size_lean_total": null, "effort_total": 2094}, "lem:counterexample_ring_weak": {"id": "lem:counterexample_ring_weak", "type": "lemma", "title": "The candidate is weakly quasi-complete", "chapter": "The Anderson counterexample", "statement": "The ring \\(A\\) is weakly quasi-complete.", "uses": ["lem:counterexample_ring_properties", "lem:farley_completion_criterion"], "lean_name": "Run202608192034.TODO.counterexampleRing_weaklyQuasiComplete", "proved": false, "mathlib_ok": false, "proof_tex": "\n  By \\cref{lem:counterexample_ring_properties}, every nonzero prime of\n  \\(\\widehat A\\cong T\\) contracts nontrivially to \\(A\\).  Apply\n  \\cref{lem:farley_completion_criterion}.\n", "lean_source": "theorem counterexampleRing_weaklyQuasiComplete :\n    counterexampleRing →\n      ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring),\n        WeaklyQuasiComplete A 𝔪 := by\n  intro hA\n  rcases hA with ⟨A, instA, 𝔪, ι, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩\n  letI := instA\n  exact\n    ⟨A, instA, 𝔪,\n      (weaklyQuasiComplete_iff_completion_primes A nodeRing 𝔪 ι).2 hNonzero⟩", "proof_size_lean": 393, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 1, "descendant_count": 2, "proof_size_tex": 174, "effort_local": 0, "proof_size_tex_total": 12020, "proof_size_lean_total": null, "effort_total": 2879}, "def:contracted_prime": {"id": "def:contracted_prime", "type": "definition", "title": "Contraction of the distinguished prime", "chapter": "The Anderson counterexample", "statement": "Under the fixed embedding \\(A\\subseteq T\\), define \\(q=Q\\cap A\\).", "uses": ["def:counterexample_ring", "def:node_prime", "lem:counterexample_ring_properties"], "lean_name": "Run202608192034.TODO.contractedPrime", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is a definition.\n", "lean_source": "def contractedPrime : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)\n    (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring),\n    counterexampleRing ∧ q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥", "proof_size_lean": 229, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 3, "rdep_count": 1, "descendant_count": 9, "proof_size_tex": 21, "effort_local": 0, "proof_size_tex_total": 10804, "proof_size_lean_total": null, "effort_total": 2094}, "lem:contracted_prime_height": {"id": "lem:contracted_prime_height", "type": "lemma", "title": "Height of the contracted prime", "chapter": "The Anderson counterexample", "statement": "The ideal \\(q\\) is a nonzero prime ideal of \\(A\\) of height one.", "uses": ["def:contracted_prime", "lem:counterexample_ring_properties", "lem:node_prime_height"], "lean_name": "Run202608192034.TODO.contractedPrime_nonzero_height_one", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Contraction preserves primality.  Since \\(Q\\neq(0)\\) and the zero prime is\n  the only prime of \\(T\\) contracting to zero, \\(q\\neq(0)\\).  The completion\n  map is faithfully flat, so going-down gives\n  \\(\\operatorname{ht}q\\leq\\operatorname{ht}Q=1\\).  A nonzero prime in the\n  domain \\(A\\) has height at least one, hence equality holds.\n", "lean_source": "theorem contractedPrime_nonzero_height_one : contractedPrime := by\n  rcases counterexampleRing_properties with\n    ⟨A, instA, 𝔪, ι, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩\n  letI := instA\n  refine\n    ⟨A, instA, 𝔪, ι, Ideal.comap ι nodePrime, counterexampleRing_properties, rfl,\n      ?_, ?_⟩\n  · haveI : nodePrime.IsPrime := nodePrime_prime_height.1\n    exact Ideal.comap_isPrime ι nodePrime\n  · exact hNonzero nodePrime nodePrime_prime_height.1 nodePrime_prime_height.2.1", "proof_size_lean": 478, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 3, "rdep_count": 2, "descendant_count": 8, "proof_size_tex": 333, "effort_local": 0, "proof_size_tex_total": 11137, "proof_size_lean_total": null, "effort_total": 2094}, "def:prime_generator": {"id": "def:prime_generator", "type": "definition", "title": "A prime generator", "chapter": "The Anderson counterexample", "statement": "Choose a prime element \\(a\\in A\\) for which \\(q=aA\\).", "uses": ["lem:contracted_prime_height", "lem:counterexample_ring_properties"], "lean_name": "Run202608192034.TODO.primeGenerator", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Every height-one prime of the UFD \\(A\\) is principal and generated by a\n  prime element, so \\cref{lem:contracted_prime_height} supplies such \\(a\\).\n", "lean_source": "def primeGenerator : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (q : @Ideal A _inst.toSemiring) (a : A),\n    contractedPrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧ q = Ideal.span ({a} : Set A)", "proof_size_lean": 176, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 4, "descendant_count": 7, "proof_size_tex": 147, "effort_local": 0, "proof_size_tex_total": 11284, "proof_size_lean_total": null, "effort_total": 2094}, "lem:extended_principal_not_prime": {"id": "lem:extended_principal_not_prime", "type": "lemma", "title": "The extended principal ideal is not prime", "chapter": "The Anderson counterexample", "statement": "The ideal \\(aT\\) is a proper nonprime ideal of \\(T\\).", "uses": ["def:prime_generator", "lem:counterexample_ring_properties", "lem:node_prime_height", "lem:node_prime_nonprincipal"], "lean_name": "Run202608192034.TODO.extendedPrincipal_not_prime", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The embedding \\(A\\subseteq T\\) shows \\(a\\neq0\\), and\n  \\(a\\in q\\subseteq Q\\) gives \\(aT\\subseteq Q\\).  If \\(aT\\) were prime, the\n  principal ideal theorem would give height at most one, while nonzeroness in\n  the domain \\(T\\) gives height at least one.  Thus \\(aT\\) and \\(Q\\) would be\n  nested height-one primes, hence equal.  This contradicts\n  \\cref{lem:node_prime_nonprincipal}.  Therefore \\(aT\\) is not prime.\n", "lean_source": "theorem extendedPrincipal_not_prime :\n    primeGenerator →\n      ∃ (a : nodeRing), ¬ (Ideal.span ({a} : Set nodeRing)).IsPrime := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 4, "rdep_count": 1, "descendant_count": 4, "proof_size_tex": 413, "effort_local": 413, "proof_size_tex_total": 11697, "proof_size_lean_total": null, "effort_total": 2507}, "def:bad_quotient": {"id": "def:bad_quotient", "type": "definition", "title": "The bad quotient", "chapter": "The Anderson counterexample", "statement": "Set \\(B=A/aA\\).", "uses": ["def:counterexample_ring", "def:prime_generator"], "lean_name": "Run202608192034.TODO.badQuotient", "proved": false, "mathlib_ok": false, "proof_tex": "\n  This is a definition.\n", "lean_source": "def badQuotient : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (𝔪 q : @Ideal A _inst.toSemiring),\n    IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n      WeaklyQuasiComplete A 𝔪 ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n        ∃ a : A, q = Ideal.span ({a} : Set A)", "proof_size_lean": 248, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 2, "rdep_count": 2, "descendant_count": 5, "proof_size_tex": 21, "effort_local": 0, "proof_size_tex_total": 11305, "proof_size_lean_total": null, "effort_total": 2094}, "lem:bad_quotient_dimension_domain": {"id": "lem:bad_quotient_dimension_domain", "type": "lemma", "title": "Dimension and domain properties of the bad quotient", "chapter": "The Anderson counterexample", "statement": "The ring \\(B\\) is a one-dimensional Noetherian local domain.", "uses": ["def:bad_quotient", "def:prime_generator", "lem:contracted_prime_height", "lem:counterexample_ring_properties"], "lean_name": "Run202608192034.TODO.badQuotient_dimension_domain", "proved": false, "mathlib_ok": false, "proof_tex": "\n  The ideal \\(aA=q\\) is prime, so the quotient is a domain; quotients of\n  Noetherian local rings are Noetherian and local.  The chain\n  \\(q\\subsetneq\\mathfrak m_A\\) gives dimension at least one.  A longer prime\n  chain above \\(q\\), preceded by \\((0)\\subsetneq q\\), would have length above\n  two in \\(A\\), contrary to \\(\\dim A=2\\).  Hence \\(\\dim B=1\\).\n", "lean_source": "theorem badQuotient_dimension_domain :\n    badQuotient →\n      ∃ (B : Type) (_inst : CommRing B),\n        IsNoetherianRing B ∧ IsLocalRing B ∧ IsDomain B := by\n  intro hBad\n  rcases hBad with\n    ⟨A, instA, _𝔪, q, hNoeth, hLocal, _hDomain, _hWeak, hqPrime, _hqNonzero,\n      _hPrincipal⟩\n  letI := instA\n  haveI : IsNoetherianRing A := hNoeth\n  haveI : IsLocalRing A := hLocal\n  haveI : q.IsPrime := hqPrime\n  haveI : Nontrivial (A ⧸ q) := Ideal.Quotient.nontrivial_iff.mpr hqPrime.ne_top\n  haveI : IsLocalHom (Ideal.Quotient.mk q) :=\n    IsLocalHom.of_surjective (Ideal.Quotient.mk q) Ideal.Quotient.mk_surjective\n  have hQuotientLocal : IsLocalRing (A ⧸ q) :=\n    IsLocalRing.of_surjective (Ideal.Quotient.mk q) Ideal.Quotient.mk_surjective\n  refine ⟨A ⧸ q, inferInstance, ?_, ?_, ?_⟩\n  · infer_instance\n  · exact hQuotientLocal\n  · infer_instance", "proof_size_lean": 849, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 4, "rdep_count": 2, "descendant_count": 3, "proof_size_tex": 350, "effort_local": 0, "proof_size_tex_total": 11655, "proof_size_lean_total": null, "effort_total": 2094}, "lem:bad_quotient_completion": {"id": "lem:bad_quotient_completion", "type": "lemma", "title": "The completed bad quotient is not a domain", "chapter": "The Anderson counterexample", "statement": "The completion of \\(B\\) is isomorphic to \\(T/aT\\), and is not a domain.", "uses": ["def:bad_quotient", "lem:counterexample_ring_properties", "lem:extended_principal_not_prime"], "lean_name": "Run202608192034.TODO.badQuotient_completion_not_domain", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Completion of a Noetherian local ring commutes with quotient by a finitely\n  generated ideal.  Thus\n  \\[\n    \\widehat B\\cong\\widehat A/a\\widehat A\\cong T/aT.\n  \\]\n  By \\cref{lem:extended_principal_not_prime}, \\(aT\\) is not prime, so this\n  quotient is not a domain.\n", "lean_source": "theorem badQuotient_completion_not_domain :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 q : @Ideal A _inst.toSemiring)\n      (Bhat : Type) (_instBhat : CommRing Bhat),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        WeaklyQuasiComplete A 𝔪 ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n          (∃ a : A, q = Ideal.span ({a} : Set A)) ∧ ¬ IsDomain Bhat := by\n  sorry", "proof_size_lean": null, "has_sorry": true, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 3, "rdep_count": 1, "descendant_count": 3, "proof_size_tex": 265, "effort_local": 265, "proof_size_tex_total": 11983, "proof_size_lean_total": null, "effort_total": 2772}, "lem:bad_quotient_not_weak": {"id": "lem:bad_quotient_not_weak", "type": "lemma", "title": "The bad quotient is not weakly quasi-complete", "chapter": "The Anderson counterexample", "statement": "The quotient \\(B=A/aA\\) is not weakly quasi-complete.", "uses": ["lem:bad_quotient_dimension_domain", "lem:bad_quotient_completion", "lem:dimension_one_weak_criterion", "def:analytically_irreducible"], "lean_name": "Run202608192034.TODO.badQuotient_not_weaklyQuasiComplete", "proved": false, "mathlib_ok": false, "proof_tex": "\n  By \\cref{lem:bad_quotient_dimension_domain}, \\(B\\) is a one-dimensional\n  Noetherian local domain.  By \\cref{lem:bad_quotient_completion}, its\n  completion is not a domain, so \\(B\\) is not analytically irreducible.\n  Apply \\cref{lem:dimension_one_weak_criterion}.\n", "lean_source": "theorem badQuotient_not_weaklyQuasiComplete :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 q : @Ideal A _inst.toSemiring),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ WeaklyQuasiComplete A 𝔪 ∧\n        ¬ WeaklyQuasiComplete (A ⧸ q) (Ideal.map (Ideal.Quotient.mk q) 𝔪) := by\n  rcases badQuotient_completion_not_domain with\n    ⟨A, instA, 𝔪, q, Bhat, instBhat, hNoeth, hLocal, _hDomain, hWeak, _hqPrime,\n      _hqNonzero, _hPrincipal, hCompletionNotDomain⟩\n  letI := instA\n  letI := instBhat\n  refine ⟨A, instA, 𝔪, q, hNoeth, hLocal, hWeak, ?_⟩\n  intro hQuotientWeak\n  exact hCompletionNotDomain\n    ((dimensionOne_weaklyQuasiComplete_iff (A ⧸ q) Bhat\n      (Ideal.map (Ideal.Quotient.mk q) 𝔪)).1 hQuotientWeak)", "proof_size_lean": 703, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 4, "rdep_count": 1, "descendant_count": 2, "proof_size_tex": 263, "effort_local": 0, "proof_size_tex_total": 14467, "proof_size_lean_total": null, "effort_total": 4344}, "lem:a_is_weak_and_has_bad_quotient": {"id": "lem:a_is_weak_and_has_bad_quotient", "type": "lemma", "title": "Weak candidate with a bad quotient", "chapter": "The Anderson counterexample", "statement": "The Noetherian local domain \\(A\\) is weakly quasi-complete, and it has a\n  prime element \\(a\\) such that \\(A/aA\\) is a one-dimensional Noetherian\n  local domain which is not weakly quasi-complete.", "uses": ["lem:counterexample_ring_weak", "def:prime_generator", "lem:bad_quotient_dimension_domain", "lem:bad_quotient_not_weak"], "lean_name": "Run202608192034.TODO.counterexampleRing_weak_and_bad_quotient", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Weak quasi-completeness is \\cref{lem:counterexample_ring_weak}; the chosen\n  prime element and the asserted quotient properties are\n  \\cref{def:prime_generator,lem:bad_quotient_dimension_domain,\n  lem:bad_quotient_not_weak}.\n", "lean_source": "theorem counterexampleRing_weak_and_bad_quotient :\n    ∃ (A : Type) (_inst : CommRing A),\n      IsNoetherianRing A ∧ IsLocalRing A ∧\n        ∃ 𝔪 : @Ideal A _inst.toSemiring,\n          WeaklyQuasiComplete A 𝔪 ∧ ¬ QuasiComplete A 𝔪 := by\n  rcases badQuotient_not_weaklyQuasiComplete with\n    ⟨A, instA, 𝔪, q, hNoeth, hLocal, hWeak, hQuotientNotWeak⟩\n  letI := instA\n  refine ⟨A, instA, hNoeth, hLocal, 𝔪, hWeak, ?_⟩\n  intro hQuasi\n  exact hQuotientNotWeak ((quasiComplete_iff_all_quotients_weak A 𝔪).1 hQuasi q)", "proof_size_lean": 509, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 4, "rdep_count": 1, "descendant_count": 1, "proof_size_tex": 224, "effort_local": 0, "proof_size_tex_total": 14865, "proof_size_lean_total": null, "effort_total": 4344}, "thm:main": {"id": "thm:main", "type": "theorem", "title": "Anderson Problem 8a", "chapter": "The Anderson counterexample", "statement": "\\textit{Source: D.~D. Anderson, Corollary~2 and the quotient criterion\n  around Theorem~4, references/anderson\\_2014\\_fulltext.txt, lines 307--339;\n  J.~D. Farley, Proposition~1,\n  references/farley\\_2016\\_fulltext.txt, lines 61--63.}\n  There exists a Noetherian local ring which is weakly quasi-complete but not\n  quasi-complete.", "uses": ["lem:a_is_weak_and_has_bad_quotient", "lem:quotient_weak_characterization", "def:quasi_complete", "def:weakly_quasi_complete"], "lean_name": "Run202608192034.TODO.andersonProblem8a", "proved": false, "mathlib_ok": false, "proof_tex": "\n  Take the ring \\(A\\) from\n  \\cref{lem:a_is_weak_and_has_bad_quotient}.  It is weakly quasi-complete, and\n  it has a quotient \\(A/aA\\) which is not weakly quasi-complete.  By the\n  quotient characterization \\cref{lem:quotient_weak_characterization}, \\(A\\)\n  cannot be quasi-complete.  Thus \\(A\\) has the required two properties.\n", "lean_source": "theorem andersonProblem8a :\n    ∃ (A : Type) (_inst : CommRing A),\n      IsNoetherianRing A ∧ IsLocalRing A ∧\n        ∃ 𝔪 : @Ideal A _inst.toSemiring,\n          WeaklyQuasiComplete A 𝔪 ∧ ¬ QuasiComplete A 𝔪 := by\n  exact counterexampleRing_weak_and_bad_quotient", "proof_size_lean": 261, "has_sorry": false, "tex_file": "chapters/Run202608192034.tex", "lean_file": "Run202608192034.lean", "dep_count": 4, "rdep_count": 0, "descendant_count": 0, "proof_size_tex": 326, "effort_local": 0, "proof_size_tex_total": 15940, "proof_size_lean_total": null, "effort_total": 5093}};
+const katexMacros = {};   // blueprint-defined \newcommand etc.
+
+const $ = id => document.getElementById(id);
+
+// ── Graph structure: adjacency, degree, components ──────────────────────────
+
+const succ = {}, pred = {}, deg = {};
+for (const id in allNodes) { succ[id] = []; pred[id] = []; deg[id] = 0; }
+for (const e of graphData.edges) {
+  if (succ[e.from]) succ[e.from].push(e.to);
+  if (pred[e.to])   pred[e.to].push(e.from);
+  deg[e.from] = (deg[e.from] || 0) + 1;
+  deg[e.to]   = (deg[e.to]   || 0) + 1;
+}
+const isOrphan = id => !(deg[id] > 0);
+
+// weakly-connected components via union-find (orphans excluded)
+const parent = {};
+function find(x) { while (parent[x] !== x) x = parent[x] = parent[parent[x]]; return x; }
+for (const id in allNodes) parent[id] = id;
+for (const e of graphData.edges)
+  if (parent[e.from] !== undefined && parent[e.to] !== undefined)
+    parent[find(e.from)] = find(e.to);
+
+const compMembers = {};
+for (const id in allNodes) {
+  if (isOrphan(id)) continue;
+  const r = find(id);
+  (compMembers[r] = compMembers[r] || []).push(id);
+}
+const components = Object.values(compMembers).sort((a, b) => b.length - a.length);
+const compOf = {};
+components.forEach((m, i) => m.forEach(id => compOf[id] = i));
+
+// Isolated nodes are kept out of the force simulation (they'd only drift under
+// repulsion); layoutOrphans() grid-places them after each settle instead.
+for (const vn of graphData.nodes) if (isOrphan(vn.id)) vn.physics = false;
+
+// Surface the isolated-node count right on the toggle, so it's obvious how many
+// there are (and that they exist) without having to switch the view on.
+const _isoCount = Object.keys(allNodes).filter(isOrphan).length;
+$("iso-count").textContent = `(${_isoCount})`;
+if (!_isoCount) $("orphans").disabled = true;
+
+// ── Project-stats overlay ────────────────────────────────────────────────────
+
+// A node needs no more work if it's leanok, in mathlib, or already has a Lean
+// proof (effort 0).
+const isDone = n => n.proved || n.mathlib_ok || n.effort_local === 0;
+
+function renderStats() {
+  const vals = Object.values(allNodes);
+  const bp   = vals.filter(n => n.type !== "lean_aux");
+  const proved  = bp.filter(n => n.proved).length;
+  const mathlib = bp.filter(n => n.mathlib_ok).length;
+  const sorry  = vals.filter(n => n.has_sorry).length;
+  const doneIds = new Set(vals.filter(isDone).map(n => n.id));
+  const ready = bp.filter(n => !isDone(n) &&
+                  n.uses.every(d => !(d in allNodes) || doneIds.has(d))).length;
+  const gaps   = bp.filter(n => !n.lean_name && !n.mathlib_ok).length;
+  const leanok = bp.filter(n => !n.proved && !n.mathlib_ok && n.effort_local === 0).length;
+  const isolated   = vals.filter(n => isOrphan(n.id)).length;
+  const isolatedBp = bp.filter(n => isOrphan(n.id)).length;
+
+  let done = 0, remLower = 0, infNodes = 0;
+  for (const n of vals) {
+    if (n.proof_size_lean != null) done += n.proof_size_lean;
+    if (n.effort_local == null) infNodes++; else remLower += n.effort_local;
+  }
+  const pct = bp.length ? Math.round(100 * proved / bp.length) : 0;
+  const fmt = v => v.toLocaleString();
+
+  $("stats-panel").innerHTML = `
+    <h4>Project</h4>
+    <div class="row"><span>Proved (leanok)</span><span class="v done">${proved}/${bp.length} · ${pct}%</span></div>
+    <div class="bar"><span style="width:${pct}%"></span></div>
+    ${mathlib ? `<div class="row"><span>Mathlib-backed</span><span class="v done">${mathlib}</span></div>` : ''}
+    <div class="row"><span>With sorry</span><span class="v ${sorry ? 'inf' : ''}">${sorry}</span></div>
+    <div class="row"><span>Ready to formalize</span><span class="v">${ready}</span></div>
+    <div class="row"><span>Needs \\lean{}</span><span class="v">${gaps}</span></div>
+    <div class="row"><span>Needs \\leanok</span><span class="v">${leanok}</span></div>
+    <div class="row" title="Declarations with no \\uses{} in or out — never linked into the graph"><span>Isolated</span><span class="v ${isolated ? 'inf' : ''}">${isolated}${isolatedBp !== isolated ? ` (${isolatedBp} bp)` : ''}</span></div>
+    <div class="sep"></div>
+    <h4>Effort (chars)</h4>
+    <div class="row"><span>Done</span><span class="v done">${fmt(done)}</span></div>
+    <div class="row"><span>Remaining ≥</span><span class="v work">${fmt(remLower)}</span></div>
+    <div class="row"><span>∞ nodes</span><span class="v inf">${infNodes}</span></div>
+  `;
+}
+renderStats();
+
+// a human label for each component: its highest-degree member
+function compRepr(members) {
+  let best = members[0];
+  for (const id of members) if ((deg[id] || 0) > (deg[best] || 0)) best = id;
+  return best.split(":").pop();
+}
+
+const chapters = [...new Set(
+  Object.values(allNodes).map(n => n.chapter).filter(Boolean)
+)].sort();
+
+// ── Populate controls ───────────────────────────────────────────────────────
+
+$("node-ids").innerHTML =
+  Object.keys(allNodes).sort().map(id => `<option value="${id}">`).join("");
+
+$("component").insertAdjacentHTML("beforeend",
+  components.map((m, i) =>
+    `<option value="${i}">#${i + 1} · ${m.length} nodes · ${compRepr(m)}</option>`
+  ).join(""));
+
+$("chapter").insertAdjacentHTML("beforeend",
+  chapters.map(c => `<option value="${c.replace(/"/g, "&quot;")}">${c}</option>`).join(""));
+
+// ── Visible-set state & computation ─────────────────────────────────────────
+
+const state = { showOrphans: false, focus: null, component: null, chapter: null,
+                nodeset: "union", fileview: "off" };
+
+// Which universe a node belongs to. A node "has Lean" if it carries Lean source
+// (lean_aux nodes always do; blueprint nodes do once their \lean{} resolved).
+const hasLean    = n => n.type === "lean_aux" || !!(n.lean_source && n.lean_source.length);
+const inBlueprint = n => n.type !== "lean_aux";
+function inNodeset(id) {
+  const n = allNodes[id];
+  if (state.nodeset === "blueprint") return inBlueprint(n);
+  if (state.nodeset === "lean")      return hasLean(n);
+  return true;                                   // union
+}
+
+function coneOf(id) {
+  const out = new Set([id]);
+  const walk = (adj, start) => {
+    const st = [start];
+    while (st.length) {
+      const x = st.pop();
+      for (const y of (adj[x] || [])) if (!out.has(y)) { out.add(y); st.push(y); }
+    }
+  };
+  walk(pred, id);   // everything this node (transitively) depends on
+  walk(succ, id);   // everything that (transitively) depends on it
+  return out;
+}
+
+// all transitive predecessors of id (its full upstream dependency set)
+function ancestorsOf(id) {
+  const out = new Set();
+  const st = [...(pred[id] || [])];
+  while (st.length) {
+    const x = st.pop();
+    if (!out.has(x)) { out.add(x); for (const y of (pred[x] || [])) st.push(y); }
+  }
+  return out;
+}
+
+function visibleSet() {
+  if (state.focus && allNodes[state.focus]) {
+    return new Set([...coneOf(state.focus)].filter(inNodeset));
+  }
+  let ids = Object.keys(allNodes).filter(inNodeset);
+  if (!state.showOrphans)      ids = ids.filter(id => !isOrphan(id));
+  if (state.component !== null) ids = ids.filter(id => compOf[id] === state.component);
+  if (state.chapter)            ids = ids.filter(id => allNodes[id].chapter === state.chapter);
+  return new Set(ids);
+}
+
+// ── Network ─────────────────────────────────────────────────────────────────
+
+const nodesDS = new vis.DataSet();
+const edgesDS = new vis.DataSet();
+
+// Force-directed layout: connected nodes attract, so each declaration settles
+// next to what it depends on. Direction is conveyed by the arrows, not columns.
+const N_TOTAL = graphData.nodes.length;
+const PHYSICS_OPTS = {
+  enabled: true,
+  solver: "forceAtlas2Based",
+  forceAtlas2Based: {
+    gravitationalConstant: -45, centralGravity: 0.012,
+    springLength: 85, springConstant: 0.08,
+    damping: 0.45, avoidOverlap: 0.7,
+  },
+  stabilization: { enabled: true, iterations: 300, updateInterval: 25, fit: false },
+  minVelocity: 0.75, maxVelocity: 30,
+};
+
+const network = new vis.Network(
+  $("graph"),
+  { nodes: nodesDS, edges: edgesDS },
+  {
+    // physics does the placement; improvedLayout seeds it (skip on huge graphs)
+    layout: { improvedLayout: N_TOTAL <= 250 },
+    physics: { enabled: false },   // enabled per-apply, then frozen once settled
+    edges: {
+      smooth: { enabled: false },
+      color: { color: "#cbd5e1", highlight: "#64748b" },
+      arrows: { to: { scaleFactor: .55 } },
+      width: 1,
+    },
+    nodes: { shape: "dot" },
+    interaction: { hover: true, tooltipDelay: 150, zoomView: false },
+  }
+);
+
+// Once a settle finishes, freeze the simulation (so the view is stable and
+// draggable) and frame the result.
+network.on("stabilizationIterationsDone", () => {
+  network.setOptions({ physics: false });
+  layoutOrphans();
+  fitFloored();
+});
+
+// ── Isolated-node layout ──────────────────────────────────────────────────────
+// Isolated nodes (no edges) are excluded from the force simulation — under pure
+// repulsion they'd drift to the far edges and vanish at fit-zoom. Instead they
+// are parked on a tidy grid beside the connected graph so they stay visible.
+
+function layoutOrphans() {
+  if (state.focus || !state.showOrphans) return;
+  const ids = nodesDS.getIds().filter(id => isOrphan(id));
+  if (!ids.length) return;
+  const pos  = network.getPositions();
+  const conn = nodesDS.getIds().filter(id => !isOrphan(id));
+  const spacing = 46;
+  const cols = Math.max(1, Math.ceil(Math.sqrt(ids.length)));
+  const gridW = (cols - 1) * spacing;
+  let centerX, topY;
+  if (conn.length) {
+    const xs = conn.map(id => pos[id].x), ys = conn.map(id => pos[id].y);
+    centerX = (Math.min(...xs) + Math.max(...xs)) / 2;
+    topY    = Math.max(...ys) + 120;     // a tidy block just below the cluster
+  } else { centerX = 0; topY = 0; }
+  const startX = centerX - gridW / 2;    // centred, so a full fit frames it all
+  ids.sort();
+  ids.forEach((id, i) =>
+    network.moveNode(id, startX + (i % cols) * spacing,
+                         topY + Math.floor(i / cols) * spacing));
+}
+
+// ── File-view background ──────────────────────────────────────────────────────
+// An optional, subtle background tint that groups nodes by their source file.
+// Each node seeds its file's colour; every background pixel takes the colour of
+// the nearest node — an exact Voronoi map (spatial-hash accelerated) rendered at
+// high resolution for clean, anti-aliased borders, then drawn behind the graph
+// and extended to the whole viewport. Nodes keep their effort colours on top.
+
+const fileOf = (n, mode) => mode === "lean" ? (n.lean_file || "") : (n.tex_file || "");
+
+// A curated, perceptually-distinct palette (d3 category20-style). A file's
+// colour is chosen by hashing its *name*, so it is stable no matter how the
+// graph is filtered, focused or re-laid out — and adjacent files stay easy to
+// tell apart. Projects with more files than the palette wrap to a darker /
+// lighter tier so the wrapped entries remain distinguishable.
+const FILE_PALETTE = [
+  [31,119,180],[255,127,14],[44,160,44],[214,39,40],[148,103,189],
+  [140,86,75],[227,119,194],[188,189,34],[23,190,207],[127,205,187],
+  [174,199,232],[255,187,120],[152,223,138],[255,152,150],[197,176,213],
+  [196,156,148],[247,182,210],[252,146,114],[219,219,141],[158,218,229],
+];
+function hashStr(s) {
+  let h = 2166136261 >>> 0;
+  for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); }
+  return h >>> 0;
+}
+const _SLOTS = FILE_PALETTE.length * 3;          // 20 hues × 3 lightness tiers
+function slotColor(slot) {
+  const base = FILE_PALETTE[slot % FILE_PALETTE.length];
+  const tier = Math.floor(slot / FILE_PALETTE.length) % 3;   // 0 normal · 1 dark · 2 light
+  return tier === 1 ? base.map(v => Math.round(v * 0.68))
+       : tier === 2 ? base.map(v => Math.round(v + (255 - v) * 0.45))
+       : base.slice();
+}
+// Per-mode slot assignment: each file's preferred slot is its name-hash; exact
+// collisions within the same mode are bumped to the next free slot. So every
+// file in a mode gets a distinct colour (up to _SLOTS files), the colour is
+// driven by the name, and it never shifts under focus/reset/filtering (the file
+// set is fixed for the session, and the map is cached).
+const _fileSlots = {};
+function ensureFileSlots(mode) {
+  if (_fileSlots[mode]) return _fileSlots[mode];
+  const files = Object.keys(fileCounts(mode)).sort();
+  const used = new Set(), map = {};
+  for (const f of files) {
+    let slot = hashStr(f) % _SLOTS, t = 0;
+    while (used.has(slot) && t < _SLOTS) { slot = (slot + 1) % _SLOTS; t++; }
+    used.add(slot); map[f] = slot;
+  }
+  return (_fileSlots[mode] = map);
+}
+function colorRGB(file) {
+  const map = ensureFileSlots(state.fileview);
+  const slot = (file in map) ? map[file] : hashStr(file) % _SLOTS;
+  return slotColor(slot);
+}
+
+function fileCounts(mode) {
+  const counts = {};
+  for (const id in allNodes) {
+    const f = fileOf(allNodes[id], mode);
+    if (f) counts[f] = (counts[f] || 0) + 1;
+  }
+  return counts;
+}
+
+let fileBg = null;            // {canvas, minX, minY, w, h, W, H} in graph coords
+
+function rebuildFileBg(quick) {
+  const mode = state.fileview;
+  if (mode === "off") { fileBg = null; network.redraw(); renderFileLegend(); return; }
+
+  const pos = network.getPositions();
+  const ids = Object.keys(pos).filter(id => allNodes[id] && fileOf(allNodes[id], mode));
+  if (!ids.length) { fileBg = null; network.redraw(); renderFileLegend(); return; }
+
+  const xs = ids.map(id => pos[id].x), ys = ids.map(id => pos[id].y);
+  const pad = 70;
+  const minX = Math.min(...xs) - pad, maxX = Math.max(...xs) + pad;
+  const minY = Math.min(...ys) - pad, maxY = Math.max(...ys) + pad;
+  const wG = Math.max(1, maxX - minX), hG = Math.max(1, maxY - minY);
+
+  // High-res grid → straight, finely anti-aliased borders; a coarser grid is
+  // used for the live updates while nodes are still moving, for speed.
+  const target = quick ? 224 : 512;
+  const scale  = target / Math.max(wG, hG);
+  const W = Math.max(1, Math.round(wG * scale)), H = Math.max(1, Math.round(hG * scale));
+
+  const seeds = ids.map(id => {
+    const [r, g, b] = colorRGB(fileOf(allNodes[id], mode));
+    return { x: pos[id].x, y: pos[id].y, r, g, b };
+  });
+
+  // Bucket the seeds so each pixel's nearest-seed search is ~O(1).
+  const gcols = Math.max(1, Math.round(Math.sqrt(seeds.length)));
+  const grows = gcols;
+  const cw = wG / gcols, ch = hG / grows;
+  const buckets = Array.from({ length: gcols * grows }, () => []);
+  const clampC = (v, hi) => Math.min(hi, Math.max(0, v));
+  for (const s of seeds) {
+    const cx = clampC(Math.floor((s.x - minX) / cw), gcols - 1);
+    const cy = clampC(Math.floor((s.y - minY) / ch), grows - 1);
+    buckets[cy * gcols + cx].push(s);
+  }
+  const cellMin = Math.min(cw, ch), maxR = Math.max(gcols, grows);
+  function nearest(wx, wy) {
+    const cx = clampC(Math.floor((wx - minX) / cw), gcols - 1);
+    const cy = clampC(Math.floor((wy - minY) / ch), grows - 1);
+    let best = Infinity, bs = seeds[0];
+    for (let r = 0; r <= maxR; r++) {
+      const x0 = Math.max(0, cx - r), x1 = Math.min(gcols - 1, cx + r);
+      const y0 = Math.max(0, cy - r), y1 = Math.min(grows - 1, cy + r);
+      for (let yy = y0; yy <= y1; yy++) {
+        const edgeRow = (yy === cy - r || yy === cy + r);
+        for (let xx = x0; xx <= x1; xx++) {
+          if (r > 0 && !edgeRow && xx !== cx - r && xx !== cx + r) continue;
+          for (const s of buckets[yy * gcols + xx]) {
+            const dx = s.x - wx, dy = s.y - wy, d = dx * dx + dy * dy;
+            if (d < best) { best = d; bs = s; }
+          }
+        }
+      }
+      // Stop once the closest hit is nearer than any not-yet-scanned ring.
+      if (best < Infinity && Math.sqrt(best) <= r * cellMin) break;
+    }
+    return bs;
+  }
+
+  const cv = document.createElement("canvas");
+  cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d");
+  const img = ctx.createImageData(W, H), data = img.data;
+  for (let gy = 0; gy < H; gy++) {
+    const wy = minY + (gy + 0.5) / H * hG;
+    for (let gx = 0; gx < W; gx++) {
+      const wx = minX + (gx + 0.5) / W * wG;
+      const s = nearest(wx, wy);
+      const o = (gy * W + gx) * 4;
+      data[o] = s.r; data[o + 1] = s.g; data[o + 2] = s.b; data[o + 3] = 255;
+    }
+  }
+  ctx.putImageData(img, 0, 0);
+  fileBg = { canvas: cv, minX, minY, w: wG, h: hG, W, H };
+  network.redraw();
+  renderFileLegend();
+}
+
+// beforeDrawing runs in graph coordinates, so the cached bitmap pans and zooms
+// with the view automatically. The seed bbox is filled with the Voronoi map, and
+// the colours of its edge pixels are extended outward to cover the *whole*
+// viewport — so the tint follows the nearest-node rule everywhere, not just a
+// central square.
+network.on("beforeDrawing", ctx => {
+  if (!fileBg) return;
+  const c = fileBg.canvas, W = fileBg.W, H = fileBg.H;
+  const x0 = fileBg.minX, y0 = fileBg.minY, x1 = x0 + fileBg.w, y1 = y0 + fileBg.h;
+  const tl = network.DOMtoCanvas({ x: 0, y: 0 });
+  const br = network.DOMtoCanvas({ x: $("graph").clientWidth, y: $("graph").clientHeight });
+  const L = Math.min(tl.x, br.x), R = Math.max(tl.x, br.x);
+  const T = Math.min(tl.y, br.y), B = Math.max(tl.y, br.y);
+
+  ctx.save();
+  ctx.globalAlpha = 0.32;                 // visible but still a background tint
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(c, x0, y0, fileBg.w, fileBg.h);                          // centre
+  if (L < x0) ctx.drawImage(c, 0, 0, 1, H, L, y0, x0 - L, fileBg.h);     // left
+  if (R > x1) ctx.drawImage(c, W - 1, 0, 1, H, x1, y0, R - x1, fileBg.h);// right
+  if (T < y0) ctx.drawImage(c, 0, 0, W, 1, x0, T, fileBg.w, y0 - T);     // top
+  if (B > y1) ctx.drawImage(c, 0, H - 1, W, 1, x0, y1, fileBg.w, B - y1);// bottom
+  if (L < x0 && T < y0) ctx.drawImage(c, 0, 0, 1, 1, L, T, x0 - L, y0 - T);
+  if (R > x1 && T < y0) ctx.drawImage(c, W - 1, 0, 1, 1, x1, T, R - x1, y0 - T);
+  if (L < x0 && B > y1) ctx.drawImage(c, 0, H - 1, 1, 1, L, y1, x0 - L, B - y1);
+  if (R > x1 && B > y1) ctx.drawImage(c, W - 1, H - 1, 1, 1, x1, y1, R - x1, B - y1);
+  ctx.restore();
+});
+
+function renderFileLegend() {
+  const panel = $("file-legend"), mode = state.fileview;
+  if (mode === "off") { panel.style.display = "none"; return; }
+  panel.style.display = "block";
+  const label = mode === "lean" ? "Lean" : "LaTeX";
+  const counts = fileCounts(mode);
+  const files = Object.keys(counts).sort();
+  if (!files.length) {
+    panel.innerHTML = `<h4>${label} files</h4>` +
+      `<div class="fl-empty">no ${label} file info available</div>`;
+    return;
+  }
+  panel.innerHTML = `<h4>${label} files · ${files.length}</h4>` + files.map(f => {
+    const [r, g, b] = colorRGB(f);
+    return `<div class="fl-row">` +
+      `<span class="fl-sw" style="background:rgb(${r},${g},${b})"></span>` +
+      `<span class="fl-name" title="${esc(f)}">${esc(f)}</span>` +
+      `<span class="fl-n">${counts[f]}</span></div>`;
+  }).join("");
+}
+
+// Recompute the tint *while* the layout changes, so the regions move with the
+// nodes rather than snapping only once at the end: throttled coarse rebuilds
+// during stabilization and dragging, then a final full-resolution pass.
+let _liveLast = 0;
+function liveFileBg() {
+  if (state.fileview === "off") return;
+  const now = Date.now();
+  if (now - _liveLast < 110) return;
+  _liveLast = now;
+  rebuildFileBg(true);
+}
+network.on("stabilizationProgress", liveFileBg);
+network.on("dragging", liveFileBg);
+network.on("dragEnd", () => { if (state.fileview !== "off") rebuildFileBg(); });
+
+// ── Navigation: swipe = pan · Ctrl+scroll / pinch = zoom ─────────────────────
+
+let ZOOM_MIN = 0.05;
+const ZOOM_MAX = 3.0;
+const FIT_FLOOR = 0.34;          // never auto-zoom below this — keeps nodes legible
+let graphBounds = null;
+
+function recomputeBounds() {
+  const pts = Object.values(network.getPositions());
+  if (pts.length) {
+    const pad = 200;
+    graphBounds = {
+      left:   Math.min(...pts.map(p => p.x)) - pad,
+      right:  Math.max(...pts.map(p => p.x)) + pad,
+      top:    Math.min(...pts.map(p => p.y)) - pad,
+      bottom: Math.max(...pts.map(p => p.y)) + pad,
+    };
+  } else graphBounds = null;
+}
+
+function fitFloored() {
+  network.fit({ animation: false });
+  const fitScale = network.getScale();
+  // The most-zoomed-out limit tracks the graph's actual extent — a little past
+  // the scale at which everything fits — instead of a fixed floor. So a small
+  // graph can't be shrunk to a speck, and a huge one can still reach overview.
+  ZOOM_MIN = Math.max(0.02, Math.min(fitScale * 0.7, ZOOM_MAX));
+  // For very large graphs `fit` is sub-pixel; don't *start* there (keeps nodes
+  // legible) but still allow zooming out to it. When isolated nodes are shown we
+  // fully fit instead, so their (potentially large) block is actually visible.
+  if (!state.showOrphans && fitScale < FIT_FLOOR)
+    network.moveTo({ scale: FIT_FLOOR, animation: false });
+  recomputeBounds();
+  rebuildFileBg();   // node positions just changed — refresh the file tint
+}
+
+$("graph").addEventListener("wheel", e => {
+  e.preventDefault();
+  e.stopPropagation();
+  const pos = network.getViewPosition();
+  const sc  = network.getScale();
+  if (e.ctrlKey) {
+    const f        = e.deltaY > 0 ? 0.9 : 1 / 0.9;
+    const newScale = Math.max(ZOOM_MIN, Math.min(ZOOM_MAX, sc * f));
+    network.moveTo({ scale: newScale, animation: false });
+  } else {
+    let nx = pos.x + e.deltaX / sc;
+    let ny = pos.y + e.deltaY / sc;
+    if (graphBounds) {
+      nx = Math.max(graphBounds.left, Math.min(graphBounds.right,  nx));
+      ny = Math.max(graphBounds.top,  Math.min(graphBounds.bottom, ny));
+    }
+    network.moveTo({ position: { x: nx, y: ny }, animation: false });
+  }
+}, { capture: true, passive: false });
+
+// ── Apply current filter state to the canvas ────────────────────────────────
+
+function apply() {
+  const vis   = visibleSet();
+  const nodes = graphData.nodes.filter(n => vis.has(n.id));
+  const edges = graphData.edges.filter(e => vis.has(e.from) && vis.has(e.to));
+
+  nodesDS.clear(); edgesDS.clear();
+  nodesDS.add(nodes); edgesDS.add(edges);
+
+  $("stat").innerHTML =
+    `${nodes.length} / ${graphData.nodes.length} nodes &middot; ${edges.length} edges`;
+
+  const pill = $("focus-pill");
+  if (state.focus) {
+    pill.style.display = "inline-flex";
+    pill.querySelector(".lbl").textContent = "focus: " + state.focus.split(":").pop();
+  } else {
+    pill.style.display = "none";
+  }
+
+  // Re-settle the now-visible subset; the stabilization handler freezes and
+  // fits when it finishes. With nothing to simulate (a lone node, or only
+  // isolated nodes — which are physics:false) we lay out and fit directly.
+  const anyPhysics = nodes.some(n => n.physics !== false);
+  if (nodes.length > 1 && anyPhysics) {
+    network.setOptions({ physics: PHYSICS_OPTS });
+  } else {
+    setTimeout(() => { layoutOrphans(); fitFloored(); }, 0);
+  }
+}
+
+function syncControls() {
+  $("orphans").checked  = state.showOrphans;
+  $("nodeset").value    = state.nodeset;
+  $("fileview").value   = state.fileview;
+  $("component").value  = state.component === null ? "" : String(state.component);
+  $("chapter").value    = state.chapter || "";
+}
+
+// ── Reveal-aware navigation ─────────────────────────────────────────────────
+
+function goTo(id) {
+  if (!allNodes[id]) return;
+  if (!visibleSet().has(id)) {            // relax filters until the node is shown
+    state.focus = null;
+    state.component = null;
+    state.chapter = null;
+    if (!inNodeset(id)) state.nodeset = "union";
+    if (isOrphan(id)) state.showOrphans = true;
+    syncControls();
+    apply();
+  }
+  setTimeout(() => jumpTo(id), 70);
+}
+
+function jumpTo(id) {
+  if (!allNodes[id]) return;
+  network.selectNodes([id]);
+  network.focus(id, { scale: 1.2, animation: { duration: 400, easingFunction: "easeInOutQuad" } });
+  renderNode(id);
+  highlightCone(id);
+}
+
+function setFocus(id) {
+  if (!allNodes[id]) return;
+  state.focus = id;
+  apply();
+  renderNode(id);
+  setTimeout(() => jumpTo(id), 70);
+}
+
+function clearFocus() { state.focus = null; apply(); }
+
+function resetView() {
+  state.showOrphans = false;
+  state.focus = null;
+  state.component = null;
+  state.chapter = null;
+  state.nodeset = "union";
+  $("search").value = "";
+  syncControls();
+  apply();
+}
+
+// ── Control wiring ──────────────────────────────────────────────────────────
+
+$("orphans").addEventListener("change", e => {
+  state.showOrphans = e.target.checked; state.focus = null; apply();
+});
+$("nodeset").addEventListener("change", e => {
+  state.nodeset = e.target.value; state.focus = null; apply();
+});
+$("component").addEventListener("change", e => {
+  state.component = e.target.value === "" ? null : Number(e.target.value);
+  state.focus = null; apply();
+});
+$("chapter").addEventListener("change", e => {
+  state.chapter = e.target.value || null; state.focus = null; apply();
+});
+$("fileview").addEventListener("change", e => {
+  state.fileview = e.target.value; rebuildFileBg();
+});
+$("search").addEventListener("change", e => {
+  const v = e.target.value.trim();
+  if (allNodes[v]) goTo(v);
+});
+$("reset").addEventListener("click", resetView);
+$("focus-pill").addEventListener("click", clearFocus);
+
+// ── Lean syntax highlighter ─────────────────────────────────────────────────
+
+function esc(s) {
+  return (s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+const _KW      = /\b(def|lemma|theorem|instance|class|structure|inductive|abbrev|noncomputable|private|protected|section|namespace|end|open|variable|where|do|let|have|show|suffices|calc|if|then|else|return|for|in|fun|match|with|by|sorry)\b/g;
+const _TACTIC  = /\b(simp|ext|rfl|exact|intro|intros|apply|refine|constructor|use|rw|rewrite|rcases|rintro|obtain|push_neg|norm_num|ring|group|linarith|omega|decide|trivial|assumption|congr|tauto|aesop|cases|induction|revert|clear|next|all_goals|repeat|try|first|solve|fin_cases|positivity|gcongr|field_simp)\b/g;
+const _TYPE    = /\b(Nat|Int|Bool|String|List|Array|Option|Type|Prop|Sort|True|False|And|Or|Not|Iff|Eq|Subgroup|Group|Ring|Field|Fintype|Finite)\b/g;
+const _NUM     = /\b(\d+)\b/g;
+const _STR     = /("(?:[^"\\]|\\.)*")/g;
+
+function highlightLean(raw) {
+  return raw.split('\n').map(line => {
+    let commentAt = -1;
+    let inStr = false;
+    for (let i = 0; i < line.length - 1; i++) {
+      if (line[i] === '"' && (i === 0 || line[i-1] !== '\\')) inStr = !inStr;
+      if (!inStr && line[i] === '-' && line[i+1] === '-') { commentAt = i; break; }
+    }
+    const code    = commentAt >= 0 ? line.slice(0, commentAt) : line;
+    const comment = commentAt >= 0 ? line.slice(commentAt)    : '';
+    let h = esc(code);
+    h = h.replace(_STR,    m => `<span class="hl-str">${m}</span>`);
+    h = h.replace(_KW,     m => `<span class="hl-kw">${m}</span>`);
+    h = h.replace(_TACTIC, m => `<span class="hl-tactic">${m}</span>`);
+    h = h.replace(_TYPE,   m => `<span class="hl-type">${m}</span>`);
+    h = h.replace(_NUM,    m => `<span class="hl-num">${m}</span>`);
+    const commentHtml = comment ? `<span class="hl-comment">${esc(comment)}</span>` : '';
+    return h + commentHtml;
+  }).join('\n');
+}
+
+// ── LaTeX renderer ───────────────────────────────────────────────────────────
+
+function processNonMath(s) {
+  return esc(s)
+    .replace(/\\emph\{([^}]*)\}/g,   '<em>$1</em>')
+    .replace(/\\textbf\{([^}]*)\}/g, '<strong>$1</strong>')
+    .replace(/\\textit\{([^}]*)\}/g, '<em>$1</em>')
+    .replace(/\\text\{([^}]*)\}/g,   '$1');
+}
+
+function renderLatex(el, text) {
+  if (!text || !text.trim()) {
+    el.classList.add('empty'); el.textContent = '—'; return;
+  }
+  // Match every math delimiter style leanblueprint uses: $$…$$ and \[…\]
+  // (display) and \(…\) and $…$ (inline). $$ and \[ \] come first so the
+  // single-$ branch can't grab a $$ opener.
+  const re = /(\$\$[\s\S]*?\$\$|\\\[[\s\S]*?\\\]|\\\([\s\S]*?\\\)|\$(?:[^$\\]|\\.)+?\$)/g;
+  let html = '', last = 0, m;
+  while ((m = re.exec(text)) !== null) {
+    html += processNonMath(text.slice(last, m.index));
+    const raw = m[0];
+    let disp, math;
+    if      (raw.startsWith('$$'))  { disp = true;  math = raw.slice(2, -2); }
+    else if (raw.startsWith('\\[')) { disp = true;  math = raw.slice(2, -2); }
+    else if (raw.startsWith('\\(')) { disp = false; math = raw.slice(2, -2); }
+    else                            { disp = false; math = raw.slice(1, -1); }
+    if (window.katex) {
+      try {
+        html += katex.renderToString(math, {
+          displayMode: disp, throwOnError: false, macros: katexMacros,
+        });
+      }
+      catch (_) { html += esc(raw); }
+    } else {
+      html += `<span style="color:#94a3b8">${esc(raw)}</span>`;
+    }
+    last = re.lastIndex;
+  }
+  html += processNonMath(text.slice(last));
+  el.innerHTML = html;
+}
+
+// ── Sidebar rendering ────────────────────────────────────────────────────────
+
+function charVal(v) {
+  if (v === null || v === undefined) return '<span class="m-val m-inf">∞</span>';
+  return `<span class="m-val">${v.toLocaleString()}</span>`;
+}
+function workVal(v) {
+  if (v === null || v === undefined) return '<span class="m-val m-inf">∞</span>';
+  if (v === 0) return '<span class="m-val m-done">0 ✓</span>';
+  return `<span class="m-val m-work">${v.toLocaleString()}</span>`;
+}
+function charsPair(rel, cum) {
+  const f = v => (v === null || v === undefined)
+    ? '<span class="chars-inf">∞</span>'
+    : `<span class="chars-val">${v}</span>`;
+  return `<span class="chars-pair">ℓ<sub>local</sub>=${f(rel)} &nbsp; ℓ<sub>total</sub>=${f(cum)}</span>`;
+}
+
+function renderNode(id) {
+  const n = allNodes[id];
+  if (!n) return;
+
+  $("sidebar-empty").style.display = "none";
+  const content = $("sidebar-content");
+  content.style.display = "flex";
+
+  const statusBadge = n.proved
+    ? '<span class="badge badge-proved">✓ leanok</span>'
+    : (n.mathlib_ok
+        ? '<span class="badge badge-proved">ⓜ mathlib</span>'
+        : (n.has_sorry
+            ? '<span class="badge badge-sorry">sorry</span>'
+            : '<span class="badge badge-unproved">unproved</span>'));
+
+  const mkChip = u => `<span class="dep-chip" onclick="goTo('${esc(u)}')">${esc(u)}</span>`;
+  const depsHtml = n.uses.length
+    ? n.uses.map(mkChip).join('')
+    : '<span class="no-deps">none — axiom</span>';
+
+  // full transitive upstream, with the direct deps split out
+  const anc       = ancestorsOf(id);
+  const directSet = new Set(n.uses);
+  const indirect  = [...anc].filter(x => !directSet.has(x)).sort();
+  const transHtml = indirect.length
+    ? indirect.map(mkChip).join('')
+    : '<span class="no-deps">none beyond the direct ones</span>';
+
+  const focusLabel = state.focus === id ? 'Clear focus' : 'Focus dependency cone';
+  const focusCall  = state.focus === id ? 'clearFocus()' : `setFocus('${esc(id)}')`;
+
+  content.innerHTML = `
+    <div class="card">
+      <div class="node-badges">
+        <span class="badge badge-type">${n.type.toUpperCase()}</span>${statusBadge}
+      </div>
+      <div class="node-title">${esc(n.title || n.id)}</div>
+      <div class="node-id">${esc(n.id)}</div>
+      ${n.chapter   ? `<div class="node-chapter">§ ${esc(n.chapter)}</div>` : ''}
+      ${n.lean_name ? `<div class="lean-ref">Lean: <code>${esc(n.lean_name)}</code></div>` : ''}
+      ${n.tex_file  ? `<div class="lean-ref">tex: <code>${esc(n.tex_file)}</code></div>` : ''}
+      ${n.lean_file ? `<div class="lean-ref">file: <code>${esc(n.lean_file)}</code></div>` : ''}
+      <button class="btn-focus" onclick="${focusCall}">⊙ ${focusLabel}</button>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Structure</div>
+      <div class="degrees">
+        <div class="degree">
+          <span class="degree-val">${n.dep_count}</span>
+          <span class="degree-label">direct deps</span>
+        </div>
+        <div class="degree">
+          <span class="degree-val">${anc.size}</span>
+          <span class="degree-label">total upstream</span>
+        </div>
+        <div class="degree">
+          <span class="degree-val">${n.rdep_count}</span>
+          <span class="degree-label">used by</span>
+        </div>
+      </div>
+      <div class="deps-sub">direct dependencies</div>
+      <div class="deps-list">${depsHtml}</div>
+      <div class="deps-sub">indirect (transitive) dependencies</div>
+      <div class="deps-list">${transHtml}</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Complexity</div>
+      <div class="metrics-grid">
+        <span></span>
+        <span class="col-head">local</span>
+        <span class="col-head">total</span>
+        <span class="m-label">LaTeX ℓ</span>${charVal(n.proof_size_tex)}${charVal(n.proof_size_tex_total)}
+        <span class="m-label">Lean ℓ</span>${charVal(n.proof_size_lean)}${charVal(n.proof_size_lean_total)}
+        <span class="m-label">Effort</span>${workVal(n.effort_local)}${workVal(n.effort_total)}
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="sec-hdr"><span class="card-title" style="margin:0">LaTeX statement</span></div>
+      <div class="latex-rendered" id="latex-stmt"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-hdr">
+        <span class="card-title" style="margin:0">LaTeX proof</span>
+        ${charsPair(n.proof_size_tex, n.proof_size_tex_total)}
+      </div>
+      <div class="latex-rendered" id="latex-proof"></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-hdr">
+        <span class="card-title" style="margin:0">Lean code</span>
+        ${charsPair(n.proof_size_lean, n.proof_size_lean_total)}
+      </div>
+      <pre class="code-block" id="lean-code"></pre>
+    </div>
+  `;
+
+  renderLatex($('latex-stmt'),  n.statement);
+  renderLatex($('latex-proof'), n.proof_tex ? n.proof_tex.trim() : '');
+
+  const leanEl = $('lean-code');
+  if (n.lean_source) {
+    leanEl.innerHTML = highlightLean(n.lean_source);
+  } else {
+    leanEl.classList.add('empty');
+    leanEl.textContent = 'declaration not found';
+  }
+}
+
+// ── Cone highlighting on click ───────────────────────────────────────────────
+// Selecting a node lights up its WHOLE transitive cone — every ancestor and
+// descendant and the edges between them — while everything else fades back.
+
+const baseNodeById = {};
+for (const vn of graphData.nodes) baseNodeById[vn.id] = vn;
+
+const EDGE_BASE = { color: "#cbd5e1", highlight: "#64748b" };
+
+function highlightCone(id) {
+  const cone = coneOf(id);   // {id} ∪ ancestors ∪ descendants
+  nodesDS.update(nodesDS.getIds().map(nid =>
+    cone.has(nid)
+      ? baseNodeById[nid]                                   // full styling
+      : { id: nid, color: { background: "#e5e7eb", border: "#d1d5db" },
+          font: { color: "#cbd5e1" } }                      // faded
+  ));
+  edgesDS.update(edgesDS.get().map(e => {
+    const on = cone.has(e.from) && cone.has(e.to);
+    return { id: e.id,
+             color: on ? { color: "#475569", highlight: "#334155" } : { color: "#edf0f4" },
+             width: on ? 2.5 : 1 };
+  }));
+}
+
+function clearHighlight() {
+  nodesDS.update(nodesDS.getIds().map(nid => baseNodeById[nid]));
+  edgesDS.update(edgesDS.get().map(e => ({ id: e.id, color: EDGE_BASE, width: 1 })));
+}
+
+network.on("click", params => {
+  if (params.nodes.length) { renderNode(params.nodes[0]); highlightCone(params.nodes[0]); }
+  else                     { clearHighlight(); }
+});
+network.on("doubleClick", params => { if (params.nodes.length) setFocus(params.nodes[0]); });
+
+// ── Initial render ───────────────────────────────────────────────────────────
+
+apply();
+</script>
+</body>
+</html>
