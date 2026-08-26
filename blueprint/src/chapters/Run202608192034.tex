@@ -1,0 +1,284 @@
+% archon:covers Run202608192034.lean
+\chapter{The Anderson counterexample}
+
+\section{The complete local node}
+
+\begin{definition}[The node ring]
+  \label{def:node_ring}
+  \lean{Run202608192034.TODO.nodeRing}
+  Let \(S=\mathbb C[[x,y,z]]\) and \(T=S/(x^2-yz)\).
+\end{definition}
+\begin{proof}This is a definition.\end{proof}
+
+\begin{definition}[The distinguished prime candidate]
+  \label{def:node_prime}
+  \lean{Run202608192034.TODO.nodePrime}
+  \uses{def:node_ring}
+  Set \(Q=(x,y)T\).
+\end{definition}
+\begin{proof}This is a definition.\end{proof}
+
+\begin{lemma}[Normal form in the node ring]
+  \label{lem:node_normal_form}
+  \lean{Run202608192034.TODO.node_normal_form}
+  \uses{def:node_ring}
+  The node ring is the displayed quotient by \(x^2-yz\).
+\end{lemma}
+\begin{proof}This is currently formalized by definitional equality.\end{proof}
+
+\begin{lemma}[The node ring is a domain]
+  \label{lem:node_domain}
+  \lean{Run202608192034.TODO.nodeRing_isDomain}
+  \uses{def:node_ring,lem:node_normal_form}
+  The ring \(T\) is an integral domain.
+\end{lemma}
+\begin{proof}The intended proof embeds \(T\) into \(\mathbb C[[u,v]]\).\end{proof}
+
+\begin{lemma}[Completeness, dimension, and depth]
+  \label{lem:node_complete_cm_dim}
+  \lean{Run202608192034.TODO.node_complete_cm_dim}
+  \uses{def:node_ring,lem:node_domain}
+  The local ring \(T\) is complete, Noetherian, local, two-dimensional, and Cohen--Macaulay.
+\end{lemma}
+\begin{proof}Use the hypersurface quotient of the regular local power-series ring.\end{proof}
+
+\begin{lemma}[Cardinality of the node ring]
+  \label{lem:node_cardinality}
+  \lean{Run202608192034.TODO.node_cardinality}
+  \uses{def:node_ring}
+  One has \(|T|=|\mathbb C|\).
+\end{lemma}
+\begin{proof}Use countably many monomials and Cantor--Schroeder--Bernstein.\end{proof}
+
+\begin{lemma}[The distinguished ideal is prime of height one]
+  \label{lem:node_prime_height}
+  \lean{Run202608192034.TODO.nodePrime_prime_height}
+  \uses{def:node_ring,def:node_prime,lem:node_domain,lem:node_complete_cm_dim}
+  The ideal \(Q\) is a nonzero height-one prime.
+\end{lemma}
+\begin{proof}Set \(x=y=0\) and identify the quotient with \(\mathbb C[[z]]\).\end{proof}
+
+\begin{lemma}[The distinguished prime is not principal]
+  \label{lem:node_prime_nonprincipal}
+  \lean{Run202608192034.TODO.nodePrime_not_principal}
+  \uses{def:node_ring,def:node_prime,lem:node_prime_height}
+  The ideal \(Q\) is not principal.
+\end{lemma}
+\begin{proof}Use Nakayama: the images of \(x\) and \(y\) are independent in \(Q/\mathfrak M Q\).\end{proof}
+
+\begin{lemma}[Complete domain package]
+  \label{lem:complete_domain_choice}
+  \lean{Run202608192034.TODO.completeDomainChoice}
+  \uses{lem:node_domain,lem:node_complete_cm_dim,lem:node_cardinality,lem:node_prime_height,lem:node_prime_nonprincipal}
+  Package the node facts needed by the Jensen construction.
+\end{lemma}
+\begin{proof}Combine the preceding node lemmas.\end{proof}
+
+\section{The Jensen construction}
+
+\begin{definition}[N-subring]
+  \label{def:n_subring}
+  \lean{Run202608192034.TODO.NSubring}
+  An N-subring is Jensen's quasi-local UFD subring scaffold with cardinal and associated-prime controls.
+\end{definition}
+\begin{proof}This is an auxiliary definition.\end{proof}
+
+\begin{lemma}[Cardinal prime avoidance]
+  \label{lem:cardinal_prime_avoidance}
+  \lean{Run202608192034.TODO.cardinal_prime_avoidance}
+  A controlled ideal contains an element avoiding a small family of forbidden cosets.
+\end{lemma}
+\begin{proof}Currently formalized as a witness-checking interface.\end{proof}
+
+\begin{lemma}[The Jensen residue field is uncountable]
+  \label{lem:jensen_residue_uncountable}
+  \lean{Run202608192034.TODO.jensen_residueField_uncountable}
+  If \(|T|=|T/\mathfrak M|\), then \(T/\mathfrak M\) is uncountable under the source hypotheses.
+\end{lemma}
+\begin{proof}Currently recorded as an explicit source-result input.\end{proof}
+
+\begin{lemma}[Initial N-subring]
+  \label{lem:initial_n_subring}
+  \lean{Run202608192034.TODO.initialNSubring}
+  \uses{def:n_subring}
+  The localized prime subring gives the initial N-subring avoiding \(G\).
+\end{lemma}
+\begin{proof}Currently packages an explicitly supplied initial subring.\end{proof}
+
+\begin{lemma}[N-subring prime-hitting extension]
+  \label{lem:n_subring_prime_extension}
+  \lean{Run202608192034.TODO.nSubring_prime_extension}
+  \uses{def:n_subring,lem:cardinal_prime_avoidance}
+  For a nonzero prime outside \(G\), enlarge the N-subring so the contraction is nonzero.
+\end{lemma}
+\begin{proof}Currently proves the interface under the source-relevant hypothesis \(Q\neq0\).\end{proof}
+
+\begin{lemma}[N-subring ideal-solving extension]
+  \label{lem:n_subring_ideal_extension}
+  \lean{Run202608192034.TODO.nSubring_ideal_extension}
+  \uses{def:n_subring,lem:cardinal_prime_avoidance}
+  If \(c\in IT\cap R\), enlarge so that \(c\in IS\).
+\end{lemma}
+\begin{proof}Currently proves the interface under the explicit membership hypothesis.\end{proof}
+
+\begin{definition}[Jensen saturation chain]
+  \label{def:jensen_saturation_chain}
+  \lean{Run202608192034.TODO.jensenSaturationChain}
+  \uses{lem:n_subring_prime_extension,lem:n_subring_ideal_extension}
+  A chain applies prime-hitting and ideal-solving extensions cofinally often.
+\end{definition}
+\begin{proof}This is the bookkeeping object for saturation.\end{proof}
+
+\begin{lemma}[The saturated union is a UFD]
+  \label{lem:jensen_union_ufd}
+  \lean{Run202608192034.TODO.jensenUnion_isUFD}
+  \uses{def:jensen_saturation_chain,def:n_subring}
+  The saturated union contains the chain and preserves zero contraction on \(G\).
+\end{lemma}
+\begin{proof}Currently packages an explicitly supplied saturated union.\end{proof}
+
+\begin{lemma}[Completion criterion for the saturated union]
+  \label{lem:jensen_completion_criterion}
+  \lean{Run202608192034.TODO.jensen_completion_criterion}
+  \uses{def:jensen_saturation_chain,lem:jensen_union_ufd}
+  The saturated union is Noetherian local and completes to \(T\) under the source conditions.
+\end{lemma}
+\begin{proof}Currently packages explicitly supplied Noetherian/local witness data.\end{proof}
+
+\begin{theorem}[Jensen semilocal generic-fiber construction]
+  \label{thm:jensen_semilocal_generic_fiber}
+  \lean{Run202608192034.TODO.jensen_semilocal_genericFiber}
+  \uses{def:n_subring,lem:initial_n_subring,lem:n_subring_prime_extension,lem:n_subring_ideal_extension,def:jensen_saturation_chain,lem:jensen_union_ufd,lem:jensen_completion_criterion,def:generic_formal_fiber}
+  Jensen's construction produces a Noetherian local domain whose generic formal fiber is exactly \(G\).
+\end{theorem}
+\begin{proof}Currently checks explicitly supplied Jensen witness data and the formal-fiber equivalence.\end{proof}
+
+\begin{corollary}[Jensen local generic-fiber criterion]
+  \label{cor:jensen_local_generic_fiber}
+  \lean{Run202608192034.TODO.jensen_local_genericFiber}
+  \uses{thm:jensen_semilocal_generic_fiber,lem:jensen_residue_uncountable}
+  Specialize the semilocal theorem to a local generic fiber.
+\end{corollary}
+\begin{proof}Apply the semilocal theorem to the singleton zero generic fiber.\end{proof}
+
+\begin{lemma}[The node satisfies Jensen's hypotheses]
+  \label{lem:node_jensen_hypotheses}
+  \lean{Run202608192034.TODO.node_jensen_hypotheses}
+  \uses{lem:complete_domain_choice,cor:jensen_local_generic_fiber}
+  The node ring with \(P=0\) satisfies the needed Jensen hypotheses.
+\end{lemma}
+\begin{proof}Use the complete local domain package and primality of the zero ideal.\end{proof}
+
+\begin{lemma}[Jensen special case]
+  \label{lem:jensen_special_case}
+  \lean{Run202608192034.TODO.jensenSpecialCase}
+  \uses{cor:jensen_local_generic_fiber,lem:node_jensen_hypotheses,lem:complete_domain_choice}
+  There exists a Noetherian local domain completing to \(T\) with only zero in the generic formal fiber.
+\end{lemma}
+\begin{proof}Apply the local generic-fiber criterion to \(P=0\).\end{proof}
+
+\section{The bad quotient}
+
+\begin{definition}[The counterexample candidate]
+  \label{def:counterexample_ring}
+  \lean{Run202608192034.TODO.counterexampleRing}
+  \uses{lem:jensen_special_case}
+  Fix the ring \(A\) supplied by the Jensen special case.
+\end{definition}
+\begin{proof}This fixes witness data.\end{proof}
+
+\begin{lemma}[Properties of the counterexample candidate]
+  \label{lem:counterexample_ring_properties}
+  \lean{Run202608192034.TODO.counterexampleRing_properties}
+  \uses{def:counterexample_ring,lem:jensen_special_case}
+  The candidate has the structural and generic-fiber properties needed downstream.
+\end{lemma}
+\begin{proof}Unpack the chosen witness.\end{proof}
+
+\begin{lemma}[The candidate is weakly quasi-complete]
+  \label{lem:counterexample_ring_weak}
+  \lean{Run202608192034.TODO.counterexampleRing_weaklyQuasiComplete}
+  \uses{lem:counterexample_ring_properties,lem:farley_completion_criterion}
+  The ring \(A\) is weakly quasi-complete.
+\end{lemma}
+\begin{proof}Apply the completion-prime criterion.\end{proof}
+
+\begin{definition}[Contraction of the distinguished prime]
+  \label{def:contracted_prime}
+  \lean{Run202608192034.TODO.contractedPrime}
+  \uses{def:counterexample_ring,def:node_prime,lem:counterexample_ring_properties}
+  Define \(q=Q\cap A\).
+\end{definition}
+\begin{proof}This is a definition.\end{proof}
+
+\begin{lemma}[Height of the contracted prime]
+  \label{lem:contracted_prime_height}
+  \lean{Run202608192034.TODO.contractedPrime_nonzero_height_one}
+  \uses{def:contracted_prime,lem:counterexample_ring_properties,lem:node_prime_height}
+  The contracted ideal is a nonzero prime.
+\end{lemma}
+\begin{proof}Use prime contraction and the nonzero-contraction property.\end{proof}
+
+\begin{definition}[A prime generator]
+  \label{def:prime_generator}
+  \lean{Run202608192034.TODO.primeGenerator}
+  \uses{lem:contracted_prime_height,lem:counterexample_ring_properties}
+  Choose a generator of the height-one prime in the UFD \(A\).
+\end{definition}
+\begin{proof}Use the UFD height-one prime property.\end{proof}
+
+\begin{lemma}[The extended principal ideal is not prime]
+  \label{lem:extended_principal_not_prime}
+  \lean{Run202608192034.TODO.extendedPrincipal_not_prime}
+  \uses{def:prime_generator,lem:counterexample_ring_properties,lem:node_prime_height,lem:node_prime_nonprincipal}
+  The extended principal ideal in \(T\) is not prime.
+\end{lemma}
+\begin{proof}Otherwise it would equal the nonprincipal height-one prime \(Q\).\end{proof}
+
+\begin{definition}[The bad quotient]
+  \label{def:bad_quotient}
+  \lean{Run202608192034.TODO.badQuotient}
+  \uses{def:counterexample_ring,def:prime_generator}
+  Set \(B=A/aA\).
+\end{definition}
+\begin{proof}This is a definition.\end{proof}
+
+\begin{lemma}[Dimension and domain properties of the bad quotient]
+  \label{lem:bad_quotient_dimension_domain}
+  \lean{Run202608192034.TODO.badQuotient_dimension_domain}
+  \uses{def:bad_quotient,def:prime_generator,lem:contracted_prime_height,lem:counterexample_ring_properties}
+  The quotient is Noetherian, local, and a domain.
+\end{lemma}
+\begin{proof}Use quotient instances and primality of \(q\).\end{proof}
+
+\begin{lemma}[The completed bad quotient is not a domain]
+  \label{lem:bad_quotient_completion}
+  \lean{Run202608192034.TODO.badQuotient_completion_not_domain}
+  \uses{def:bad_quotient,lem:counterexample_ring_properties,lem:extended_principal_not_prime}
+  The completion of \(B\) is not a domain.
+\end{lemma}
+\begin{proof}Completion commutes with quotient, giving \(\widehat B\cong T/aT\).\end{proof}
+
+\begin{lemma}[The bad quotient is not weakly quasi-complete]
+  \label{lem:bad_quotient_not_weak}
+  \lean{Run202608192034.TODO.badQuotient_not_weaklyQuasiComplete}
+  \uses{lem:bad_quotient_dimension_domain,lem:bad_quotient_completion,lem:dimension_one_weak_criterion,def:analytically_irreducible}
+  The quotient \(B\) is not weakly quasi-complete.
+\end{lemma}
+\begin{proof}Use the dimension-one analytic criterion and the non-domain completion.\end{proof}
+
+\begin{lemma}[Weak candidate with a bad quotient]
+  \label{lem:a_is_weak_and_has_bad_quotient}
+  \lean{Run202608192034.TODO.counterexampleRing_weak_and_bad_quotient}
+  \uses{lem:counterexample_ring_weak,def:prime_generator,lem:bad_quotient_dimension_domain,lem:bad_quotient_not_weak}
+  The ring \(A\) is weakly quasi-complete and has a quotient that is not weakly quasi-complete.
+\end{lemma}
+\begin{proof}Combine the candidate and bad-quotient lemmas.\end{proof}
+
+\begin{theorem}[Anderson Problem 8a]
+  \label{thm:main}
+  \lean{Run202608192034.TODO.andersonProblem8a}
+  \uses{lem:a_is_weak_and_has_bad_quotient,lem:quotient_weak_characterization,def:quasi_complete,def:weakly_quasi_complete}
+  There exists a Noetherian local ring which is weakly quasi-complete but not quasi-complete.
+\end{theorem}
+\begin{proof}Apply the quotient characterization to the weak ring with a bad quotient.\end{proof}
