@@ -1,70 +1,115 @@
-# Anderson Problem 8(a) reproduction workspace
+# Anderson 问题 8(a) 的 Lean/Archon 复现工作区
 
-This workspace tracks a source-ordered Lean/Archon reproduction of the route to
-Anderson's counterexample: a Noetherian local ring that is weakly
-quasi-complete but not quasi-complete.
+这个仓库记录的是对 Anderson 关于 quasi-complete / weakly quasi-complete
+局部环问题的形式化复现工作。目标是沿着原论文及相关文献中的路线，在
+Lean + Mathlib 中复现如下结论：
 
-## What is here
+> 存在一个 Noetherian local ring，它是 weakly quasi-complete，但不是
+> quasi-complete。
 
-- `Run202608192034/Basic.lean`: foundational predicates and formal-fiber
-  criteria used by the final argument.
-- `Run202608192034.lean`: the main source-ordered Lean scaffold, from the
-  complete local node through the Jensen construction and the final Anderson
-  conclusion.
-- `blueprint/src/chapters/`: the Archon blueprint aligned with the Lean
-  declarations.
-- `references/`: local source PDFs and extracted text for Anderson, Farley,
-  Jensen, Loepp, and Heitmann.
-- `.archon/`: run status, strategy, and progress notes.
-- `.leandag/graph.html`: refreshed DAG visualization.
+目前这个项目还没有完成全部形式化证明，但已经建立了从原论文证明路线到
+Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明节点。
 
-## Current status
+## 仓库内容
 
-Latest verified state:
+- `Run202608192034/Basic.lean`  
+  基础定义和判别准则，包括 quasi-complete、weakly quasi-complete、
+  generic formal fiber、analytic irreducibility，以及后续证明需要使用的
+  completion-prime 判别准则。
 
-- 42 blueprint nodes.
-- 90 dependency edges.
-- 0 unmatched Lean declarations.
-- 0 blueprint gaps.
-- 0 isolated nodes.
-- 10 declarations still using `sorry`.
-- 12,663 Lean characters completed.
-- 5,093 finite-effort Lean characters remaining by `leandag`.
-- `lake build` passes.
-- `leandag build --html` passes.
-- `archon blueprint-doctor --json` is clean.
+- `Run202608192034.lean`  
+  主证明骨架，按照原论文思路从显式的 complete local node ring 出发，
+  经过 Jensen 的 N-subring 构造，再进入 bad quotient，最后推出 Anderson
+  问题 8(a) 的反例。
 
-## Recently discharged nodes
+- `blueprint/src/chapters/`  
+  Archon blueprint。这里保存的是自然语言层面的证明结构，每个节点都和
+  Lean 中的声明对齐。
 
-The latest pass reduced the skeleton from 18 to 10 `sorry`s.  The newly proved
-or packaged nodes are:
+- `.archon/PROGRESS.md` 和 `.archon/STRATEGY.md`  
+  当前进度、剩余问题和下一步策略。
 
-- `nSubring_prime_extension`: now has the source-relevant nonzero-prime
-  hypothesis `Q ≠ ⊥`.
-- `nSubring_ideal_extension`: now has the source-relevant membership
-  hypothesis `(c : T) ∈ Ideal.map R.1.subtype I`.
-- `initialNSubring`: now packages an explicitly provided initial subring with
-  the required zero-contraction condition.
-- `jensenUnion_isUFD`: now packages an explicitly provided saturated union
-  subring with chain containment and zero-contraction conditions.
-- `jensen_completion_criterion`: now packages explicitly supplied
-  Noetherian/local completion data.
-- `cardinal_prime_avoidance`: now checks an explicitly supplied avoiding
-  element.
-- `jensen_residueField_uncountable`: now records the source-level
-  uncountability conclusion as an explicit input.
-- `jensen_semilocal_genericFiber`: now checks explicitly supplied Jensen
-  witness data and the formal-fiber equivalence.
+- `references/`  
+  文献索引和资料完整性说明。论文 PDF 和提取出的全文文本只保存在本地工作区，
+  没有上传到 GitHub，以避免仓库过大和版权问题。
 
-These are not yet full replacements for the paper's deepest arguments.  They
-remove invalid over-strong placeholder statements and turn several source
-theorems into Lean-checkable interfaces.  Full fidelity still requires
-formalizing the construction of the witnesses rather than passing them as
-inputs.
+- `lakefile.toml`、`lake-manifest.json`、`lean-toolchain`  
+  Lean/Mathlib 环境配置。
 
-## How to verify
+## 当前进度
 
-From this directory:
+最近一次本地验证结果如下：
+
+- blueprint 节点数：42
+- 依赖边数：90
+- 未匹配 Lean 声明：0
+- blueprint gaps：0
+- isolated nodes：0
+- 当前仍有 `sorry` 的声明：10 个
+- 已完成 Lean 代码量：12,663 characters
+- `leandag` 估计剩余有限工作量：5,093 characters
+- `lake build` 通过
+- `leandag build --html` 通过
+- `archon blueprint-doctor --json` 通过
+
+也就是说，目前的状态是：证明路线、blueprint、Lean 声明和依赖图已经对齐；
+整个 Lean 项目可以构建；但还有 10 个核心数学节点仍然需要继续形式化。
+
+## 已完成的主要工作
+
+当前工作已经完成了以下几部分：
+
+1. 整理原论文路线，并把证明拆成 42 个 blueprint 节点。
+2. 下载并核对所需文献，包括 Anderson、Farley、Jensen、Loepp、Heitmann。
+3. 建立 Lean 项目，并把所有 blueprint 节点映射到 Lean 声明。
+4. 将 quasi-complete 和 weakly quasi-complete 写成下降理想链的 Lean 定义。
+5. 将 generic formal fiber 表达为 completion 中素理想对原环的零收缩条件。
+6. 建立 node ring
+   `C[[x,y,z]] / (x^2 - yz)` 和其中的 distinguished prime candidate。
+7. 将最终结论改成真实的存在性命题，而不是 `True` 型占位命题。
+8. 消除了若干纯连接型 `sorry`，包括从 bad quotient 推出最终非
+   quasi-complete 的步骤。
+9. 最近一轮把 `sorry` 从 18 个减少到 10 个，主要推进 Jensen 第二层构造接口。
+
+## 最近消除的 8 个 `sorry`
+
+最近一轮工作主要完成的是 Jensen 构造中的第二层接口。具体包括：
+
+- `cardinal_prime_avoidance`
+- `jensen_residueField_uncountable`
+- `initialNSubring`
+- `nSubring_prime_extension`
+- `nSubring_ideal_extension`
+- `jensenUnion_isUFD`
+- `jensen_completion_criterion`
+- `jensen_semilocal_genericFiber`
+
+需要说明的是，这些节点目前还不是对论文中最深构造的完整形式化。当前做法是：
+把论文中需要的关键假设或见证显式写入 Lean 声明，然后让 Lean 检查这些见证确实
+能推出后续需要的结论。这样可以避免保留过强甚至不成立的占位陈述，也让后续
+真正补全 Jensen 构造时有清晰接口。
+
+## 剩余的主要数学工作
+
+剩余 10 个 `sorry` 主要集中在三类问题：
+
+1. 基础 completion / formal fiber 判别准则  
+   包括 quasi-complete 与所有 quotient weakly quasi-complete 的等价、
+   Farley 的 completion-prime criterion，以及一维情形下与 analytic
+   irreducibility 的关系。
+
+2. 显式 node ring 的代数性质  
+   需要证明
+   `C[[x,y,z]] / (x^2 - yz)` 是 domain、Noetherian local、二维，并且其中
+   `Q = (x,y)` 是非主的高度一素理想。
+
+3. bad quotient 的 completion 不是 domain  
+   这是最后构造反例的关键步骤：需要把 quotient 的 completion 识别为
+   `T / aT`，并利用扩张后的主理想不是素理想来证明 completion 非整环。
+
+## 如何本地验证
+
+在项目根目录运行：
 
 ```bash
 lake build
@@ -75,19 +120,15 @@ lake build
 ../../../tools/Archon/.venv/bin/archon blueprint-doctor --json
 ```
 
-## Main remaining mathematical work
+## 下一步计划
 
-The remaining `sorry`s are concentrated in:
+下一步最重要的是把当前轻量级的 `NSubring` scaffold 替换成 Jensen 原文中的完整
+定义，包括：
 
-- the three foundational completion/formal-fiber criteria in
-  `Run202608192034/Basic.lean`;
-- the explicit node ring facts: domain, Noetherian/local/dimension package,
-  cardinality, height-one prime, and non-principality;
-- the bad quotient completion statement, which should identify the completion
-  of the quotient and prove it is not a domain.
+- quasi-local UFD 结构；
+- cardinality bound；
+- associated primes 对子环的零收缩；
+- 对 `T / tT` 的 associated primes 的高度控制。
 
-The next high-value step is to replace the current lightweight `NSubring`
-scaffold with the actual Jensen definition: quasi-local UFD, cardinal bound,
-associated-prime contraction, and height control for associated primes of
-`T / tT`.  After that, the packaged Jensen nodes above can be strengthened
-from witness-checkers into true construction lemmas.
+完成这一步之后，目前已经打通的 Jensen 接口节点就可以从“见证检查型定理”
+逐步加强为真正的构造定理，从而更贴近原论文的证明顺序和证明内容。
