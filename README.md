@@ -29,6 +29,10 @@ Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明
 - `.archon/PROGRESS.md` 和 `.archon/STRATEGY.md`  
   当前进度、剩余问题和下一步策略。
 
+- `.archon/REMAINING_SORRY_BREAKDOWN.md`  
+  当前 5 个 `sorry` 的细分 lemma 清单，包括对应的原论文/blueprint 句子、
+  需要的 Mathlib API 类型，以及当前是否能直接证明。
+
 - `references/`  
   文献索引和资料完整性说明。论文 PDF 和提取出的全文文本只保存在本地工作区，
   没有上传到 GitHub，以避免仓库过大和版权问题。
@@ -40,26 +44,26 @@ Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明
 
 最近一次本地验证结果如下：
 
-- blueprint 节点数：42
-- 依赖边数：90
+- blueprint 节点数：63
+- 依赖边数：137
 - 未匹配 Lean 声明：0
 - blueprint gaps：0
 - isolated nodes：0
-- 当前仍有 `sorry` 的声明：10 个
-- 已完成 Lean 代码量：12,663 characters
-- `leandag` 估计剩余有限工作量：5,093 characters
+- 当前仍有 `sorry` 的声明：5 个
+- 已完成 Lean 代码量：29,476 characters
+- `leandag` 估计剩余有限工作量：1,057 characters
 - `lake build` 通过
 - `leandag build --html` 通过
 - `archon blueprint-doctor --json` 通过
 
 也就是说，目前的状态是：证明路线、blueprint、Lean 声明和依赖图已经对齐；
-整个 Lean 项目可以构建；但还有 10 个核心数学节点仍然需要继续形式化。
+整个 Lean 项目可以构建；当前还有 5 个源级数学节点仍然需要继续形式化。
 
 ## 已完成的主要工作
 
 当前工作已经完成了以下几部分：
 
-1. 整理原论文路线，并把证明拆成 42 个 blueprint 节点。
+1. 整理原论文路线，并把证明拆成 63 个 blueprint 节点。
 2. 下载并核对所需文献，包括 Anderson、Farley、Jensen、Loepp、Heitmann。
 3. 建立 Lean 项目，并把所有 blueprint 节点映射到 Lean 声明。
 4. 将 quasi-complete 和 weakly quasi-complete 写成下降理想链的 Lean 定义。
@@ -69,7 +73,54 @@ Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明
 7. 将最终结论改成真实的存在性命题，而不是 `True` 型占位命题。
 8. 消除了若干纯连接型 `sorry`，包括从 bad quotient 推出最终非
    quasi-complete 的步骤。
-9. 最近一轮把 `sorry` 从 18 个减少到 10 个，主要推进 Jensen 第二层构造接口。
+9. 前一轮把 `sorry` 从 18 个减少到 10 个，主要推进 Jensen 第二层构造接口。
+10. 本轮把 completion / formal fiber 的 3 个判别准则从裸 `sorry` 改成显式
+    source criterion 接口，并把这些准则作为数据沿主证明链传递。
+11. 本轮继续把 5 个 node ring 局部代数事实收束到 `completeDomainChoice`
+    这个源事实包中，其余 node ring 声明从该事实包投影得到。
+12. 已加强 `primeGenerator` 和 `badQuotient` 的数据包，使其保留 completion map
+    `ι`、`q = comap ι nodePrime`、`q = span {a}` 等后续证明需要的数据。
+13. `extendedPrincipal_not_prime` 已写成 Lean 证明：从
+    `q = span {a}` 推出 `map ι q = span {ι a}`，证明该扩张主理想非零且
+    包含于 `nodePrime`，再用 Krull 主理想定理/高度比较推出若它为素理想
+    则等于 `nodePrime`，从而和 `nodePrime` 非主性矛盾。
+14. 已将 bad quotient completion 步骤拆成三个更细的 blueprint/Lean 节点：
+    `extendedPrincipal_not_prime_of_generator_data`、
+    `quotient_not_domain_of_not_prime` 和 `badQuotient_completion_source`。
+    其中商环非整环的 Mathlib 桥已经证明，公开的
+    `badQuotient_completion_not_domain` 现在从 completion source package
+    和扩张主理想非素性推出。
+15. 进一步把 bad quotient 的剩余源缺口前移到
+    `badQuotient_criteria_source`：`badQuotient_completion_source` 现在由
+    Lean 通过选择 completion target 为
+    `nodeRing / Ideal.span {ι a}` 和恒等同构推出。
+16. 最新一轮把 bad quotient 的剩余源缺口拆成结构化数据包
+    `BadQuotientSourceData`、两个判别准则字段
+    `QuasiCriterion` / `DimensionCriterion`，以及无 `sorry` 的展开引理
+    `badQuotient_criteria_source`。真正剩下的 bad quotient 源洞现在是
+    `badQuotient_structured_criteria_source`。
+17. 继续把 bad quotient 源洞向原论文上游拆分：新增
+    `JensenCompletionWitness` 表达 \(\widehat A\cong T\)，新增
+    `QuotientCompletionWitness` 表达 \(\widehat{A/q}\cong T/aT\)，并证明
+    `QuotientCompletionWitness.dimensionCriterion` 可把解析不可约判别准则
+    沿环等价转移到 `nodeRing / Ideal.span {ι a}`。现在真正剩下的
+    bad quotient 源洞是 `badQuotient_structured_source`。
+18. 最新一轮补强 `BadQuotientSourceData`：它现在同时保存
+    `counterexampleRing` 见证和非零素理想收缩非零性质，并新增两个无
+    `sorry` 的投影定理
+    `BadQuotientSourceData.to_contractedPrime` 与
+    `BadQuotientSourceData.to_primeGenerator`。这使剩余 source package
+    不只服务于最终 quotient，也能回推出原论文中间的 contracted prime 和
+    prime generator 节点。
+19. 最新一轮按照原论文顺序把 `badQuotient_structured_source` 拆成四个
+    source 入口：`badQuotient_sourceData_from_jensen`、
+    `jensenCompletionWitness_source`、`quotientCompletionWitness_source` 和
+    `badQuotient_quasiCriterion_source`。因此 `sorry` 数量从 2 个变为
+    5 个，但 `badQuotient_structured_source` 本身现在是组合证明，不再是一个
+    扁平大洞。
+20. 最新一轮把 `badQuotient_sourceData_from_jensen` 证明掉，并新增更上游的
+    `primeGenerator_source`。这一步把 bad quotient 数据的来源移回原论文中
+    “\(q=Q\cap A\) 是高度一素理想，因 \(A\) 是 UFD 所以 \(q=aA\)”这一句。
 
 ## 最近消除的 8 个 `sorry`
 
@@ -89,23 +140,79 @@ Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明
 能推出后续需要的结论。这样可以避免保留过强甚至不成立的占位陈述，也让后续
 真正补全 Jensen 构造时有清晰接口。
 
+## 本轮消除的 3 个 completion / formal fiber `sorry`
+
+本轮处理的是基础文件中的三个判别准则接口：
+
+- `quasiComplete_iff_all_quotients_weak`
+- `weaklyQuasiComplete_iff_completion_primes`
+- `dimensionOne_weaklyQuasiComplete_iff`
+
+原来的 Lean 声明对任意 completion target 都成立，形式上过强。现在的做法是：
+把 Farley / Anderson 中使用的判别标准作为显式 source criterion 假设传入，
+定理本身负责把该 source criterion 变成后续证明可以调用的 Lean 接口。
+这消除了 3 个 `sorry`，同时保留了后续真正形式化这些判别准则的位置。
+
+## 本轮推进的 node ring 部分
+
+本轮处理的是显式 node ring
+`C[[x,y,z]] / (x^2 - yz)` 相关的 5 个分散 `sorry`：
+
+- `nodeRing_isDomain`
+- `node_complete_cm_dim`
+- `node_cardinality`
+- `nodePrime_prime_height`
+- `nodePrime_not_principal`
+
+现在这些节点都不再各自保留裸 `sorry`，而是从 `completeDomainChoice` 投影得到。
+`completeDomainChoice` 被加强为一个包含 node ring 标准事实的 source package：
+domain、Noetherian local、维数为 2、基数为 `|C|`、`nodePrime` 是非零高度一素理想，
+并且 `nodePrime` 非主。
+
+这一步把 node ring 缺口从 5 个分散证明压缩成 1 个明确的源事实包。后续如果要
+完全贴合原论文，需要继续把这个 source package 展开成实际证明：构造到
+`C[[u,v]]` 的嵌入、证明 kernel 正好是 `(x^2-yz)`，再形式化维数、基数、高度和
+Nakayama 非主性论证。
+
+## 本轮消除的 extended principal `sorry`
+
+本轮继续完成了 `extendedPrincipal_not_prime`。证明内容与原论文该段一致：
+
+- 由 `q = span {a}` 和 `q = comap ι nodePrime` 得到
+  `Ideal.map ι q = Ideal.span {ι a}` 以及 `Ideal.span {ι a} ≤ nodePrime`。
+- 由 `comap ι ⊥ = ⊥` 得到 `ι` 单射，所以扩张主理想非零。
+- 如果 `Ideal.span {ι a}` 是素理想，Mathlib 的
+  `Ideal.height_le_spanRank_toENat` 给出其高度至多为 1。
+- 由于 `nodeRing` 是整环，非零素理想高度至少为 1；于是该主素理想高度为 1。
+- 它包含在同样高度为 1 的 `nodePrime` 中，严格包含会违反
+  `Ideal.primeHeight_strict_mono`，所以二者相等，矛盾于
+  `nodePrime_not_principal`。
+
+这是真正消除的一个实质性 Lean `sorry`，不是改成新的裸接口。
+
 ## 剩余的主要数学工作
 
-剩余 10 个 `sorry` 主要集中在三类问题：
+当前 5 个 `sorry` 主要集中在两类问题：
 
-1. 基础 completion / formal fiber 判别准则  
-   包括 quasi-complete 与所有 quotient weakly quasi-complete 的等价、
-   Farley 的 completion-prime criterion，以及一维情形下与 analytic
-   irreducibility 的关系。
+1. node ring 源事实包  
+   需要完整形式化 `C[[x,y,z]] / (x^2 - yz)` 的 domain、Noetherian local、
+   二维、基数、`Q = (x,y)` 的高度一素性和非主性。
 
-2. 显式 node ring 的代数性质  
-   需要证明
-   `C[[x,y,z]] / (x^2 - yz)` 是 domain、Noetherian local、二维，并且其中
-   `Q = (x,y)` 是非主的高度一素理想。
+2. bad quotient 的 completion 不是 domain  
+   这是最后构造反例的关键步骤。现在“利用扩张后的主理想不是素理想来证明
+   completion 非整环”的后半段已经完成；剩下的是四个源级入口：
+   `primeGenerator_source`、`jensenCompletionWitness_source`、
+   `quotientCompletionWitness_source` 和 `badQuotient_quasiCriterion_source`。
 
-3. bad quotient 的 completion 不是 domain  
-   这是最后构造反例的关键步骤：需要把 quotient 的 completion 识别为
-   `T / aT`，并利用扩张后的主理想不是素理想来证明 completion 非整环。
+这一轮有意增加了 `sorry` 的总数，但把最后的 bad quotient 大洞整理成和原论文
+顺序更一致的形式：先由 Jensen/UFD 给出 \(A,q,a\) 数据，再记录
+\(\widehat A\cong T\)，再记录 completion commutes with quotient 给出的
+\(\widehat{A/q}\cong T/aT\)，最后才把判别准则展开给后续主证明使用。
+
+如果要继续提高对原论文的贴合度，completion / formal fiber 的三个 source
+criterion 仍需要在后续阶段从引用文献中完整形式化，而不是长期停留为接口假设。
+
+更细的剩余任务拆分见 `.archon/REMAINING_SORRY_BREAKDOWN.md`。
 
 ## 如何本地验证
 

@@ -579,20 +579,49 @@
   prime element, so \cref{lem:contracted_prime_height} supplies such \(a\).
 \end{proof}
 
+\begin{lemma}[Source theorem for the prime generator]
+  \label{lem:prime_generator_source}
+  \lean{Run202608192034.TODO.primeGenerator_source}
+  \uses{def:prime_generator,lem:contracted_prime_height,lem:counterexample_ring_weak}
+  The Jensen construction and the UFD height-one-prime argument supply the
+  prime-generator package used later.
+\end{lemma}
+
+\begin{proof}
+  Use the constructed ring \(A\), take \(q=Q\cap A\), and apply the
+  height-one-prime-in-a-UFD argument to choose \(a\) with \(q=aA\).  The
+  generic-fiber condition gives nonzeroness of the contraction, and the
+  Farley criterion gives weak quasi-completeness of \(A\).
+\end{proof}
+
+\begin{lemma}[The chosen extended principal ideal is not prime]
+  \label{lem:extended_principal_specific_not_prime}
+  \lean{Run202608192034.TODO.extendedPrincipal_not_prime_of_generator_data}
+  \uses{def:prime_generator,lem:counterexample_ring_properties,lem:node_prime_height,lem:node_prime_nonprincipal}
+  For the specific generator \(a\) of the contracted prime \(q\), the extended
+  ideal \(aT\) is not prime.
+\end{lemma}
+
+\begin{proof}
+  The identity \(q=aA\) gives \(qT=aT\), while
+  \(q=Q\cap A\) gives \(qT\subseteq Q\).  Since \(A\subseteq T\), the extended
+  ideal is nonzero.  If \(aT\) were prime, the principal ideal theorem would
+  give height at most one, and nonzeroness in the domain \(T\) gives height at
+  least one.  A strict containment \(aT\subsetneq Q\) would then strictly
+  increase prime height, contradicting that both have height one.  Hence
+  \(aT=Q\), contradicting that \(Q\) is not principal.
+\end{proof}
+
 \begin{lemma}[The extended principal ideal is not prime]
   \label{lem:extended_principal_not_prime}
   \lean{Run202608192034.TODO.extendedPrincipal_not_prime}
-  \uses{def:prime_generator,lem:counterexample_ring_properties,lem:node_prime_height,lem:node_prime_nonprincipal}
+  \uses{lem:extended_principal_specific_not_prime}
   The ideal \(aT\) is a proper nonprime ideal of \(T\).
 \end{lemma}
 
 \begin{proof}
-  The embedding \(A\subseteq T\) shows \(a\neq0\), and
-  \(a\in q\subseteq Q\) gives \(aT\subseteq Q\).  If \(aT\) were prime, the
-  principal ideal theorem would give height at most one, while nonzeroness in
-  the domain \(T\) gives height at least one.  Thus \(aT\) and \(Q\) would be
-  nested height-one primes, hence equal.  This contradicts
-  \cref{lem:node_prime_nonprincipal}.  Therefore \(aT\) is not prime.
+  This is the existential form of
+  \cref{lem:extended_principal_specific_not_prime}.
 \end{proof}
 
 \begin{definition}[The bad quotient]
@@ -604,6 +633,219 @@
 
 \begin{proof}
   This is a definition.
+\end{proof}
+
+\begin{definition}[Bad quotient source data]
+  \label{def:bad_quotient_source_data}
+  \lean{Run202608192034.TODO.BadQuotientSourceData}
+  \uses{def:bad_quotient,def:prime_generator}
+  Package the source data for the bad quotient as one object:
+  \(A\), \(\mathfrak m_A\), the map \(A\to T\), the contracted prime
+  \(q=Q\cap A\), its chosen generator \(a\), and the structural properties of
+  \(A\) and \(q\).
+\end{definition}
+
+\begin{proof}
+  This is a data structure organizing the hypotheses already present in
+  \cref{def:bad_quotient}, together with the Jensen generic-fiber data needed
+  to recover the earlier contracted-prime and prime-generator nodes.
+\end{proof}
+
+\begin{definition}[Quotient criterion field]
+  \label{def:bad_quotient_quasi_criterion_field}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.QuasiCriterion}
+  \uses{def:bad_quotient_source_data,lem:quotient_weak_characterization}
+  The source data carries the Anderson/Farley criterion saying that
+  \(A\) is quasi-complete exactly when all quotients \(A/J\) are weakly
+  quasi-complete.
+\end{definition}
+
+\begin{proof}
+  This field records the criterion in the notation of the chosen data package.
+\end{proof}
+
+\begin{definition}[Dimension-one criterion field]
+  \label{def:bad_quotient_dimension_criterion_field}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.DimensionCriterion}
+  \uses{def:bad_quotient_source_data,lem:dimension_one_weak_criterion}
+  The source data carries the dimension-one criterion identifying weak
+  quasi-completeness of \(A/q\) with analytic irreducibility of the completed
+  quotient \(T/aT\).
+\end{definition}
+
+\begin{proof}
+  This field records the dimension-one criterion in the notation of the chosen
+  data package.
+\end{proof}
+
+\begin{definition}[Jensen completion witness]
+  \label{def:jensen_completion_witness}
+  \lean{Run202608192034.TODO.JensenCompletionWitness}
+  \uses{lem:jensen_special_case,lem:farley_completion_criterion}
+  Record the stronger Jensen output needed later: an abstract completion
+  \(\widehat A\), a completion map \(A\to\widehat A\), an equivalence
+  \(\widehat A\cong T\), compatibility with the embedded map \(A\to T\), and
+  the weak quasi-completeness criterion expressed through this completion.
+\end{definition}
+
+\begin{proof}
+  This is a source data structure isolating the part of Jensen's construction
+  that identifies the completion of \(A\) with the chosen complete local ring
+  \(T\).
+\end{proof}
+
+\begin{definition}[Quotient completion witness]
+  \label{def:quotient_completion_witness}
+  \lean{Run202608192034.TODO.QuotientCompletionWitness}
+  \uses{def:bad_quotient_source_data,def:jensen_completion_witness,lem:dimension_one_weak_criterion}
+  Record the completion bridge for the quotient \(A/q=A/aA\): its completion
+  target is equivalent to \(T/aT\), and the dimension-one analytic
+  irreducibility criterion applies to that completion target.
+\end{definition}
+
+\begin{proof}
+  This is the source interface for the theorem that completion commutes with
+  quotient by the principal ideal \(aA\), after transporting
+  \(\widehat A\cong T\).
+\end{proof}
+
+\begin{lemma}[Transporting the dimension-one criterion]
+  \label{lem:quotient_completion_dimension_criterion}
+  \lean{Run202608192034.TODO.QuotientCompletionWitness.dimensionCriterion}
+  \uses{def:quotient_completion_witness,def:bad_quotient_dimension_criterion_field}
+  If the quotient completion target is equivalent to \(T/aT\), then the
+  analytic irreducibility criterion may be stated directly with \(T/aT\) as
+  the target.
+\end{lemma}
+
+\begin{proof}
+  In this formalization analytic irreducibility is represented by the target
+  being a domain.  Domainness is transported across the recorded ring
+  equivalence.
+\end{proof}
+
+\begin{definition}[Structured bad-quotient source]
+  \label{def:bad_quotient_structured_source}
+  \lean{Run202608192034.TODO.BadQuotientStructuredSource}
+  \uses{def:bad_quotient_source_data,def:jensen_completion_witness,def:quotient_completion_witness,def:bad_quotient_quasi_criterion_field}
+  Package the bad quotient data together with Jensen's completion witness, the
+  quotient-completion bridge, and the quotient criterion for quasi-completeness.
+\end{definition}
+
+\begin{proof}
+  This structure separates the paper's order into three layers: construct the
+  ring \(A\), identify its completion with \(T\), and then identify the
+  completion of \(A/aA\) with \(T/aT\).
+\end{proof}
+
+\begin{lemma}[Source data recovers the contracted prime]
+  \label{lem:source_data_to_contracted_prime}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.to_contractedPrime}
+  \uses{def:bad_quotient_source_data,def:contracted_prime}
+  The structured source data remembers the contracted prime
+  \(q=Q\cap A\), so it recovers the contracted-prime node.
+\end{lemma}
+
+\begin{proof}
+  Return the stored counterexample-ring witness, the equality
+  \(q=Q\cap A\), primality of \(q\), and nonzeroness of \(q\).
+\end{proof}
+
+\begin{lemma}[Source data recovers the prime generator]
+  \label{lem:source_data_to_prime_generator}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.to_primeGenerator}
+  \uses{def:bad_quotient_source_data,def:prime_generator}
+  The structured source data remembers the generator \(q=aA\), so it recovers
+  the prime-generator node used in the proof that \(aT\) is not prime.
+\end{lemma}
+
+\begin{proof}
+  Return the stored Jensen data, weak quasi-completeness, nonzero-contraction
+  condition, contracted-prime identity, and principal generator identity.
+\end{proof}
+
+\begin{lemma}[Bad-quotient source data from Jensen]
+  \label{lem:bad_quotient_source_data_from_jensen}
+  \lean{Run202608192034.TODO.badQuotient_sourceData_from_jensen}
+  \uses{lem:prime_generator_source,def:bad_quotient_source_data}
+  The prime-generator source theorem supplies the source data
+  \(A,\mathfrak m_A,q,a\) used for the bad quotient.
+\end{lemma}
+
+\begin{proof}
+  Destructure the prime-generator package and return the same data as a
+  `BadQuotientSourceData` object.
+\end{proof}
+
+\begin{lemma}[Jensen completion equivalence source]
+  \label{lem:jensen_completion_witness_source}
+  \lean{Run202608192034.TODO.jensenCompletionWitness_source}
+  \uses{lem:bad_quotient_source_data_from_jensen,lem:jensen_completion_criterion}
+  The Jensen construction identifies the completion of the selected ring
+  \(A\) with the prescribed complete local ring \(T\).
+\end{lemma}
+
+\begin{proof}
+  This is the strengthened form of Jensen's completion conclusion: besides
+  the embedded map \(A\to T\), it records an abstract completion
+  \(\widehat A\), the completion map \(A\to\widehat A\), and an equivalence
+  \(\widehat A\cong T\) compatible with the embedding.
+\end{proof}
+
+\begin{lemma}[Quotient completion source]
+  \label{lem:quotient_completion_witness_source}
+  \lean{Run202608192034.TODO.quotientCompletionWitness_source}
+  \uses{lem:jensen_completion_witness_source,def:quotient_completion_witness,lem:dimension_one_weak_criterion}
+  Completion commutes with quotient by \(q=aA\), giving a completion target for
+  \(A/q\) equivalent to \(T/aT\).
+\end{lemma}
+
+\begin{proof}
+  Use exactness of completion over the Noetherian local ring \(A\), then
+  transport the quotient of \(\widehat A\) across the equivalence
+  \(\widehat A\cong T\).  The result is the completion target appearing in the
+  dimension-one analytic irreducibility criterion.
+\end{proof}
+
+\begin{lemma}[Bad-quotient quasi-completeness criterion source]
+  \label{lem:bad_quotient_quasi_criterion_source}
+  \lean{Run202608192034.TODO.badQuotient_quasiCriterion_source}
+  \uses{lem:bad_quotient_source_data_from_jensen,lem:quotient_weak_characterization}
+  The selected ring \(A\) satisfies the Anderson/Farley criterion:
+  \(A\) is quasi-complete exactly when every quotient \(A/J\) is weakly
+  quasi-complete.
+\end{lemma}
+
+\begin{proof}
+  This is the cited quotient characterization, specialized to the Jensen ring
+  \(A\) and its maximal ideal \(\mathfrak m_A\).
+\end{proof}
+
+\begin{lemma}[Source theorem for the structured bad quotient]
+  \label{lem:bad_quotient_structured_source}
+  \lean{Run202608192034.TODO.badQuotient_structured_source}
+  \uses{def:bad_quotient_structured_source,lem:bad_quotient_source_data_from_jensen,lem:jensen_completion_witness_source,lem:quotient_completion_witness_source,lem:bad_quotient_quasi_criterion_source,lem:source_data_to_contracted_prime,lem:source_data_to_prime_generator}
+  The source construction supplies the complete structured package for the bad
+  quotient.
+\end{lemma}
+
+\begin{proof}
+  Choose the source data supplied by Jensen and the UFD generator step.  Attach
+  the Jensen completion witness, the quotient-completion witness, and the
+  quotient criterion.  The resulting tuple is the structured source package.
+\end{proof}
+
+\begin{lemma}[Source data gives a bad quotient]
+  \label{lem:source_data_to_bad_quotient}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.to_badQuotient}
+  \uses{def:bad_quotient_source_data,def:bad_quotient}
+  Forgetting the two final criterion fields, the structured source data is
+  exactly the bad quotient data.
+\end{lemma}
+
+\begin{proof}
+  Return the fields of the source package in the order required by
+  \cref{def:bad_quotient}.
 \end{proof}
 
 \begin{lemma}[Dimension and domain properties of the bad quotient]
@@ -621,10 +863,65 @@
   two in \(A\), contrary to \(\dim A=2\).  Hence \(\dim B=1\).
 \end{proof}
 
+\begin{lemma}[A quotient by a nonprime ideal is not a domain]
+  \label{lem:quotient_not_domain_of_not_prime}
+  \lean{Run202608192034.TODO.quotient_not_domain_of_not_prime}
+  If an ideal \(I\) is not prime, then the quotient \(R/I\) is not a domain.
+\end{lemma}
+
+\begin{proof}
+  If \(R/I\) were a domain, then the kernel of the quotient map
+  \(R\to R/I\) would be prime.  This kernel is exactly \(I\), contradiction.
+\end{proof}
+
+\begin{lemma}[Structured source criteria for the bad quotient]
+  \label{lem:bad_quotient_structured_criteria_source}
+  \lean{Run202608192034.TODO.badQuotient_structured_criteria_source}
+  \uses{lem:bad_quotient_structured_source,lem:quotient_completion_dimension_criterion}
+  The constructed data can be packaged as a source-ordered tuple containing
+  \(A\), \(\mathfrak m_A\), the completion embedding \(A\to T\), the contracted
+  prime \(q=Q\cap A\), a generator \(q=aA\), and the two criteria needed for
+  the final bad quotient.
+\end{lemma}
+
+\begin{proof}
+  Destructure the structured source theorem.  The quasi-completeness criterion
+  is stored directly, and the dimension-one criterion is transported from the
+  quotient completion target across its equivalence with \(T/aT\).
+\end{proof}
+
+\begin{lemma}[Expanded source criteria for the bad quotient]
+  \label{lem:bad_quotient_criteria_source}
+  \lean{Run202608192034.TODO.badQuotient_criteria_source}
+  \uses{lem:bad_quotient_structured_criteria_source}
+  Expanding the structured source package gives the explicit existential
+  statement used by the downstream Lean proof.
+\end{lemma}
+
+\begin{proof}
+  Destructure the source package and return its fields in the order expected by
+  the public bad-quotient interface.
+\end{proof}
+
+\begin{lemma}[Completion source data for the bad quotient]
+  \label{lem:bad_quotient_completion_source}
+  \lean{Run202608192034.TODO.badQuotient_completion_source}
+  \uses{lem:bad_quotient_criteria_source}
+  The bad quotient data can be chosen with an isomorphism
+  \(T/aT\cong\widehat{A/aA}\), together with the source criteria needed for
+  the final quasi-completeness argument.
+\end{lemma}
+
+\begin{proof}
+  Take the completion target in
+  \cref{lem:bad_quotient_criteria_source} to be \(T/aT\), with the identity
+  isomorphism.
+\end{proof}
+
 \begin{lemma}[The completed bad quotient is not a domain]
   \label{lem:bad_quotient_completion}
   \lean{Run202608192034.TODO.badQuotient_completion_not_domain}
-  \uses{def:bad_quotient,lem:counterexample_ring_properties,lem:extended_principal_not_prime}
+  \uses{lem:bad_quotient_completion_source,lem:extended_principal_specific_not_prime,lem:quotient_not_domain_of_not_prime}
   The completion of \(B\) is isomorphic to \(T/aT\), and is not a domain.
 \end{lemma}
 

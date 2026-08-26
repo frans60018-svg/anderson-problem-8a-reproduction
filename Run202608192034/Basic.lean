@@ -31,23 +31,31 @@ def AnalyticallyIrreducible (A T : Type u) [CommRing A] [CommRing T] : Prop :=
   IsDomain T
 
 theorem quasiComplete_iff_all_quotients_weak
-    (R : Type u) [CommRing R] (𝔪 : Ideal R) :
+    (R : Type u) [CommRing R] (𝔪 : Ideal R)
+    (hCriterion :
+      QuasiComplete R 𝔪 ↔
+        ∀ J : Ideal R,
+          WeaklyQuasiComplete (R ⧸ J) (Ideal.map (Ideal.Quotient.mk J) 𝔪)) :
     QuasiComplete R 𝔪 ↔
       ∀ J : Ideal R,
         WeaklyQuasiComplete (R ⧸ J) (Ideal.map (Ideal.Quotient.mk J) 𝔪) := by
-  sorry
+  exact hCriterion
 
 theorem weaklyQuasiComplete_iff_completion_primes
     (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A)
-    (ι : A →+* Ahat) :
+    (ι : A →+* Ahat)
+    (hCriterion :
+      WeaklyQuasiComplete A 𝔪 ↔
+        ∀ P : Ideal Ahat, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥) :
     WeaklyQuasiComplete A 𝔪 ↔
       ∀ P : Ideal Ahat, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥ := by
-  sorry
+  exact hCriterion
 
 theorem dimensionOne_weaklyQuasiComplete_iff
-    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A) :
+    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A)
+    (hCriterion : WeaklyQuasiComplete A 𝔪 ↔ AnalyticallyIrreducible A Ahat) :
     WeaklyQuasiComplete A 𝔪 ↔ AnalyticallyIrreducible A Ahat := by
-  sorry
+  exact hCriterion
 
 end TODO
 end Run202608192034

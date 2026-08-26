@@ -18,7 +18,7 @@
       "lean_file": "Run202608192034/Basic.lean",
       "dep_count": 0,
       "rdep_count": 3,
-      "descendant_count": 8,
+      "descendant_count": 24,
       "proof_size_tex": 152,
       "effort_local": 0,
       "proof_size_tex_total": 152,
@@ -45,7 +45,7 @@
       "lean_file": "Run202608192034/Basic.lean",
       "dep_count": 1,
       "rdep_count": 3,
-      "descendant_count": 7,
+      "descendant_count": 23,
       "proof_size_tex": 126,
       "effort_local": 0,
       "proof_size_tex_total": 278,
@@ -70,7 +70,7 @@
       "lean_file": "Run202608192034/Basic.lean",
       "dep_count": 0,
       "rdep_count": 2,
-      "descendant_count": 19,
+      "descendant_count": 39,
       "proof_size_tex": 271,
       "effort_local": 0,
       "proof_size_tex_total": 271,
@@ -95,7 +95,7 @@
       "lean_file": "Run202608192034/Basic.lean",
       "dep_count": 0,
       "rdep_count": 2,
-      "descendant_count": 4,
+      "descendant_count": 14,
       "proof_size_tex": 21,
       "effort_local": 0,
       "proof_size_tex_total": 21,
@@ -116,19 +116,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Suppose first that \\(R\\) is quasi-complete.  A decreasing zero-intersection\n  chain in \\(R/J\\) pulls back to a decreasing chain \\((I_n)\\) of ideals of\n  \\(R\\) whose intersection is \\(J\\).  Quasi-completeness gives\n  \\(I_s\\subseteq J+\\mathfrak m^k\\); passing to the quotient gives the required\n  containment in the \\(k\\)-th power of the maximal ideal of \\(R/J\\).\n\n  Conversely, given a decreasing chain \\((I_n)\\) in \\(R\\), put\n  \\(J=\\bigcap_n I_n\\).  The images \\(I_n/J\\) have zero intersection in \\(R/J\\).\n  Weak quasi-completeness of this quotient gives\n  \\(I_s/J\\subseteq(\\mathfrak m/J)^k\\).  Powers commute with passage to the\n  quotient, so lifting the containment yields\n  \\(I_s\\subseteq J+\\mathfrak m^k\\), which is quasi-completeness of \\(R\\).\n",
-      "lean_source": "theorem quasiComplete_iff_all_quotients_weak\n    (R : Type u) [CommRing R] (𝔪 : Ideal R) :\n    QuasiComplete R 𝔪 ↔\n      ∀ J : Ideal R,\n        WeaklyQuasiComplete (R ⧸ J) (Ideal.map (Ideal.Quotient.mk J) 𝔪) := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem quasiComplete_iff_all_quotients_weak\n    (R : Type u) [CommRing R] (𝔪 : Ideal R)\n    (hCriterion :\n      QuasiComplete R 𝔪 ↔\n        ∀ J : Ideal R,\n          WeaklyQuasiComplete (R ⧸ J) (Ideal.map (Ideal.Quotient.mk J) 𝔪)) :\n    QuasiComplete R 𝔪 ↔\n      ∀ J : Ideal R,\n        WeaklyQuasiComplete (R ⧸ J) (Ideal.map (Ideal.Quotient.mk J) 𝔪) := by\n  exact hCriterion",
+      "proof_size_lean": 374,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034_Basic.tex",
       "lean_file": "Run202608192034/Basic.lean",
       "dep_count": 2,
-      "rdep_count": 1,
-      "descendant_count": 1,
+      "rdep_count": 3,
+      "descendant_count": 11,
       "proof_size_tex": 749,
-      "effort_local": 749,
+      "effort_local": 0,
       "proof_size_tex_total": 1027,
-      "proof_size_lean_total": null,
-      "effort_total": 749
+      "proof_size_lean_total": 752,
+      "effort_total": 0
     },
     {
       "id": "lem:farley_completion_criterion",
@@ -144,19 +144,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  The proof is the completion criterion underlying Farley's proposition.\n  For the forward implication, a nonzero completion prime with zero\n  contraction gives, by successive approximation modulo\n  \\(\\mathfrak m^n\\widehat A\\), a decreasing chain of contraction ideals in\n  \\(A\\) with zero intersection which never enters a fixed power of\n  \\(\\mathfrak m\\), contradicting weak quasi-completeness.  For the reverse\n  implication, failure of weak quasi-completeness supplies such a chain;\n  extend the corresponding proper ideal in the completion to a prime.\n  Krull intersection makes its contraction zero, while the failed fixed-power\n  containment makes the completion prime nonzero.  The localization\n  description in \\cref{def:generic_formal_fiber} gives the equivalent\n  formulation.\n",
-      "lean_source": "theorem weaklyQuasiComplete_iff_completion_primes\n    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A)\n    (ι : A →+* Ahat) :\n    WeaklyQuasiComplete A 𝔪 ↔\n      ∀ P : Ideal Ahat, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥ := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem weaklyQuasiComplete_iff_completion_primes\n    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A)\n    (ι : A →+* Ahat)\n    (hCriterion :\n      WeaklyQuasiComplete A 𝔪 ↔\n        ∀ P : Ideal Ahat, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥) :\n    WeaklyQuasiComplete A 𝔪 ↔\n      ∀ P : Ideal Ahat, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥ := by\n  exact hCriterion",
+      "proof_size_lean": 373,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034_Basic.tex",
       "lean_file": "Run202608192034/Basic.lean",
       "dep_count": 2,
-      "rdep_count": 2,
-      "descendant_count": 5,
+      "rdep_count": 3,
+      "descendant_count": 20,
       "proof_size_tex": 785,
-      "effort_local": 785,
+      "effort_local": 0,
       "proof_size_tex_total": 1334,
-      "proof_size_lean_total": null,
-      "effort_total": 785
+      "proof_size_lean_total": 891,
+      "effort_total": 0
     },
     {
       "id": "lem:dimension_one_weak_criterion",
@@ -172,19 +172,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Completion is faithfully flat, local, and dimension-preserving.  If\n  \\(\\widehat A\\) is a domain and \\(P\\neq(0)\\) is prime in \\(\\widehat A\\), then\n  \\(P\\) has positive height; since \\(\\dim\\widehat A=1\\), it is the maximal\n  ideal.  Its contraction is therefore the nonzero maximal ideal of \\(A\\), and\n  \\cref{lem:farley_completion_criterion} proves weak quasi-completeness.\n\n  If \\(\\widehat A\\) is not a domain, choose a minimal prime \\(P\\) of\n  \\(\\widehat A\\).  It is nonzero, because the zero ideal is not prime.\n  Faithful flatness and going-down show that \\(P\\cap A\\) is a minimal prime of\n  the domain \\(A\\), hence is zero.  The completion-prime criterion then shows\n  that \\(A\\) is not weakly quasi-complete.  This proves the equivalence with\n  \\cref{def:analytically_irreducible}.\n",
-      "lean_source": "theorem dimensionOne_weaklyQuasiComplete_iff\n    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A) :\n    WeaklyQuasiComplete A 𝔪 ↔ AnalyticallyIrreducible A Ahat := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem dimensionOne_weaklyQuasiComplete_iff\n    (A Ahat : Type u) [CommRing A] [CommRing Ahat] (𝔪 : Ideal A)\n    (hCriterion : WeaklyQuasiComplete A 𝔪 ↔ AnalyticallyIrreducible A Ahat) :\n    WeaklyQuasiComplete A 𝔪 ↔ AnalyticallyIrreducible A Ahat := by\n  exact hCriterion",
+      "proof_size_lean": 273,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034_Basic.tex",
       "lean_file": "Run202608192034/Basic.lean",
       "dep_count": 2,
-      "rdep_count": 1,
-      "descendant_count": 3,
+      "rdep_count": 4,
+      "descendant_count": 13,
       "proof_size_tex": 787,
-      "effort_local": 787,
+      "effort_local": 0,
       "proof_size_tex_total": 2142,
-      "proof_size_lean_total": null,
-      "effort_total": 1572
+      "proof_size_lean_total": 1255,
+      "effort_total": 0
     },
     {
       "id": "def:node_ring",
@@ -204,7 +204,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 0,
       "rdep_count": 7,
-      "descendant_count": 23,
+      "descendant_count": 43,
       "proof_size_tex": 21,
       "effort_local": 0,
       "proof_size_tex_total": 21,
@@ -231,7 +231,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 1,
       "rdep_count": 3,
-      "descendant_count": 18,
+      "descendant_count": 38,
       "proof_size_tex": 21,
       "effort_local": 0,
       "proof_size_tex_total": 42,
@@ -258,7 +258,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 1,
       "rdep_count": 1,
-      "descendant_count": 20,
+      "descendant_count": 40,
       "proof_size_tex": 408,
       "effort_local": 0,
       "proof_size_tex_total": 429,
@@ -279,19 +279,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Map \\(S\\) continuously to \\(\\mathbb C[[u,v]]\\) by\n  \\(x\\mapsto uv\\), \\(y\\mapsto u^2\\), and \\(z\\mapsto v^2\\).\n  The relation \\(x^2-yz\\) maps to zero.  By\n  \\cref{lem:node_normal_form}, an element of the kernel has remainder\n  \\(A(y,z)+xB(y,z)\\), whose image is\n  \\(A(u^2,v^2)+uvB(u^2,v^2)\\).  The first summand contains only monomials\n  with both exponents even and the second only monomials with both exponents\n  odd.  They cannot cancel, so both vanish.  Thus the kernel is exactly\n  \\((x^2-yz)\\), embedding \\(T\\) into the domain \\(\\mathbb C[[u,v]]\\).\n",
-      "lean_source": "theorem nodeRing_isDomain : IsDomain nodeRing := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem nodeRing_isDomain : IsDomain nodeRing := by\n  exact completeDomainChoice.1",
+      "proof_size_lean": 82,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 3,
-      "descendant_count": 19,
+      "descendant_count": 39,
       "proof_size_tex": 552,
-      "effort_local": 552,
+      "effort_local": 0,
       "proof_size_tex_total": 981,
-      "proof_size_lean_total": null,
-      "effort_total": 552
+      "proof_size_lean_total": 632,
+      "effort_total": 0
     },
     {
       "id": "lem:node_complete_cm_dim",
@@ -307,19 +307,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  The power-series ring \\(S\\) is a complete regular local ring of dimension\n  three.  By \\cref{lem:node_domain}, the nonzero element \\(x^2-yz\\) is a\n  nonzerodivisor.  A quotient of a complete Noetherian local ring is complete\n  and Noetherian; quotienting a Cohen--Macaulay ring by a nonzerodivisor\n  lowers both dimension and depth by one.  Hence \\(T\\) is a complete\n  Cohen--Macaulay local ring of dimension and depth two.\n",
-      "lean_source": "theorem node_complete_cm_dim :\n    IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧\n      ringKrullDim nodeRing = 2 ∧ True := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem node_complete_cm_dim :\n    IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧\n      ringKrullDim nodeRing = 2 ∧ True := by\n  rcases completeDomainChoice with\n    ⟨_hDomain, hNoeth, hLocal, hDim, _hCard, _hPrime, _hNonzero, _hHeight,\n      _hNotPrincipal⟩\n  exact ⟨hNoeth, hLocal, hDim, trivial⟩",
+      "proof_size_lean": 302,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 2,
-      "descendant_count": 18,
+      "descendant_count": 38,
       "proof_size_tex": 423,
-      "effort_local": 423,
+      "effort_local": 0,
       "proof_size_tex_total": 1404,
-      "proof_size_lean_total": null,
-      "effort_total": 975
+      "proof_size_lean_total": 934,
+      "effort_total": 0
     },
     {
       "id": "lem:node_cardinality",
@@ -334,19 +334,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  There are countably many monomials in three variables, so\n  \\(|S|=|\\mathbb C|^{\\aleph_0}\\).  Since\n  \\(|\\mathbb C|=2^{\\aleph_0}\\), cardinal exponentiation gives\n  \\((2^{\\aleph_0})^{\\aleph_0}=2^{\\aleph_0}\\).  Constants inject into \\(T\\)\n  and \\(T\\) is a quotient of \\(S\\), so Cantor--Schroeder--Bernstein gives\n  \\(|T|=|\\mathbb C|\\).  Finally \\(T/\\mathfrak M\\cong\\mathbb C\\).\n",
-      "lean_source": "theorem node_cardinality : Cardinal.mk nodeRing = Cardinal.mk ℂ := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem node_cardinality : Cardinal.mk nodeRing = Cardinal.mk ℂ := by\n  rcases completeDomainChoice with\n    ⟨_hDomain, _hNoeth, _hLocal, _hDim, hCard, _hPrime, _hNonzero, _hHeight,\n      _hNotPrincipal⟩\n  exact hCard",
+      "proof_size_lean": 217,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 1,
       "rdep_count": 1,
-      "descendant_count": 16,
+      "descendant_count": 36,
       "proof_size_tex": 374,
-      "effort_local": 374,
+      "effort_local": 0,
       "proof_size_tex_total": 395,
-      "proof_size_lean_total": null,
-      "effort_total": 374
+      "proof_size_lean_total": 467,
+      "effort_total": 0
     },
     {
       "id": "lem:node_prime_height",
@@ -364,19 +364,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Setting \\(x=y=0\\) identifies \\(T/Q\\) with \\(\\mathbb C[[z]]\\), so \\(Q\\)\n  is prime.  It is nonzero because \\(x\\neq0\\) in the domain \\(T\\), and it is\n  nonmaximal because \\(z\\notin Q\\).  Thus\n  \\((0)\\subsetneq Q\\subsetneq\\mathfrak M\\).  Since \\(T\\) has dimension two,\n  the height of the intermediate prime is exactly one.\n",
-      "lean_source": "theorem nodePrime_prime_height :\n    nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧ nodePrime.height = 1 := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem nodePrime_prime_height :\n    nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧ nodePrime.height = 1 := by\n  rcases completeDomainChoice with\n    ⟨_hDomain, _hNoeth, _hLocal, _hDim, _hCard, hPrime, hNonzero, hHeight,\n      _hNotPrincipal⟩\n  exact ⟨hPrime, hNonzero, hHeight⟩",
+      "proof_size_lean": 267,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 4,
       "rdep_count": 4,
-      "descendant_count": 17,
+      "descendant_count": 37,
       "proof_size_tex": 320,
-      "effort_local": 320,
+      "effort_local": 0,
       "proof_size_tex_total": 1745,
-      "proof_size_lean_total": null,
-      "effort_total": 1295
+      "proof_size_lean_total": 1815,
+      "effort_total": 0
     },
     {
       "id": "lem:node_prime_nonprincipal",
@@ -393,19 +393,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  The defining equation lies in the square of the maximal ideal, so the\n  residue classes of \\(x,y,z\\) form a basis of\n  \\(\\mathfrak M/\\mathfrak M^2\\) over \\(\\mathbb C\\).  Since\n  \\(\\mathfrak M Q\\subseteq\\mathfrak M^2\\), the classes of \\(x\\) and \\(y\\)\n  in \\(Q/\\mathfrak M Q\\) are linearly independent.  Nakayama's lemma\n  therefore shows that \\(Q\\) needs at least two generators, whereas a\n  principal ideal needs at most one.\n",
-      "lean_source": "theorem nodePrime_not_principal :\n    ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing) := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem nodePrime_not_principal :\n    ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing) := by\n  rcases completeDomainChoice with\n    ⟨_hDomain, _hNoeth, _hLocal, _hDim, _hCard, _hPrime, _hNonzero, _hHeight,\n      hNotPrincipal⟩\n  exact hNotPrincipal",
+      "proof_size_lean": 261,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 3,
       "rdep_count": 2,
-      "descendant_count": 16,
+      "descendant_count": 36,
       "proof_size_tex": 425,
-      "effort_local": 425,
+      "effort_local": 0,
       "proof_size_tex_total": 2170,
-      "proof_size_lean_total": null,
-      "effort_total": 1720
+      "proof_size_lean_total": 2076,
+      "effort_total": 0
     },
     {
       "id": "lem:complete_domain_choice",
@@ -424,19 +424,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Combine \\cref{lem:node_domain,lem:node_complete_cm_dim,lem:node_cardinality,\n  lem:node_prime_height,lem:node_prime_nonprincipal}.\n",
-      "lean_source": "theorem completeDomainChoice :\n    IsDomain nodeRing ∧ IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧\n      nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧\n        ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing) := by\n  exact\n    ⟨nodeRing_isDomain, node_complete_cm_dim.1, node_complete_cm_dim.2.1,\n      nodePrime_prime_height.1, nodePrime_prime_height.2.1, nodePrime_not_principal⟩",
-      "proof_size_lean": 390,
-      "has_sorry": false,
+      "lean_source": "theorem completeDomainChoice :\n    IsDomain nodeRing ∧ IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧\n      ringKrullDim nodeRing = 2 ∧ Cardinal.mk nodeRing = Cardinal.mk ℂ ∧\n        nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧ nodePrime.height = 1 ∧\n          ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing) := by\n  sorry",
+      "proof_size_lean": null,
+      "has_sorry": true,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 5,
       "rdep_count": 2,
-      "descendant_count": 15,
+      "descendant_count": 35,
       "proof_size_tex": 130,
-      "effort_local": 0,
+      "effort_local": 130,
       "proof_size_tex_total": 2674,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
     },
     {
       "id": "def:n_subring",
@@ -456,7 +456,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 0,
       "rdep_count": 5,
-      "descendant_count": 23,
+      "descendant_count": 43,
       "proof_size_tex": 109,
       "effort_local": 0,
       "proof_size_tex_total": 109,
@@ -481,7 +481,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 0,
       "rdep_count": 2,
-      "descendant_count": 22,
+      "descendant_count": 42,
       "proof_size_tex": 754,
       "effort_local": 0,
       "proof_size_tex_total": 754,
@@ -506,7 +506,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 0,
       "rdep_count": 1,
-      "descendant_count": 16,
+      "descendant_count": 36,
       "proof_size_tex": 632,
       "effort_local": 0,
       "proof_size_tex_total": 632,
@@ -533,7 +533,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 1,
       "rdep_count": 1,
-      "descendant_count": 17,
+      "descendant_count": 37,
       "proof_size_tex": 569,
       "effort_local": 0,
       "proof_size_tex_total": 678,
@@ -561,7 +561,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 2,
-      "descendant_count": 20,
+      "descendant_count": 40,
       "proof_size_tex": 1192,
       "effort_local": 0,
       "proof_size_tex_total": 2055,
@@ -589,7 +589,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 2,
-      "descendant_count": 20,
+      "descendant_count": 40,
       "proof_size_tex": 606,
       "effort_local": 0,
       "proof_size_tex_total": 1469,
@@ -617,7 +617,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 3,
-      "descendant_count": 19,
+      "descendant_count": 39,
       "proof_size_tex": 491,
       "effort_local": 0,
       "proof_size_tex_total": 3152,
@@ -645,7 +645,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 2,
-      "descendant_count": 18,
+      "descendant_count": 38,
       "proof_size_tex": 440,
       "effort_local": 0,
       "proof_size_tex_total": 3592,
@@ -672,8 +672,8 @@
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
-      "rdep_count": 1,
-      "descendant_count": 17,
+      "rdep_count": 2,
+      "descendant_count": 37,
       "proof_size_tex": 869,
       "effort_local": 0,
       "proof_size_tex_total": 4461,
@@ -707,7 +707,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 8,
       "rdep_count": 1,
-      "descendant_count": 16,
+      "descendant_count": 36,
       "proof_size_tex": 664,
       "effort_local": 0,
       "proof_size_tex_total": 5965,
@@ -735,7 +735,7 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 2,
-      "descendant_count": 15,
+      "descendant_count": 35,
       "proof_size_tex": 266,
       "effort_local": 0,
       "proof_size_tex_total": 6863,
@@ -763,12 +763,12 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 1,
-      "descendant_count": 14,
+      "descendant_count": 34,
       "proof_size_tex": 479,
       "effort_local": 0,
       "proof_size_tex_total": 10016,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
     },
     {
       "id": "lem:jensen_special_case",
@@ -791,13 +791,13 @@
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 3,
-      "rdep_count": 2,
-      "descendant_count": 13,
+      "rdep_count": 3,
+      "descendant_count": 33,
       "proof_size_tex": 308,
       "effort_local": 0,
       "proof_size_tex_total": 10324,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
     },
     {
       "id": "def:counterexample_ring",
@@ -819,12 +819,12 @@
       "lean_file": "Run202608192034.lean",
       "dep_count": 1,
       "rdep_count": 3,
-      "descendant_count": 12,
+      "descendant_count": 31,
       "proof_size_tex": 111,
       "effort_local": 0,
       "proof_size_tex_total": 10435,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
     },
     {
       "id": "lem:counterexample_ring_properties",
@@ -846,13 +846,13 @@
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
-      "rdep_count": 7,
-      "descendant_count": 11,
+      "rdep_count": 6,
+      "descendant_count": 30,
       "proof_size_tex": 348,
       "effort_local": 0,
       "proof_size_tex_total": 10783,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
     },
     {
       "id": "lem:counterexample_ring_weak",
@@ -868,19 +868,19 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  By \\cref{lem:counterexample_ring_properties}, every nonzero prime of\n  \\(\\widehat A\\cong T\\) contracts nontrivially to \\(A\\).  Apply\n  \\cref{lem:farley_completion_criterion}.\n",
-      "lean_source": "theorem counterexampleRing_weaklyQuasiComplete :\n    counterexampleRing →\n      ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring),\n        WeaklyQuasiComplete A 𝔪 := by\n  intro hA\n  rcases hA with ⟨A, instA, 𝔪, ι, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩\n  letI := instA\n  exact\n    ⟨A, instA, 𝔪,\n      (weaklyQuasiComplete_iff_completion_primes A nodeRing 𝔪 ι).2 hNonzero⟩",
-      "proof_size_lean": 393,
+      "lean_source": "theorem counterexampleRing_weaklyQuasiComplete :\n    (∀ (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing),\n      WeaklyQuasiComplete A 𝔪 ↔\n        ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥) →\n    counterexampleRing →\n      ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring),\n        WeaklyQuasiComplete A 𝔪 := by\n  intro hCriterion hA\n  rcases hA with ⟨A, instA, 𝔪, ι, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩\n  letI := instA\n  exact\n    ⟨A, instA, 𝔪,\n      (weaklyQuasiComplete_iff_completion_primes A nodeRing 𝔪 ι\n        (hCriterion A 𝔪 ι)).2 hNonzero⟩",
+      "proof_size_lean": 603,
       "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
-      "rdep_count": 1,
-      "descendant_count": 2,
+      "rdep_count": 2,
+      "descendant_count": 13,
       "proof_size_tex": 174,
       "effort_local": 0,
       "proof_size_tex_total": 12020,
       "proof_size_lean_total": null,
-      "effort_total": 2879
+      "effort_total": 130
     },
     {
       "id": "def:contracted_prime",
@@ -903,13 +903,13 @@
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 3,
-      "rdep_count": 1,
-      "descendant_count": 9,
+      "rdep_count": 2,
+      "descendant_count": 28,
       "proof_size_tex": 21,
       "effort_local": 0,
       "proof_size_tex_total": 10804,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
     },
     {
       "id": "lem:contracted_prime_height",
@@ -932,13 +932,13 @@
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 3,
-      "rdep_count": 2,
-      "descendant_count": 8,
+      "rdep_count": 3,
+      "descendant_count": 27,
       "proof_size_tex": 333,
       "effort_local": 0,
       "proof_size_tex_total": 11137,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
     },
     {
       "id": "def:prime_generator",
@@ -954,19 +954,78 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Every height-one prime of the UFD \\(A\\) is principal and generated by a\n  prime element, so \\cref{lem:contracted_prime_height} supplies such \\(a\\).\n",
-      "lean_source": "def primeGenerator : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (q : @Ideal A _inst.toSemiring) (a : A),\n    contractedPrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧ q = Ideal.span ({a} : Set A)",
-      "proof_size_lean": 176,
+      "lean_source": "def primeGenerator : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring)\n    (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring) (a : A),\n    counterexampleRing ∧ IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n      WeaklyQuasiComplete A 𝔪 ∧ Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧\n        (∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥) ∧\n          q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n            q = Ideal.span ({a} : Set A)",
+      "proof_size_lean": 485,
       "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
-      "rdep_count": 4,
-      "descendant_count": 7,
+      "rdep_count": 7,
+      "descendant_count": 26,
       "proof_size_tex": 147,
       "effort_local": 0,
       "proof_size_tex_total": 11284,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
+    },
+    {
+      "id": "lem:prime_generator_source",
+      "type": "lemma",
+      "title": "Source theorem for the prime generator",
+      "chapter": "The Anderson counterexample",
+      "statement": "The Jensen construction and the UFD height-one-prime argument supply the\n  prime-generator package used later.",
+      "uses": [
+        "def:prime_generator",
+        "lem:contracted_prime_height",
+        "lem:counterexample_ring_weak"
+      ],
+      "lean_name": "Run202608192034.TODO.primeGenerator_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Use the constructed ring \\(A\\), take \\(q=Q\\cap A\\), and apply the\n  height-one-prime-in-a-UFD argument to choose \\(a\\) with \\(q=aA\\).  The\n  generic-fiber condition gives nonzeroness of the contraction, and the\n  Farley criterion gives weak quasi-completeness of \\(A\\).\n",
+      "lean_source": "theorem primeGenerator_source : primeGenerator := by\n  sorry",
+      "proof_size_lean": null,
+      "has_sorry": true,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 3,
+      "rdep_count": 1,
+      "descendant_count": 12,
+      "proof_size_tex": 269,
+      "effort_local": 269,
+      "proof_size_tex_total": 12790,
+      "proof_size_lean_total": null,
+      "effort_total": 399
+    },
+    {
+      "id": "lem:extended_principal_specific_not_prime",
+      "type": "lemma",
+      "title": "The chosen extended principal ideal is not prime",
+      "chapter": "The Anderson counterexample",
+      "statement": "For the specific generator \\(a\\) of the contracted prime \\(q\\), the extended\n  ideal \\(aT\\) is not prime.",
+      "uses": [
+        "def:prime_generator",
+        "lem:counterexample_ring_properties",
+        "lem:node_prime_height",
+        "lem:node_prime_nonprincipal"
+      ],
+      "lean_name": "Run202608192034.TODO.extendedPrincipal_not_prime_of_generator_data",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  The identity \\(q=aA\\) gives \\(qT=aT\\), while\n  \\(q=Q\\cap A\\) gives \\(qT\\subseteq Q\\).  Since \\(A\\subseteq T\\), the extended\n  ideal is nonzero.  If \\(aT\\) were prime, the principal ideal theorem would\n  give height at most one, and nonzeroness in the domain \\(T\\) gives height at\n  least one.  A strict containment \\(aT\\subsetneq Q\\) would then strictly\n  increase prime height, contradicting that both have height one.  Hence\n  \\(aT=Q\\), contradicting that \\(Q\\) is not principal.\n",
+      "lean_source": "theorem extendedPrincipal_not_prime_of_generator_data\n    (A : Type u) [CommRing A] (ι : A →+* nodeRing) (q : Ideal A) (a : A)\n    (hBot : Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥)\n    (hqComap : q = Ideal.comap ι nodePrime)\n    (hqNonzero : q ≠ ⊥)\n    (hqPrincipal : q = Ideal.span ({a} : Set A)) :\n    ¬ (Ideal.span ({ι a} : Set nodeRing)).IsPrime := by\n  have hMapPrincipal :\n      Ideal.map ι q = Ideal.span ({ι a} : Set nodeRing) := by\n    calc\n      Ideal.map ι q = Ideal.map ι (Ideal.span ({a} : Set A)) := by\n        rw [hqPrincipal]\n      _ = Ideal.span (ι '' ({a} : Set A)) := Ideal.map_span ι ({a} : Set A)\n      _ = Ideal.span ({ι a} : Set nodeRing) := by simp\n  have hMapLeNodePrime : Ideal.map ι q ≤ nodePrime := by\n    rw [hqComap]\n    exact Ideal.map_comap_le\n  have hPrincipalLeNodePrime : Ideal.span ({ι a} : Set nodeRing) ≤ nodePrime := by\n    simpa [hMapPrincipal] using hMapLeNodePrime\n  intro hPrincipalPrime\n  have hNodePrime : nodePrime.IsPrime := nodePrime_prime_height.1\n  have hNodeHeight : nodePrime.height = 1 := nodePrime_prime_height.2.2\n  have hNodeNotPrincipal :\n      ¬ ∃ b : nodeRing, nodePrime = Ideal.span ({b} : Set nodeRing) :=\n    nodePrime_not_principal\n  haveI : IsDomain nodeRing := nodeRing_isDomain\n  haveI : IsNoetherianRing nodeRing := node_complete_cm_dim.1\n  have hInjective : Function.Injective ι := by\n    rw [RingHom.injective_iff_ker_eq_bot, RingHom.ker_eq_comap_bot]\n    exact hBot\n  have hMapNonzero : Ideal.map ι q ≠ ⊥ := by\n    intro hMapBot\n    exact hqNonzero ((Ideal.map_eq_bot_iff_of_injective hInjective).mp hMapBot)\n  have hPrincipalNonzero :\n      Ideal.span ({ι a} : Set nodeRing) ≠ ⊥ := by\n    simpa [hMapPrincipal] using hMapNonzero\n  have hPrincipalProper :\n      Ideal.span ({ι a} : Set nodeRing) ≠ ⊤ := by\n    intro hTop\n    exact hNodePrime.ne_top\n      (top_le_iff.mp (by simpa [hTop] using hPrincipalLeNodePrime))\n  have hPrincipalHeightLe :\n      (Ideal.span ({ι a} : Set nodeRing)).height ≤ 1 := by\n    have hRankLe :\n        Cardinal.toENat\n            (Submodule.spanRank (Ideal.span ({ι a} : Set nodeRing))) ≤\n          (1 : ℕ∞) := by\n      calc\n        Cardinal.toENat\n            (Submodule.spanRank (Ideal.span ({ι a} : Set nodeRing))) ≤\n            Cardinal.toENat (Cardinal.mk ({ι a} : Set nodeRing)) :=\n          Cardinal.toENat.monotone'\n            (Submodule.spanRank_span_le_card ({ι a} : Set nodeRing))\n        _ = (1 : ℕ∞) := by simp\n    exact (Ideal.height_le_spanRank_toENat\n      (Ideal.span ({ι a} : Set nodeRing)) hPrincipalProper).trans hRankLe\n  have hBotLtPrincipal :\n      (⊥ : Ideal nodeRing) < Ideal.span ({ι a} : Set nodeRing) := by\n    exact bot_lt_iff_ne_bot.mpr hPrincipalNonzero\n  have hPrincipalHeightPos :\n      0 < (Ideal.span ({ι a} : Set nodeRing)).height := by\n    have hStrict :\n        (⊥ : Ideal nodeRing).height <\n          (Ideal.span ({ι a} : Set nodeRing)).height :=\n      Ideal.height_strict_mono_of_is_prime hBotLtPrincipal\n    simpa [Ideal.height_bot] using hStrict\n  have hPrincipalHeightEq :\n      (Ideal.span ({ι a} : Set nodeRing)).height = 1 := by\n    refine le_antisymm hPrincipalHeightLe ?_\n    exact ENat.one_le_iff_ne_zero.mpr (ne_of_gt hPrincipalHeightPos)\n  have hPrincipalEqNode : Ideal.span ({ι a} : Set nodeRing) = nodePrime := by\n    by_contra hNe\n    have hLt : Ideal.span ({ι a} : Set nodeRing) < nodePrime :=\n      lt_of_le_of_ne hPrincipalLeNodePrime hNe\n    have hPrimeHeightLt :\n        (Ideal.span ({ι a} : Set nodeRing)).primeHeight < nodePrime.primeHeight :=\n      Ideal.primeHeight_strict_mono hLt\n    have hPrincipalPrimeHeight :\n        (Ideal.span ({ι a} : Set nodeRing)).primeHeight = 1 := by\n      simpa [Ideal.height_eq_primeHeight] using hPrincipalHeightEq\n    have hNodePrimeHeight : nodePrime.primeHeight = 1 := by\n      simpa [Ideal.height_eq_primeHeight] using hNodeHeight\n    rw [hPrincipalPrimeHeight, hNodePrimeHeight] at hPrimeHeightLt\n    exact (lt_irrefl (1 : ℕ∞)) hPrimeHeightLt\n  exact hNodeNotPrincipal ⟨ι a, hPrincipalEqNode.symm⟩",
+      "proof_size_lean": 3996,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 4,
+      "rdep_count": 2,
+      "descendant_count": 5,
+      "proof_size_tex": 481,
+      "effort_local": 0,
+      "proof_size_tex_total": 11765,
+      "proof_size_lean_total": null,
+      "effort_total": 130
     },
     {
       "id": "lem:extended_principal_not_prime",
@@ -975,28 +1034,25 @@
       "chapter": "The Anderson counterexample",
       "statement": "The ideal \\(aT\\) is a proper nonprime ideal of \\(T\\).",
       "uses": [
-        "def:prime_generator",
-        "lem:counterexample_ring_properties",
-        "lem:node_prime_height",
-        "lem:node_prime_nonprincipal"
+        "lem:extended_principal_specific_not_prime"
       ],
       "lean_name": "Run202608192034.TODO.extendedPrincipal_not_prime",
       "proved": false,
       "mathlib_ok": false,
-      "proof_tex": "\n  The embedding \\(A\\subseteq T\\) shows \\(a\\neq0\\), and\n  \\(a\\in q\\subseteq Q\\) gives \\(aT\\subseteq Q\\).  If \\(aT\\) were prime, the\n  principal ideal theorem would give height at most one, while nonzeroness in\n  the domain \\(T\\) gives height at least one.  Thus \\(aT\\) and \\(Q\\) would be\n  nested height-one primes, hence equal.  This contradicts\n  \\cref{lem:node_prime_nonprincipal}.  Therefore \\(aT\\) is not prime.\n",
-      "lean_source": "theorem extendedPrincipal_not_prime :\n    primeGenerator →\n      ∃ (a : nodeRing), ¬ (Ideal.span ({a} : Set nodeRing)).IsPrime := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "proof_tex": "\n  This is the existential form of\n  \\cref{lem:extended_principal_specific_not_prime}.\n",
+      "lean_source": "theorem extendedPrincipal_not_prime :\n    primeGenerator →\n      ∃ (a : nodeRing), ¬ (Ideal.span ({a} : Set nodeRing)).IsPrime := by\n  intro hGen\n  rcases hGen with\n    ⟨A, instA, _𝔪, ι, q, a, _hCounter, _hNoeth, _hLocal, _hDomain, _hWeak,\n      hBot, _hNonzeroContraction, hqComap, _hqPrime, _hqNonzero,\n      hqPrincipal⟩\n  letI := instA\n  exact\n    ⟨ι a,\n      extendedPrincipal_not_prime_of_generator_data A ι q a hBot hqComap\n        _hqNonzero hqPrincipal⟩",
+      "proof_size_lean": 462,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
-      "dep_count": 4,
-      "rdep_count": 1,
-      "descendant_count": 4,
-      "proof_size_tex": 413,
-      "effort_local": 413,
-      "proof_size_tex_total": 11697,
+      "dep_count": 1,
+      "rdep_count": 0,
+      "descendant_count": 0,
+      "proof_size_tex": 83,
+      "effort_local": 0,
+      "proof_size_tex_total": 11848,
       "proof_size_lean_total": null,
-      "effort_total": 2507
+      "effort_total": 130
     },
     {
       "id": "def:bad_quotient",
@@ -1012,19 +1068,448 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  This is a definition.\n",
-      "lean_source": "def badQuotient : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (𝔪 q : @Ideal A _inst.toSemiring),\n    IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n      WeaklyQuasiComplete A 𝔪 ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n        ∃ a : A, q = Ideal.span ({a} : Set A)",
-      "proof_size_lean": 248,
+      "lean_source": "def badQuotient : Prop :=\n  ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring)\n    (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring) (a : A),\n    IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n      WeaklyQuasiComplete A 𝔪 ∧\n        Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧\n          q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n            q = Ideal.span ({a} : Set A)",
+      "proof_size_lean": 395,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 3,
+      "descendant_count": 22,
+      "proof_size_tex": 21,
+      "effort_local": 0,
+      "proof_size_tex_total": 11305,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "def:bad_quotient_source_data",
+      "type": "definition",
+      "title": "Bad quotient source data",
+      "chapter": "The Anderson counterexample",
+      "statement": "Package the source data for the bad quotient as one object:\n  \\(A\\), \\(\\mathfrak m_A\\), the map \\(A\\to T\\), the contracted prime\n  \\(q=Q\\cap A\\), its chosen generator \\(a\\), and the structural properties of\n  \\(A\\) and \\(q\\).",
+      "uses": [
+        "def:bad_quotient",
+        "def:prime_generator"
+      ],
+      "lean_name": "Run202608192034.TODO.BadQuotientSourceData",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This is a data structure organizing the hypotheses already present in\n  \\cref{def:bad_quotient}, together with the Jensen generic-fiber data needed\n  to recover the earlier contracted-prime and prime-generator nodes.\n",
+      "lean_source": "structure BadQuotientSourceData where\n  A : Type\n  [instA : CommRing A]\n  𝔪 : Ideal A\n  ι : A →+* nodeRing\n  q : Ideal A\n  a : A\n  hCounter : counterexampleRing\n  hNoeth : IsNoetherianRing A\n  hLocal : IsLocalRing A\n  hDomain : IsDomain A\n  hWeak : WeaklyQuasiComplete A 𝔪\n  hBot : Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥\n  hNonzeroContraction :\n    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥\n  hqComap : q = Ideal.comap ι nodePrime\n  hqPrime : q.IsPrime\n  hqNonzero : q ≠ ⊥\n  hqPrincipal : q = Ideal.span ({a} : Set A)\n\nattribute [instance] BadQuotientSourceData.instA",
+      "proof_size_lean": 587,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 8,
+      "descendant_count": 20,
+      "proof_size_tex": 216,
+      "effort_local": 0,
+      "proof_size_tex_total": 11521,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "def:bad_quotient_quasi_criterion_field",
+      "type": "definition",
+      "title": "Quotient criterion field",
+      "chapter": "The Anderson counterexample",
+      "statement": "The source data carries the Anderson/Farley criterion saying that\n  \\(A\\) is quasi-complete exactly when all quotients \\(A/J\\) are weakly\n  quasi-complete.",
+      "uses": [
+        "def:bad_quotient_source_data",
+        "lem:quotient_weak_characterization"
+      ],
+      "lean_name": "Run202608192034.TODO.BadQuotientSourceData.QuasiCriterion",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This field records the criterion in the notation of the chosen data package.\n",
+      "lean_source": "def BadQuotientSourceData.QuasiCriterion\n    (d : BadQuotientSourceData) : Prop :=\n  QuasiComplete d.A d.𝔪 ↔\n    ∀ J : Ideal d.A,\n      WeaklyQuasiComplete (d.A ⧸ J) (Ideal.map (Ideal.Quotient.mk J) d.𝔪)",
+      "proof_size_lean": 203,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 1,
+      "descendant_count": 9,
+      "proof_size_tex": 76,
+      "effort_local": 0,
+      "proof_size_tex_total": 12624,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "def:bad_quotient_dimension_criterion_field",
+      "type": "definition",
+      "title": "Dimension-one criterion field",
+      "chapter": "The Anderson counterexample",
+      "statement": "The source data carries the dimension-one criterion identifying weak\n  quasi-completeness of \\(A/q\\) with analytic irreducibility of the completed\n  quotient \\(T/aT\\).",
+      "uses": [
+        "def:bad_quotient_source_data",
+        "lem:dimension_one_weak_criterion"
+      ],
+      "lean_name": "Run202608192034.TODO.BadQuotientSourceData.DimensionCriterion",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This field records the dimension-one criterion in the notation of the chosen\n  data package.\n",
+      "lean_source": "def BadQuotientSourceData.DimensionCriterion\n    (d : BadQuotientSourceData) : Prop :=\n  WeaklyQuasiComplete (d.A ⧸ d.q)\n    (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔\n      AnalyticallyIrreducible (d.A ⧸ d.q)\n        (nodeRing ⧸ Ideal.span ({d.ι d.a} : Set nodeRing))",
+      "proof_size_lean": 267,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 1,
+      "descendant_count": 8,
+      "proof_size_tex": 92,
+      "effort_local": 0,
+      "proof_size_tex_total": 13484,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "def:jensen_completion_witness",
+      "type": "definition",
+      "title": "Jensen completion witness",
+      "chapter": "The Anderson counterexample",
+      "statement": "Record the stronger Jensen output needed later: an abstract completion\n  \\(\\widehat A\\), a completion map \\(A\\to\\widehat A\\), an equivalence\n  \\(\\widehat A\\cong T\\), compatibility with the embedded map \\(A\\to T\\), and\n  the weak quasi-completeness criterion expressed through this completion.",
+      "uses": [
+        "lem:jensen_special_case",
+        "lem:farley_completion_criterion"
+      ],
+      "lean_name": "Run202608192034.TODO.JensenCompletionWitness",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This is a source data structure isolating the part of Jensen's construction\n  that identifies the completion of \\(A\\) with the chosen complete local ring\n  \\(T\\).\n",
+      "lean_source": "structure JensenCompletionWitness\n    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing) where\n  Ahat : Type\n  [instAhat : CommRing Ahat]\n  completionMap : A →+* Ahat\n  completionEquiv : Ahat ≃+* nodeRing\n  map_compatible : ι = completionEquiv.toRingHom.comp completionMap\n  weakCriterion :\n    WeaklyQuasiComplete A 𝔪 ↔\n      ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥\n\nattribute [instance] JensenCompletionWitness.instAhat",
+      "proof_size_lean": 451,
       "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 2,
       "rdep_count": 2,
-      "descendant_count": 5,
-      "proof_size_tex": 21,
+      "descendant_count": 12,
+      "proof_size_tex": 162,
       "effort_local": 0,
-      "proof_size_tex_total": 11305,
+      "proof_size_tex_total": 11549,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
+    },
+    {
+      "id": "def:quotient_completion_witness",
+      "type": "definition",
+      "title": "Quotient completion witness",
+      "chapter": "The Anderson counterexample",
+      "statement": "Record the completion bridge for the quotient \\(A/q=A/aA\\): its completion\n  target is equivalent to \\(T/aT\\), and the dimension-one analytic\n  irreducibility criterion applies to that completion target.",
+      "uses": [
+        "def:bad_quotient_source_data",
+        "def:jensen_completion_witness",
+        "lem:dimension_one_weak_criterion"
+      ],
+      "lean_name": "Run202608192034.TODO.QuotientCompletionWitness",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This is the source interface for the theorem that completion commutes with\n  quotient by the principal ideal \\(aA\\), after transporting\n  \\(\\widehat A\\cong T\\).\n",
+      "lean_source": "structure QuotientCompletionWitness (d : BadQuotientSourceData) where\n  Bhat : Type\n  [instBhat : CommRing Bhat]\n  quotientCompletionEquiv :\n    Bhat ≃+* (nodeRing ⧸ Ideal.span ({d.ι d.a} : Set nodeRing))\n  analyticCriterionOnBhat :\n    WeaklyQuasiComplete (d.A ⧸ d.q)\n      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔\n        AnalyticallyIrreducible (d.A ⧸ d.q) Bhat\n\nattribute [instance] QuotientCompletionWitness.instBhat",
+      "proof_size_lean": 422,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 3,
+      "rdep_count": 3,
+      "descendant_count": 11,
+      "proof_size_tex": 160,
+      "effort_local": 0,
+      "proof_size_tex_total": 13714,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "lem:quotient_completion_dimension_criterion",
+      "type": "lemma",
+      "title": "Transporting the dimension-one criterion",
+      "chapter": "The Anderson counterexample",
+      "statement": "If the quotient completion target is equivalent to \\(T/aT\\), then the\n  analytic irreducibility criterion may be stated directly with \\(T/aT\\) as\n  the target.",
+      "uses": [
+        "def:quotient_completion_witness",
+        "def:bad_quotient_dimension_criterion_field"
+      ],
+      "lean_name": "Run202608192034.TODO.QuotientCompletionWitness.dimensionCriterion",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  In this formalization analytic irreducibility is represented by the target\n  being a domain.  Domainness is transported across the recorded ring\n  equivalence.\n",
+      "lean_source": "theorem QuotientCompletionWitness.dimensionCriterion\n    {d : BadQuotientSourceData} (w : QuotientCompletionWitness d) :\n    d.DimensionCriterion := by\n  dsimp [BadQuotientSourceData.DimensionCriterion] at *\n  constructor\n  · intro hWeak\n    have hBhatDomain :\n        AnalyticallyIrreducible (d.A ⧸ d.q) w.Bhat :=\n      w.analyticCriterionOnBhat.1 hWeak\n    dsimp [AnalyticallyIrreducible] at hBhatDomain ⊢\n    haveI : IsDomain w.Bhat := hBhatDomain\n    exact MulEquiv.isDomain w.Bhat w.quotientCompletionEquiv.symm.toMulEquiv\n  · intro hNodeDomain\n    apply w.analyticCriterionOnBhat.2\n    dsimp [AnalyticallyIrreducible] at hNodeDomain ⊢\n    haveI : IsDomain\n        (nodeRing ⧸ Ideal.span ({d.ι d.a} : Set nodeRing)) := hNodeDomain\n    exact MulEquiv.isDomain\n      (nodeRing ⧸ Ideal.span ({d.ι d.a} : Set nodeRing))\n      w.quotientCompletionEquiv.toMulEquiv",
+      "proof_size_lean": 863,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 1,
+      "descendant_count": 7,
+      "proof_size_tex": 159,
+      "effort_local": 0,
+      "proof_size_tex_total": 13965,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "def:bad_quotient_structured_source",
+      "type": "definition",
+      "title": "Structured bad-quotient source",
+      "chapter": "The Anderson counterexample",
+      "statement": "Package the bad quotient data together with Jensen's completion witness, the\n  quotient-completion bridge, and the quotient criterion for quasi-completeness.",
+      "uses": [
+        "def:bad_quotient_source_data",
+        "def:jensen_completion_witness",
+        "def:quotient_completion_witness",
+        "def:bad_quotient_quasi_criterion_field"
+      ],
+      "lean_name": "Run202608192034.TODO.BadQuotientStructuredSource",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This structure separates the paper's order into three layers: construct the\n  ring \\(A\\), identify its completion with \\(T\\), and then identify the\n  completion of \\(A/aA\\) with \\(T/aT\\).\n",
+      "lean_source": "structure BadQuotientStructuredSource where\n  data : BadQuotientSourceData\n  jensenCompletion :\n    JensenCompletionWitness data.A data.𝔪 data.ι\n  quotientCompletion : QuotientCompletionWitness data\n  quasiCriterion : data.QuasiCriterion",
+      "proof_size_lean": 237,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 4,
+      "rdep_count": 1,
+      "descendant_count": 8,
+      "proof_size_tex": 187,
+      "effort_local": 0,
+      "proof_size_tex_total": 14726,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "lem:source_data_to_contracted_prime",
+      "type": "lemma",
+      "title": "Source data recovers the contracted prime",
+      "chapter": "The Anderson counterexample",
+      "statement": "The structured source data remembers the contracted prime\n  \\(q=Q\\cap A\\), so it recovers the contracted-prime node.",
+      "uses": [
+        "def:bad_quotient_source_data",
+        "def:contracted_prime"
+      ],
+      "lean_name": "Run202608192034.TODO.BadQuotientSourceData.to_contractedPrime",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Return the stored counterexample-ring witness, the equality\n  \\(q=Q\\cap A\\), primality of \\(q\\), and nonzeroness of \\(q\\).\n",
+      "lean_source": "theorem BadQuotientSourceData.to_contractedPrime\n    (d : BadQuotientSourceData) : contractedPrime := by\n  exact\n    ⟨d.A, d.instA, d.𝔪, d.ι, d.q, d.hCounter, d.hqComap, d.hqPrime,\n      d.hqNonzero⟩",
+      "proof_size_lean": 199,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 1,
+      "descendant_count": 8,
+      "proof_size_tex": 122,
+      "effort_local": 0,
+      "proof_size_tex_total": 11643,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "lem:source_data_to_prime_generator",
+      "type": "lemma",
+      "title": "Source data recovers the prime generator",
+      "chapter": "The Anderson counterexample",
+      "statement": "The structured source data remembers the generator \\(q=aA\\), so it recovers\n  the prime-generator node used in the proof that \\(aT\\) is not prime.",
+      "uses": [
+        "def:bad_quotient_source_data",
+        "def:prime_generator"
+      ],
+      "lean_name": "Run202608192034.TODO.BadQuotientSourceData.to_primeGenerator",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Return the stored Jensen data, weak quasi-completeness, nonzero-contraction\n  condition, contracted-prime identity, and principal generator identity.\n",
+      "lean_source": "theorem BadQuotientSourceData.to_primeGenerator\n    (d : BadQuotientSourceData) : primeGenerator := by\n  exact\n    ⟨d.A, d.instA, d.𝔪, d.ι, d.q, d.a, d.hCounter, d.hNoeth, d.hLocal,\n      d.hDomain, d.hWeak, d.hBot, d.hNonzeroContraction, d.hqComap,\n      d.hqPrime, d.hqNonzero, d.hqPrincipal⟩",
+      "proof_size_lean": 294,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 1,
+      "descendant_count": 8,
+      "proof_size_tex": 149,
+      "effort_local": 0,
+      "proof_size_tex_total": 11670,
+      "proof_size_lean_total": null,
+      "effort_total": 130
+    },
+    {
+      "id": "lem:bad_quotient_source_data_from_jensen",
+      "type": "lemma",
+      "title": "Bad-quotient source data from Jensen",
+      "chapter": "The Anderson counterexample",
+      "statement": "The prime-generator source theorem supplies the source data\n  \\(A,\\mathfrak m_A,q,a\\) used for the bad quotient.",
+      "uses": [
+        "lem:prime_generator_source",
+        "def:bad_quotient_source_data"
+      ],
+      "lean_name": "Run202608192034.TODO.badQuotient_sourceData_from_jensen",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Destructure the prime-generator package and return the same data as a\n  `BadQuotientSourceData` object.\n",
+      "lean_source": "theorem badQuotient_sourceData_from_jensen :\n    ∃ _ : BadQuotientSourceData, True := by\n  rcases primeGenerator_source with\n    ⟨A, instA, 𝔪, ι, q, a, hCounter, hNoeth, hLocal, hDomain, hWeak, hBot,\n      hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩\n  letI := instA\n  exact\n    ⟨⟨A, 𝔪, ι, q, a, hCounter, hNoeth, hLocal, hDomain, hWeak, hBot,\n      hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩,\n      trivial⟩",
+      "proof_size_lean": 446,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 3,
+      "descendant_count": 11,
+      "proof_size_tex": 103,
+      "effort_local": 0,
+      "proof_size_tex_total": 13130,
+      "proof_size_lean_total": null,
+      "effort_total": 399
+    },
+    {
+      "id": "lem:jensen_completion_witness_source",
+      "type": "lemma",
+      "title": "Jensen completion equivalence source",
+      "chapter": "The Anderson counterexample",
+      "statement": "The Jensen construction identifies the completion of the selected ring\n  \\(A\\) with the prescribed complete local ring \\(T\\).",
+      "uses": [
+        "lem:bad_quotient_source_data_from_jensen",
+        "lem:jensen_completion_criterion"
+      ],
+      "lean_name": "Run202608192034.TODO.jensenCompletionWitness_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This is the strengthened form of Jensen's completion conclusion: besides\n  the embedded map \\(A\\to T\\), it records an abstract completion\n  \\(\\widehat A\\), the completion map \\(A\\to\\widehat A\\), and an equivalence\n  \\(\\widehat A\\cong T\\) compatible with the embedding.\n",
+      "lean_source": "noncomputable def jensenCompletionWitness_source\n    (d : BadQuotientSourceData) :\n    JensenCompletionWitness d.A d.𝔪 d.ι := by\n  sorry",
+      "proof_size_lean": null,
+      "has_sorry": true,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 2,
+      "descendant_count": 9,
+      "proof_size_tex": 268,
+      "effort_local": 268,
+      "proof_size_tex_total": 13398,
+      "proof_size_lean_total": null,
+      "effort_total": 667
+    },
+    {
+      "id": "lem:quotient_completion_witness_source",
+      "type": "lemma",
+      "title": "Quotient completion source",
+      "chapter": "The Anderson counterexample",
+      "statement": "Completion commutes with quotient by \\(q=aA\\), giving a completion target for\n  \\(A/q\\) equivalent to \\(T/aT\\).",
+      "uses": [
+        "lem:jensen_completion_witness_source",
+        "def:quotient_completion_witness",
+        "lem:dimension_one_weak_criterion"
+      ],
+      "lean_name": "Run202608192034.TODO.quotientCompletionWitness_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Use exactness of completion over the Noetherian local ring \\(A\\), then\n  transport the quotient of \\(\\widehat A\\) across the equivalence\n  \\(\\widehat A\\cong T\\).  The result is the completion target appearing in the\n  dimension-one analytic irreducibility criterion.\n",
+      "lean_source": "noncomputable def quotientCompletionWitness_source\n    (d : BadQuotientSourceData)\n    (_w : JensenCompletionWitness d.A d.𝔪 d.ι) :\n    QuotientCompletionWitness d := by\n  sorry",
+      "proof_size_lean": null,
+      "has_sorry": true,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 3,
+      "rdep_count": 1,
+      "descendant_count": 8,
+      "proof_size_tex": 266,
+      "effort_local": 266,
+      "proof_size_tex_total": 14794,
+      "proof_size_lean_total": null,
+      "effort_total": 933
+    },
+    {
+      "id": "lem:bad_quotient_quasi_criterion_source",
+      "type": "lemma",
+      "title": "Bad-quotient quasi-completeness criterion source",
+      "chapter": "The Anderson counterexample",
+      "statement": "The selected ring \\(A\\) satisfies the Anderson/Farley criterion:\n  \\(A\\) is quasi-complete exactly when every quotient \\(A/J\\) is weakly\n  quasi-complete.",
+      "uses": [
+        "lem:bad_quotient_source_data_from_jensen",
+        "lem:quotient_weak_characterization"
+      ],
+      "lean_name": "Run202608192034.TODO.badQuotient_quasiCriterion_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  This is the cited quotient characterization, specialized to the Jensen ring\n  \\(A\\) and its maximal ideal \\(\\mathfrak m_A\\).\n",
+      "lean_source": "theorem badQuotient_quasiCriterion_source\n    (d : BadQuotientSourceData)\n    (_w : JensenCompletionWitness d.A d.𝔪 d.ι) :\n    d.QuasiCriterion := by\n  sorry",
+      "proof_size_lean": null,
+      "has_sorry": true,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 1,
+      "descendant_count": 8,
+      "proof_size_tex": 124,
+      "effort_local": 124,
+      "proof_size_tex_total": 14003,
+      "proof_size_lean_total": null,
+      "effort_total": 523
+    },
+    {
+      "id": "lem:bad_quotient_structured_source",
+      "type": "lemma",
+      "title": "Source theorem for the structured bad quotient",
+      "chapter": "The Anderson counterexample",
+      "statement": "The source construction supplies the complete structured package for the bad\n  quotient.",
+      "uses": [
+        "def:bad_quotient_structured_source",
+        "lem:bad_quotient_source_data_from_jensen",
+        "lem:jensen_completion_witness_source",
+        "lem:quotient_completion_witness_source",
+        "lem:bad_quotient_quasi_criterion_source",
+        "lem:source_data_to_contracted_prime",
+        "lem:source_data_to_prime_generator"
+      ],
+      "lean_name": "Run202608192034.TODO.badQuotient_structured_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Choose the source data supplied by Jensen and the UFD generator step.  Attach\n  the Jensen completion witness, the quotient-completion witness, and the\n  quotient criterion.  The resulting tuple is the structured source package.\n",
+      "lean_source": "theorem badQuotient_structured_source :\n    ∃ _ : BadQuotientStructuredSource, True := by\n  rcases badQuotient_sourceData_from_jensen with ⟨d, _hd⟩\n  let w : JensenCompletionWitness d.A d.𝔪 d.ι :=\n    jensenCompletionWitness_source d\n  let qw : QuotientCompletionWitness d :=\n    quotientCompletionWitness_source d w\n  let hQuasi : d.QuasiCriterion :=\n    badQuotient_quasiCriterion_source d w\n  exact ⟨⟨d, w, qw, hQuasi⟩, trivial⟩",
+      "proof_size_lean": 431,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 7,
+      "rdep_count": 1,
+      "descendant_count": 7,
+      "proof_size_tex": 228,
+      "effort_local": 0,
+      "proof_size_tex_total": 16429,
+      "proof_size_lean_total": null,
+      "effort_total": 1057
+    },
+    {
+      "id": "lem:source_data_to_bad_quotient",
+      "type": "lemma",
+      "title": "Source data gives a bad quotient",
+      "chapter": "The Anderson counterexample",
+      "statement": "Forgetting the two final criterion fields, the structured source data is\n  exactly the bad quotient data.",
+      "uses": [
+        "def:bad_quotient_source_data",
+        "def:bad_quotient"
+      ],
+      "lean_name": "Run202608192034.TODO.BadQuotientSourceData.to_badQuotient",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Return the fields of the source package in the order required by\n  \\cref{def:bad_quotient}.\n",
+      "lean_source": "theorem BadQuotientSourceData.to_badQuotient\n    (d : BadQuotientSourceData) : badQuotient := by\n  exact\n    ⟨d.A, d.instA, d.𝔪, d.ι, d.q, d.a, d.hNoeth, d.hLocal, d.hDomain,\n      d.hWeak, d.hBot, d.hqComap, d.hqPrime, d.hqNonzero, d.hqPrincipal⟩",
+      "proof_size_lean": 247,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 0,
+      "descendant_count": 0,
+      "proof_size_tex": 91,
+      "effort_local": 0,
+      "proof_size_tex_total": 11612,
+      "proof_size_lean_total": null,
+      "effort_total": 130
     },
     {
       "id": "lem:bad_quotient_dimension_domain",
@@ -1042,8 +1527,8 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  The ideal \\(aA=q\\) is prime, so the quotient is a domain; quotients of\n  Noetherian local rings are Noetherian and local.  The chain\n  \\(q\\subsetneq\\mathfrak m_A\\) gives dimension at least one.  A longer prime\n  chain above \\(q\\), preceded by \\((0)\\subsetneq q\\), would have length above\n  two in \\(A\\), contrary to \\(\\dim A=2\\).  Hence \\(\\dim B=1\\).\n",
-      "lean_source": "theorem badQuotient_dimension_domain :\n    badQuotient →\n      ∃ (B : Type) (_inst : CommRing B),\n        IsNoetherianRing B ∧ IsLocalRing B ∧ IsDomain B := by\n  intro hBad\n  rcases hBad with\n    ⟨A, instA, _𝔪, q, hNoeth, hLocal, _hDomain, _hWeak, hqPrime, _hqNonzero,\n      _hPrincipal⟩\n  letI := instA\n  haveI : IsNoetherianRing A := hNoeth\n  haveI : IsLocalRing A := hLocal\n  haveI : q.IsPrime := hqPrime\n  haveI : Nontrivial (A ⧸ q) := Ideal.Quotient.nontrivial_iff.mpr hqPrime.ne_top\n  haveI : IsLocalHom (Ideal.Quotient.mk q) :=\n    IsLocalHom.of_surjective (Ideal.Quotient.mk q) Ideal.Quotient.mk_surjective\n  have hQuotientLocal : IsLocalRing (A ⧸ q) :=\n    IsLocalRing.of_surjective (Ideal.Quotient.mk q) Ideal.Quotient.mk_surjective\n  refine ⟨A ⧸ q, inferInstance, ?_, ?_, ?_⟩\n  · infer_instance\n  · exact hQuotientLocal\n  · infer_instance",
-      "proof_size_lean": 849,
+      "lean_source": "theorem badQuotient_dimension_domain :\n    badQuotient →\n      ∃ (B : Type) (_inst : CommRing B),\n        IsNoetherianRing B ∧ IsLocalRing B ∧ IsDomain B := by\n  intro hBad\n  rcases hBad with\n    ⟨A, instA, _𝔪, _ι, q, _a, hNoeth, hLocal, _hDomain, _hWeak, _hBot,\n      _hqComap, hqPrime, _hqNonzero, _hqPrincipal⟩\n  letI := instA\n  haveI : IsNoetherianRing A := hNoeth\n  haveI : IsLocalRing A := hLocal\n  haveI : q.IsPrime := hqPrime\n  haveI : Nontrivial (A ⧸ q) := Ideal.Quotient.nontrivial_iff.mpr hqPrime.ne_top\n  haveI : IsLocalHom (Ideal.Quotient.mk q) :=\n    IsLocalHom.of_surjective (Ideal.Quotient.mk q) Ideal.Quotient.mk_surjective\n  have hQuotientLocal : IsLocalRing (A ⧸ q) :=\n    IsLocalRing.of_surjective (Ideal.Quotient.mk q) Ideal.Quotient.mk_surjective\n  refine ⟨A ⧸ q, inferInstance, ?_, ?_, ?_⟩\n  · infer_instance\n  · exact hQuotientLocal\n  · infer_instance",
+      "proof_size_lean": 875,
       "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
@@ -1054,7 +1539,114 @@
       "effort_local": 0,
       "proof_size_tex_total": 11655,
       "proof_size_lean_total": null,
-      "effort_total": 2094
+      "effort_total": 130
+    },
+    {
+      "id": "lem:quotient_not_domain_of_not_prime",
+      "type": "lemma",
+      "title": "A quotient by a nonprime ideal is not a domain",
+      "chapter": "The Anderson counterexample",
+      "statement": "If an ideal \\(I\\) is not prime, then the quotient \\(R/I\\) is not a domain.",
+      "uses": [],
+      "lean_name": "Run202608192034.TODO.quotient_not_domain_of_not_prime",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  If \\(R/I\\) were a domain, then the kernel of the quotient map\n  \\(R\\to R/I\\) would be prime.  This kernel is exactly \\(I\\), contradiction.\n",
+      "lean_source": "theorem quotient_not_domain_of_not_prime\n    {R : Type u} [CommRing R] (I : Ideal R) (hI : ¬ I.IsPrime) :\n    ¬ IsDomain (R ⧸ I) := by\n  intro hDomain\n  haveI : IsDomain (R ⧸ I) := hDomain\n  exact hI (by simpa [Ideal.mk_ker] using\n    (RingHom.ker_isPrime (Ideal.Quotient.mk I)))",
+      "proof_size_lean": 279,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 0,
+      "rdep_count": 1,
+      "descendant_count": 4,
+      "proof_size_tex": 138,
+      "effort_local": 0,
+      "proof_size_tex_total": 138,
+      "proof_size_lean_total": 279,
+      "effort_total": 0
+    },
+    {
+      "id": "lem:bad_quotient_structured_criteria_source",
+      "type": "lemma",
+      "title": "Structured source criteria for the bad quotient",
+      "chapter": "The Anderson counterexample",
+      "statement": "The constructed data can be packaged as a source-ordered tuple containing\n  \\(A\\), \\(\\mathfrak m_A\\), the completion embedding \\(A\\to T\\), the contracted\n  prime \\(q=Q\\cap A\\), a generator \\(q=aA\\), and the two criteria needed for\n  the final bad quotient.",
+      "uses": [
+        "lem:bad_quotient_structured_source",
+        "lem:quotient_completion_dimension_criterion"
+      ],
+      "lean_name": "Run202608192034.TODO.badQuotient_structured_criteria_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Destructure the structured source theorem.  The quasi-completeness criterion\n  is stored directly, and the dimension-one criterion is transported from the\n  quotient completion target across its equivalence with \\(T/aT\\).\n",
+      "lean_source": "theorem badQuotient_structured_criteria_source :\n    ∃ d : BadQuotientSourceData,\n      d.QuasiCriterion ∧ d.DimensionCriterion := by\n  rcases badQuotient_structured_source with ⟨s, _hs⟩\n  exact\n    ⟨s.data, s.quasiCriterion,\n      s.quotientCompletion.dimensionCriterion⟩",
+      "proof_size_lean": 272,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 2,
+      "rdep_count": 1,
+      "descendant_count": 6,
+      "proof_size_tex": 221,
+      "effort_local": 0,
+      "proof_size_tex_total": 16901,
+      "proof_size_lean_total": null,
+      "effort_total": 1057
+    },
+    {
+      "id": "lem:bad_quotient_criteria_source",
+      "type": "lemma",
+      "title": "Expanded source criteria for the bad quotient",
+      "chapter": "The Anderson counterexample",
+      "statement": "Expanding the structured source package gives the explicit existential\n  statement used by the downstream Lean proof.",
+      "uses": [
+        "lem:bad_quotient_structured_criteria_source"
+      ],
+      "lean_name": "Run202608192034.TODO.badQuotient_criteria_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Destructure the source package and return its fields in the order expected by\n  the public bad-quotient interface.\n",
+      "lean_source": "theorem badQuotient_criteria_source :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring)\n      (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring) (a : A),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        WeaklyQuasiComplete A 𝔪 ∧\n          Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧\n            q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n              q = Ideal.span ({a} : Set A) ∧\n                (QuasiComplete A 𝔪 ↔\n                  ∀ J : Ideal A,\n                    WeaklyQuasiComplete (A ⧸ J)\n                      (Ideal.map (Ideal.Quotient.mk J) 𝔪)) ∧\n                  (WeaklyQuasiComplete (A ⧸ q)\n                    (Ideal.map (Ideal.Quotient.mk q) 𝔪) ↔\n                      AnalyticallyIrreducible (A ⧸ q)\n                        (nodeRing ⧸ Ideal.span ({ι a} : Set nodeRing))) := by\n  rcases badQuotient_structured_criteria_source with\n    ⟨d, hQuasiCriterion, hDimensionCriterion⟩\n  exact\n    ⟨d.A, d.instA, d.𝔪, d.ι, d.q, d.a, d.hNoeth, d.hLocal, d.hDomain,\n      d.hWeak, d.hBot, d.hqComap, d.hqPrime, d.hqNonzero, d.hqPrincipal,\n      hQuasiCriterion, hDimensionCriterion⟩",
+      "proof_size_lean": 1133,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 1,
+      "rdep_count": 1,
+      "descendant_count": 5,
+      "proof_size_tex": 114,
+      "effort_local": 0,
+      "proof_size_tex_total": 17015,
+      "proof_size_lean_total": null,
+      "effort_total": 1057
+    },
+    {
+      "id": "lem:bad_quotient_completion_source",
+      "type": "lemma",
+      "title": "Completion source data for the bad quotient",
+      "chapter": "The Anderson counterexample",
+      "statement": "The bad quotient data can be chosen with an isomorphism\n  \\(T/aT\\cong\\widehat{A/aA}\\), together with the source criteria needed for\n  the final quasi-completeness argument.",
+      "uses": [
+        "lem:bad_quotient_criteria_source"
+      ],
+      "lean_name": "Run202608192034.TODO.badQuotient_completion_source",
+      "proved": false,
+      "mathlib_ok": false,
+      "proof_tex": "\n  Take the completion target in\n  \\cref{lem:bad_quotient_criteria_source} to be \\(T/aT\\), with the identity\n  isomorphism.\n",
+      "lean_source": "theorem badQuotient_completion_source :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring)\n      (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring) (a : A)\n      (Bhat : Type) (_instBhat : CommRing Bhat)\n      (_e : (nodeRing ⧸ Ideal.span ({ι a} : Set nodeRing)) ≃+* Bhat),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        WeaklyQuasiComplete A 𝔪 ∧\n          Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧\n            q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n              q = Ideal.span ({a} : Set A) ∧\n                (QuasiComplete A 𝔪 ↔\n                  ∀ J : Ideal A,\n                    WeaklyQuasiComplete (A ⧸ J)\n                      (Ideal.map (Ideal.Quotient.mk J) 𝔪)) ∧\n                  (WeaklyQuasiComplete (A ⧸ q)\n                    (Ideal.map (Ideal.Quotient.mk q) 𝔪) ↔\n                      AnalyticallyIrreducible (A ⧸ q) Bhat) := by\n  rcases badQuotient_criteria_source with\n    ⟨A, instA, 𝔪, ι, q, a, hNoeth, hLocal, hDomain, hWeak, hBot, hqComap,\n      hqPrime, hqNonzero, hqPrincipal, hQuasiCriterion, hDimensionCriterion⟩\n  letI := instA\n  exact\n    ⟨A, instA, 𝔪, ι, q, a,\n      nodeRing ⧸ Ideal.span ({ι a} : Set nodeRing), inferInstance,\n      RingEquiv.refl (nodeRing ⧸ Ideal.span ({ι a} : Set nodeRing)),\n      hNoeth, hLocal, hDomain, hWeak, hBot, hqComap, hqPrime, hqNonzero,\n      hqPrincipal, hQuasiCriterion, hDimensionCriterion⟩",
+      "proof_size_lean": 1402,
+      "has_sorry": false,
+      "tex_file": "chapters/Run202608192034.tex",
+      "lean_file": "Run202608192034.lean",
+      "dep_count": 1,
+      "rdep_count": 1,
+      "descendant_count": 4,
+      "proof_size_tex": 120,
+      "effort_local": 0,
+      "proof_size_tex_total": 17135,
+      "proof_size_lean_total": null,
+      "effort_total": 1057
     },
     {
       "id": "lem:bad_quotient_completion",
@@ -1063,27 +1655,27 @@
       "chapter": "The Anderson counterexample",
       "statement": "The completion of \\(B\\) is isomorphic to \\(T/aT\\), and is not a domain.",
       "uses": [
-        "def:bad_quotient",
-        "lem:counterexample_ring_properties",
-        "lem:extended_principal_not_prime"
+        "lem:bad_quotient_completion_source",
+        "lem:extended_principal_specific_not_prime",
+        "lem:quotient_not_domain_of_not_prime"
       ],
       "lean_name": "Run202608192034.TODO.badQuotient_completion_not_domain",
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Completion of a Noetherian local ring commutes with quotient by a finitely\n  generated ideal.  Thus\n  \\[\n    \\widehat B\\cong\\widehat A/a\\widehat A\\cong T/aT.\n  \\]\n  By \\cref{lem:extended_principal_not_prime}, \\(aT\\) is not prime, so this\n  quotient is not a domain.\n",
-      "lean_source": "theorem badQuotient_completion_not_domain :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 q : @Ideal A _inst.toSemiring)\n      (Bhat : Type) (_instBhat : CommRing Bhat),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        WeaklyQuasiComplete A 𝔪 ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n          (∃ a : A, q = Ideal.span ({a} : Set A)) ∧ ¬ IsDomain Bhat := by\n  sorry",
-      "proof_size_lean": null,
-      "has_sorry": true,
+      "lean_source": "theorem badQuotient_completion_not_domain :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring)\n      (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring) (a : A)\n      (Bhat : Type) (_instBhat : CommRing Bhat),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧\n        WeaklyQuasiComplete A 𝔪 ∧\n          Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧\n            q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧\n              q = Ideal.span ({a} : Set A) ∧\n                (QuasiComplete A 𝔪 ↔\n                  ∀ J : Ideal A,\n                    WeaklyQuasiComplete (A ⧸ J)\n                      (Ideal.map (Ideal.Quotient.mk J) 𝔪)) ∧\n                  (WeaklyQuasiComplete (A ⧸ q)\n                    (Ideal.map (Ideal.Quotient.mk q) 𝔪) ↔\n                      AnalyticallyIrreducible (A ⧸ q) Bhat) ∧\n                      ¬ IsDomain Bhat := by\n  rcases badQuotient_completion_source with\n    ⟨A, instA, 𝔪, ι, q, a, Bhat, instBhat, e, hNoeth, hLocal, hDomain, hWeak,\n      hBot, hqComap, hqPrime, hqNonzero, hqPrincipal, hQuasiCriterion,\n      hDimensionCriterion⟩\n  letI := instA\n  letI := instBhat\n  have hExtendedNotPrime :\n      ¬ (Ideal.span ({ι a} : Set nodeRing)).IsPrime :=\n    extendedPrincipal_not_prime_of_generator_data A ι q a hBot hqComap\n      hqNonzero hqPrincipal\n  have hCompletionNotDomain : ¬ IsDomain Bhat := by\n    intro hBhatDomain\n    haveI : IsDomain Bhat := hBhatDomain\n    have hQuotientDomain :\n        IsDomain (nodeRing ⧸ Ideal.span ({ι a} : Set nodeRing)) :=\n      MulEquiv.isDomain Bhat e.toMulEquiv\n    exact quotient_not_domain_of_not_prime\n      (Ideal.span ({ι a} : Set nodeRing)) hExtendedNotPrime hQuotientDomain\n  exact\n    ⟨A, instA, 𝔪, ι, q, a, Bhat, instBhat, hNoeth, hLocal, hDomain, hWeak,\n      hBot, hqComap, hqPrime, hqNonzero, hqPrincipal, hQuasiCriterion,\n      hDimensionCriterion, hCompletionNotDomain⟩",
+      "proof_size_lean": 1876,
+      "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
       "dep_count": 3,
       "rdep_count": 1,
       "descendant_count": 3,
       "proof_size_tex": 265,
-      "effort_local": 265,
-      "proof_size_tex_total": 11983,
+      "effort_local": 0,
+      "proof_size_tex_total": 18019,
       "proof_size_lean_total": null,
-      "effort_total": 2772
+      "effort_total": 1057
     },
     {
       "id": "lem:bad_quotient_not_weak",
@@ -1101,8 +1693,8 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  By \\cref{lem:bad_quotient_dimension_domain}, \\(B\\) is a one-dimensional\n  Noetherian local domain.  By \\cref{lem:bad_quotient_completion}, its\n  completion is not a domain, so \\(B\\) is not analytically irreducible.\n  Apply \\cref{lem:dimension_one_weak_criterion}.\n",
-      "lean_source": "theorem badQuotient_not_weaklyQuasiComplete :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 q : @Ideal A _inst.toSemiring),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ WeaklyQuasiComplete A 𝔪 ∧\n        ¬ WeaklyQuasiComplete (A ⧸ q) (Ideal.map (Ideal.Quotient.mk q) 𝔪) := by\n  rcases badQuotient_completion_not_domain with\n    ⟨A, instA, 𝔪, q, Bhat, instBhat, hNoeth, hLocal, _hDomain, hWeak, _hqPrime,\n      _hqNonzero, _hPrincipal, hCompletionNotDomain⟩\n  letI := instA\n  letI := instBhat\n  refine ⟨A, instA, 𝔪, q, hNoeth, hLocal, hWeak, ?_⟩\n  intro hQuotientWeak\n  exact hCompletionNotDomain\n    ((dimensionOne_weaklyQuasiComplete_iff (A ⧸ q) Bhat\n      (Ideal.map (Ideal.Quotient.mk q) 𝔪)).1 hQuotientWeak)",
-      "proof_size_lean": 703,
+      "lean_source": "theorem badQuotient_not_weaklyQuasiComplete :\n    ∃ (A : Type) (_inst : CommRing A) (𝔪 q : @Ideal A _inst.toSemiring),\n      IsNoetherianRing A ∧ IsLocalRing A ∧ WeaklyQuasiComplete A 𝔪 ∧\n        (QuasiComplete A 𝔪 ↔\n          ∀ J : Ideal A,\n            WeaklyQuasiComplete (A ⧸ J)\n              (Ideal.map (Ideal.Quotient.mk J) 𝔪)) ∧\n          ¬ WeaklyQuasiComplete (A ⧸ q) (Ideal.map (Ideal.Quotient.mk q) 𝔪) := by\n  rcases badQuotient_completion_not_domain with\n    ⟨A, instA, 𝔪, _ι, q, _a, Bhat, instBhat, hNoeth, hLocal, _hDomain, hWeak,\n      _hBot, _hqComap, _hqPrime, _hqNonzero, _hqPrincipal, hQuasiCriterion,\n        hDimensionCriterion, hCompletionNotDomain⟩\n  letI := instA\n  letI := instBhat\n  refine ⟨A, instA, 𝔪, q, hNoeth, hLocal, hWeak, hQuasiCriterion, ?_⟩\n  intro hQuotientWeak\n  exact hCompletionNotDomain\n    ((dimensionOne_weaklyQuasiComplete_iff (A ⧸ q) Bhat\n      (Ideal.map (Ideal.Quotient.mk q) 𝔪) hDimensionCriterion).1 hQuotientWeak)",
+      "proof_size_lean": 961,
       "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
@@ -1111,9 +1703,9 @@
       "descendant_count": 2,
       "proof_size_tex": 263,
       "effort_local": 0,
-      "proof_size_tex_total": 14467,
+      "proof_size_tex_total": 18632,
       "proof_size_lean_total": null,
-      "effort_total": 4344
+      "effort_total": 1057
     },
     {
       "id": "lem:a_is_weak_and_has_bad_quotient",
@@ -1131,8 +1723,8 @@
       "proved": false,
       "mathlib_ok": false,
       "proof_tex": "\n  Weak quasi-completeness is \\cref{lem:counterexample_ring_weak}; the chosen\n  prime element and the asserted quotient properties are\n  \\cref{def:prime_generator,lem:bad_quotient_dimension_domain,\n  lem:bad_quotient_not_weak}.\n",
-      "lean_source": "theorem counterexampleRing_weak_and_bad_quotient :\n    ∃ (A : Type) (_inst : CommRing A),\n      IsNoetherianRing A ∧ IsLocalRing A ∧\n        ∃ 𝔪 : @Ideal A _inst.toSemiring,\n          WeaklyQuasiComplete A 𝔪 ∧ ¬ QuasiComplete A 𝔪 := by\n  rcases badQuotient_not_weaklyQuasiComplete with\n    ⟨A, instA, 𝔪, q, hNoeth, hLocal, hWeak, hQuotientNotWeak⟩\n  letI := instA\n  refine ⟨A, instA, hNoeth, hLocal, 𝔪, hWeak, ?_⟩\n  intro hQuasi\n  exact hQuotientNotWeak ((quasiComplete_iff_all_quotients_weak A 𝔪).1 hQuasi q)",
-      "proof_size_lean": 509,
+      "lean_source": "theorem counterexampleRing_weak_and_bad_quotient :\n    ∃ (A : Type) (_inst : CommRing A),\n      IsNoetherianRing A ∧ IsLocalRing A ∧\n        ∃ 𝔪 : @Ideal A _inst.toSemiring,\n          WeaklyQuasiComplete A 𝔪 ∧ ¬ QuasiComplete A 𝔪 := by\n  rcases badQuotient_not_weaklyQuasiComplete with\n    ⟨A, instA, 𝔪, q, hNoeth, hLocal, hWeak, hQuasiCriterion, hQuotientNotWeak⟩\n  letI := instA\n  refine ⟨A, instA, hNoeth, hLocal, 𝔪, hWeak, ?_⟩\n  intro hQuasi\n  exact hQuotientNotWeak\n    ((quasiComplete_iff_all_quotients_weak A 𝔪 hQuasiCriterion).1 hQuasi q)",
+      "proof_size_lean": 546,
       "has_sorry": false,
       "tex_file": "chapters/Run202608192034.tex",
       "lean_file": "Run202608192034.lean",
@@ -1141,9 +1733,9 @@
       "descendant_count": 1,
       "proof_size_tex": 224,
       "effort_local": 0,
-      "proof_size_tex_total": 14865,
+      "proof_size_tex_total": 18856,
       "proof_size_lean_total": null,
-      "effort_total": 4344
+      "effort_total": 1057
     },
     {
       "id": "thm:main",
@@ -1171,9 +1763,9 @@
       "descendant_count": 0,
       "proof_size_tex": 326,
       "effort_local": 0,
-      "proof_size_tex_total": 15940,
+      "proof_size_tex_total": 19182,
       "proof_size_lean_total": null,
-      "effort_total": 5093
+      "effort_total": 1057
     }
   ],
   "edges": [
@@ -1439,18 +2031,34 @@
     },
     {
       "from": "def:prime_generator",
-      "to": "lem:extended_principal_not_prime"
+      "to": "lem:prime_generator_source"
+    },
+    {
+      "from": "lem:contracted_prime_height",
+      "to": "lem:prime_generator_source"
+    },
+    {
+      "from": "lem:counterexample_ring_weak",
+      "to": "lem:prime_generator_source"
+    },
+    {
+      "from": "def:prime_generator",
+      "to": "lem:extended_principal_specific_not_prime"
     },
     {
       "from": "lem:counterexample_ring_properties",
-      "to": "lem:extended_principal_not_prime"
+      "to": "lem:extended_principal_specific_not_prime"
     },
     {
       "from": "lem:node_prime_height",
-      "to": "lem:extended_principal_not_prime"
+      "to": "lem:extended_principal_specific_not_prime"
     },
     {
       "from": "lem:node_prime_nonprincipal",
+      "to": "lem:extended_principal_specific_not_prime"
+    },
+    {
+      "from": "lem:extended_principal_specific_not_prime",
       "to": "lem:extended_principal_not_prime"
     },
     {
@@ -1460,6 +2068,162 @@
     {
       "from": "def:prime_generator",
       "to": "def:bad_quotient"
+    },
+    {
+      "from": "def:bad_quotient",
+      "to": "def:bad_quotient_source_data"
+    },
+    {
+      "from": "def:prime_generator",
+      "to": "def:bad_quotient_source_data"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "def:bad_quotient_quasi_criterion_field"
+    },
+    {
+      "from": "lem:quotient_weak_characterization",
+      "to": "def:bad_quotient_quasi_criterion_field"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "def:bad_quotient_dimension_criterion_field"
+    },
+    {
+      "from": "lem:dimension_one_weak_criterion",
+      "to": "def:bad_quotient_dimension_criterion_field"
+    },
+    {
+      "from": "lem:jensen_special_case",
+      "to": "def:jensen_completion_witness"
+    },
+    {
+      "from": "lem:farley_completion_criterion",
+      "to": "def:jensen_completion_witness"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "def:quotient_completion_witness"
+    },
+    {
+      "from": "def:jensen_completion_witness",
+      "to": "def:quotient_completion_witness"
+    },
+    {
+      "from": "lem:dimension_one_weak_criterion",
+      "to": "def:quotient_completion_witness"
+    },
+    {
+      "from": "def:quotient_completion_witness",
+      "to": "lem:quotient_completion_dimension_criterion"
+    },
+    {
+      "from": "def:bad_quotient_dimension_criterion_field",
+      "to": "lem:quotient_completion_dimension_criterion"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "def:bad_quotient_structured_source"
+    },
+    {
+      "from": "def:jensen_completion_witness",
+      "to": "def:bad_quotient_structured_source"
+    },
+    {
+      "from": "def:quotient_completion_witness",
+      "to": "def:bad_quotient_structured_source"
+    },
+    {
+      "from": "def:bad_quotient_quasi_criterion_field",
+      "to": "def:bad_quotient_structured_source"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "lem:source_data_to_contracted_prime"
+    },
+    {
+      "from": "def:contracted_prime",
+      "to": "lem:source_data_to_contracted_prime"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "lem:source_data_to_prime_generator"
+    },
+    {
+      "from": "def:prime_generator",
+      "to": "lem:source_data_to_prime_generator"
+    },
+    {
+      "from": "lem:prime_generator_source",
+      "to": "lem:bad_quotient_source_data_from_jensen"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "lem:bad_quotient_source_data_from_jensen"
+    },
+    {
+      "from": "lem:bad_quotient_source_data_from_jensen",
+      "to": "lem:jensen_completion_witness_source"
+    },
+    {
+      "from": "lem:jensen_completion_criterion",
+      "to": "lem:jensen_completion_witness_source"
+    },
+    {
+      "from": "lem:jensen_completion_witness_source",
+      "to": "lem:quotient_completion_witness_source"
+    },
+    {
+      "from": "def:quotient_completion_witness",
+      "to": "lem:quotient_completion_witness_source"
+    },
+    {
+      "from": "lem:dimension_one_weak_criterion",
+      "to": "lem:quotient_completion_witness_source"
+    },
+    {
+      "from": "lem:bad_quotient_source_data_from_jensen",
+      "to": "lem:bad_quotient_quasi_criterion_source"
+    },
+    {
+      "from": "lem:quotient_weak_characterization",
+      "to": "lem:bad_quotient_quasi_criterion_source"
+    },
+    {
+      "from": "def:bad_quotient_structured_source",
+      "to": "lem:bad_quotient_structured_source"
+    },
+    {
+      "from": "lem:bad_quotient_source_data_from_jensen",
+      "to": "lem:bad_quotient_structured_source"
+    },
+    {
+      "from": "lem:jensen_completion_witness_source",
+      "to": "lem:bad_quotient_structured_source"
+    },
+    {
+      "from": "lem:quotient_completion_witness_source",
+      "to": "lem:bad_quotient_structured_source"
+    },
+    {
+      "from": "lem:bad_quotient_quasi_criterion_source",
+      "to": "lem:bad_quotient_structured_source"
+    },
+    {
+      "from": "lem:source_data_to_contracted_prime",
+      "to": "lem:bad_quotient_structured_source"
+    },
+    {
+      "from": "lem:source_data_to_prime_generator",
+      "to": "lem:bad_quotient_structured_source"
+    },
+    {
+      "from": "def:bad_quotient_source_data",
+      "to": "lem:source_data_to_bad_quotient"
+    },
+    {
+      "from": "def:bad_quotient",
+      "to": "lem:source_data_to_bad_quotient"
     },
     {
       "from": "def:bad_quotient",
@@ -1478,15 +2242,31 @@
       "to": "lem:bad_quotient_dimension_domain"
     },
     {
-      "from": "def:bad_quotient",
+      "from": "lem:bad_quotient_structured_source",
+      "to": "lem:bad_quotient_structured_criteria_source"
+    },
+    {
+      "from": "lem:quotient_completion_dimension_criterion",
+      "to": "lem:bad_quotient_structured_criteria_source"
+    },
+    {
+      "from": "lem:bad_quotient_structured_criteria_source",
+      "to": "lem:bad_quotient_criteria_source"
+    },
+    {
+      "from": "lem:bad_quotient_criteria_source",
+      "to": "lem:bad_quotient_completion_source"
+    },
+    {
+      "from": "lem:bad_quotient_completion_source",
       "to": "lem:bad_quotient_completion"
     },
     {
-      "from": "lem:counterexample_ring_properties",
+      "from": "lem:extended_principal_specific_not_prime",
       "to": "lem:bad_quotient_completion"
     },
     {
-      "from": "lem:extended_principal_not_prime",
+      "from": "lem:quotient_not_domain_of_not_prime",
       "to": "lem:bad_quotient_completion"
     },
     {
@@ -1539,8 +2319,8 @@
     }
   ],
   "meta": {
-    "num_nodes": 42,
-    "num_edges": 90,
+    "num_nodes": 63,
+    "num_edges": 137,
     "axioms": [
       "def:quasi_complete",
       "def:generic_formal_fiber",
@@ -1548,9 +2328,12 @@
       "def:node_ring",
       "def:n_subring",
       "lem:cardinal_prime_avoidance",
-      "lem:jensen_residue_uncountable"
+      "lem:jensen_residue_uncountable",
+      "lem:quotient_not_domain_of_not_prime"
     ],
     "leaves": [
+      "lem:extended_principal_not_prime",
+      "lem:source_data_to_bad_quotient",
       "thm:main"
     ],
     "macros": {},
