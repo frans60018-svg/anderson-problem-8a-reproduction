@@ -30,11 +30,11 @@ Run id: `run-20260819-2034`
 ## Verification
 
 - `leandag build --html`: passed
-- `leandag --plain stats`: 63 blueprint nodes, 137 edges, 0 infinity nodes, 0 Lean-aux nodes, 5 declarations with `sorry`, 29,476 Lean chars done, 1,057 finite-effort Lean chars remaining
+- `leandag --plain stats`: 74 blueprint nodes, 154 edges, 0 infinity nodes, 0 Lean-aux nodes, 5 declarations with `sorry`, 38,025 Lean chars done, 1,046 finite-effort Lean chars remaining
 - `leandag --plain show gaps`: 0 nodes
 - `leandag --plain show isolated`: 0 nodes
 - `archon dag-query unmatched`: 0 uncovered Lean declarations
-- `archon dag-query ancestors --node thm:main`: all mathematical dependencies covered by the current DAG
+- `archon dag-query ancestors --node thm:main`: 71/71 mathematical dependencies covered by the current DAG
 - `archon blueprint-doctor --json`: no orphan chapters, broken refs, malformed refs, axioms, or covers problems
 - `lake build`: passed
 
@@ -45,7 +45,7 @@ Archon DAG/scaffold stage is partially complete: the informal blueprint DAG is g
 Blocking gates:
 
 - The required `blueprint-reviewer` subagent could not run in the current sandbox.
-- The theorem skeleton currently contains strengthened placeholder statements and 5 `sorry`s; the latest pass intentionally split one large bad-quotient source hole into four source-ordered targets.
+- The theorem skeleton currently contains strengthened placeholder statements and 5 `sorry`s; the latest pass strengthened the Jensen completion witness and made both the weak-completeness criterion and completion-map going-down statement checked consequences of that witness.
 
 Resolved source gate:
 
@@ -59,10 +59,13 @@ Resolved source gate:
 - The downstream data-package pass strengthened `primeGenerator`, `badQuotient`, and the bad-quotient completion package so that the completion map `ι`, the equality `q = Ideal.comap ι nodePrime`, and the principal generator `q = Ideal.span {a}` are retained for the remaining proofs.
 - `extendedPrincipal_not_prime` is now fully checked: it proves the extension identity `Ideal.map ι q = Ideal.span {ι a}`, nonzeroness of the extended principal ideal from injectivity, the principal-height bound from `Ideal.height_le_spanRank_toENat`, and the nested height-one-prime contradiction using `Ideal.primeHeight_strict_mono`.
 - The bad-quotient completion step has been split into source data and checked downstream logic: `quotient_not_domain_of_not_prime` proves the quotient/domain bridge, and `badQuotient_completion_not_domain` now derives non-domainness from `badQuotient_completion_source` and the specific extended-principal nonprimality theorem.
-- The remaining bad-quotient source hole has been pushed further upstream to `badQuotient_structured_source`; the intermediate `badQuotient_structured_criteria_source` and `badQuotient_criteria_source` are now checked expansion/transport lemmas.  The new split records Jensen's completion witness `Ahat ≃ nodeRing`, the quotient-completion witness, and the transport of the dimension-one criterion across the quotient equivalence.
+- The remaining bad-quotient source hole has been pushed further upstream to `badQuotient_structured_source`; the intermediate `badQuotient_structured_criteria_source` and `badQuotient_criteria_source` are now checked expansion/transport lemmas.  The split records Jensen's completion witness, the quotient-completion witness, and the transport of the dimension-one criterion across the quotient equivalence.
 - `BadQuotientSourceData` now also stores the original counterexample-ring witness and the nonzero-prime contraction property; the checked projections `BadQuotientSourceData.to_contractedPrime` and `BadQuotientSourceData.to_primeGenerator` recover the corresponding source-ordered intermediate nodes.
 - `badQuotient_structured_source` is now a checked combination proof from four source-ordered targets: `badQuotient_sourceData_from_jensen`, `jensenCompletionWitness_source`, `quotientCompletionWitness_source`, and `badQuotient_quasiCriterion_source`.
-- `badQuotient_sourceData_from_jensen` is now checked from the new upstream `primeGenerator_source`, moving the remaining source obligation to the UFD height-one-prime generator step.
+- `badQuotient_sourceData_from_jensen` is now checked from the new upstream `primeGenerator_source`, and the UFD height-one-prime generator step has also been proved.
+- `primeGenerator_source` is now checked from the Jensen UFD source target, the strengthened Jensen completion witness, the checked contracted-prime height calculation, and the completed UFD principalization theorem.
+- `adicCompletion_hasGoingDown_of_isNoetherian` is checked from Mathlib's Noetherian adic-completion flatness and flat-algebra going-down instance.  `adicCompletion_equiv_hasGoingDown_of_isNoetherian` is also checked: the going-down input transfers across a ring equivalence after transporting the algebra structure.
+- `JensenCompletionWitness` now uses the standard Mathlib object `AdicCompletion 𝔪 A`, stores the map-compatibility equation `ι = e ∘ algebraMap`, and stores the transported weak-completeness criterion.  `counterexampleRing_weakCriterion_source` is now a projection from this witness, and `completionMap_hasGoingDown_source` is proved from the map-compatibility equation plus the completion-equivalence going-down bridge.  This reduced the active `sorry` count from 7 to 5.
 
 ## Fallbacks
 

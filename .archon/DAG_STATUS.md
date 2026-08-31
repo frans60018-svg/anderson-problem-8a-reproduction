@@ -4,11 +4,11 @@
 
 ## Last local verification
 
-- `leandag build --html`: 63 blueprint nodes, 137 dependency edges, 0 infinity nodes.
+- `leandag build --html`: 74 blueprint nodes, 154 dependency edges, 0 infinity nodes.
 - `leandag --plain show gaps`: 0 nodes.
 - `leandag --plain show isolated`: 0 nodes.
-- `leandag --plain stats`: 0 Lean-aux nodes, 0 unmatched `\lean{}` references, 5 declarations with `sorry`, 29,476 Lean chars done, 1,057 finite-effort Lean chars remaining.
-- `archon dag-query ancestors --node thm:main`: 41/41 mathematical dependencies.
+- `leandag --plain stats`: 0 Lean-aux nodes, 0 unmatched `\lean{}` references, 5 declarations with `sorry`, 38,025 Lean chars done, 1,046 finite-effort Lean chars remaining.
+- `archon dag-query ancestors --node thm:main`: 71/71 mathematical dependencies.
 - `archon blueprint-doctor --json`: clean.
 - `lake build`: passed.
 
@@ -19,6 +19,8 @@
 - The Lean theorem skeleton is still partial: strengthened placeholder definitions remain and 5 declarations still use `sorry`.
 - The source-ordered strengthening pass has made the basic completion definitions, Jensen special case, node cardinality/dimension/height statements, Jensen extension/chain statements, contracted-prime/bad-quotient segment, bad quotient domain/noetherian/local step, and final existence theorem nontrivial Lean statements.
 - The latest Jensen-interface pass discharged eight `sorry`s by replacing over-strong placeholders with source-relevant explicit hypotheses or witness data for prime avoidance, residue-field uncountability, initial N-subring construction, prime hitting, ideal solving, saturated union, completion criterion, and semilocal generic fiber.
+- The latest completion-map pass added checked bridges `adicCompletion_hasGoingDown_of_isNoetherian` and `adicCompletion_equiv_hasGoingDown_of_isNoetherian`: Mathlib proves the standard Noetherian adic completion map has going-down via flatness, and this transfers across a ring equivalence when the target algebra structure is transported.
+- The Jensen completion witness has been strengthened to use the standard `AdicCompletion 𝔪 A`, to store the compatibility equation for `ι`, and to store the transported weak-completeness criterion.  Consequently `counterexampleRing_weakCriterion_source` and `completionMap_hasGoingDown_source` are checked downstream lemmas, and the `sorry` count dropped from 7 to 5.
 - The completion/formal-fiber interface pass discharged three Basic-file `sorry`s by making the quoted quotient, completion-prime, and dimension-one analytic criteria explicit source hypotheses.
 - The node-ring interface pass discharged four net `sorry`s by turning `completeDomainChoice` into the single concrete node-ring source package and deriving the five individual node-ring facts from it.
 - The downstream data-package pass preserves the completion map, contracted prime identity, and principal generator inside `primeGenerator`, `badQuotient`, and the bad-quotient completion package.
@@ -28,6 +30,7 @@
 - `BadQuotientSourceData.to_contractedPrime` and `BadQuotientSourceData.to_primeGenerator` are checked, so the structured source package now recovers the contracted-prime and prime-generator stages of the paper.
 - `badQuotient_structured_source` is now checked as a combination proof from four finer source targets: Jensen-to-source-data, Jensen completion equivalence, quotient completion bridge, and the quasi-completeness quotient criterion.
 - `badQuotient_sourceData_from_jensen` is checked from `primeGenerator_source`, so the remaining bad quotient source obligations are now the UFD generator source, Jensen completion equivalence, quotient completion bridge, and quotient criterion.
+- `primeGenerator_source` is checked from the Jensen UFD source target, the strengthened Jensen completion witness, the checked contracted-prime height calculation, and the completed UFD principalization theorem.
 
 ## Declared coverage so far
 

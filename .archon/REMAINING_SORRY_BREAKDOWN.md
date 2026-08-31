@@ -9,10 +9,10 @@ Current actual proof holes:
 
 ```text
 Run202608192034.lean:53   completeDomainChoice
-Run202608192034.lean:297  primeGenerator_source
-Run202608192034.lean:559  jensenCompletionWitness_source
-Run202608192034.lean:565  quotientCompletionWitness_source
-Run202608192034.lean:571  badQuotient_quasiCriterion_source
+Run202608192034.lean:271  jensenCompletionWitness_source
+Run202608192034.lean:325  jensenSpecialCase_isUFD_source
+Run202608192034.lean:767  quotientCompletionWitness_source
+Run202608192034.lean:773  badQuotient_quasiCriterion_source
 ```
 
 Status labels:
@@ -115,18 +115,96 @@ This proof is now a completed downstream connector.  It still depends on
 domain and that `nodePrime` is a nonprincipal height-one prime, but it no
 longer contributes an independent `sorry`.
 
-## 2. Bad quotient source targets
+## Completed. `heightOnePrime_principal_of_ufd_source`
+
+Lean target:
+
+```lean
+heightOnePrime_principal_of_ufd_source
+  (A : Type) [CommRing A] [IsDomain A] [UniqueFactorizationMonoid A]
+  (q : Ideal A) (_hqPrime : q.IsPrime) (_hqNonzero : q ≠ ⊥)
+  (_hqHeight : q.height = 1) :
+  ∃ a : A, q = Ideal.span ({a} : Set A)
+```
+
+Source route:
+
+- `source_blueprint.md`, lines 216--229: after proving
+  `q = Q ∩ A` has height one and `A` is a UFD, the paper concludes that
+  `q = aA`.
+
+Proof now used in Lean:
+
+1. `Ideal.IsPrime.exists_mem_prime_of_ne_bot` gives a prime element
+   `p ∈ q`.
+2. `Ideal.span_singleton_prime` turns `Prime p` into primality of `(p)`.
+3. Since `p ≠ 0`, `(p) ≠ ⊥`, so `(p)` has positive height in the domain.
+4. If `(p) < q`, then `Ideal.primeHeight_strict_mono` gives
+   `primeHeight (p) < primeHeight q = 1`, contradicting positivity.
+5. Therefore `(p) = q`.
+
+Status: `done`.  This is a genuine Mathlib proof, not a replacement source
+interface.
+
+## 2. Prime-generator source targets
+
+Lean targets still open:
+
+```lean
+jensenSpecialCase_isUFD_source
+  (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+  (_hCounter : counterexampleRing) :
+  UniqueFactorizationMonoid A
+
+jensenCompletionWitness_source
+  (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+  (_hNoeth : IsNoetherianRing A) (_hLocal : IsLocalRing A)
+  (_hDomain : IsDomain A)
+  (_hBot : Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥)
+  (_hNonzeroContraction :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥) :
+  JensenCompletionWitness A 𝔪 ι
+```
+
+Suggested lemma split:
+
+| Proposed Lean lemma | Source sentence | Mathlib needed | Current status |
+|---|---|---|---|
+| `jensenUnion_isUFD_actual` | "The saturated union is a UFD." | current `NSubring` must be replaced by Jensen's quasi-local UFD structure; well-founded divisor/prime-element preservation | `deep`: current theorem is a witness checker, not a construction proof. |
+| `jensenCompletion_ring_is_selected_union` | "The ring obtained by the union/completion criterion is the desired local ring." | directed union, completion criterion, quotient map onto `T/M²` | `deep/interface`: data is threaded, construction still missing. |
+| `selected_ring_ufd` | "Thus `A` is a UFD." | transfer of the UFD structure from the saturated union to selected `A` | `interface`: direct after the previous two construction lemmas. |
+| `farley_weak_criterion_selected_completion` | "Farley's criterion applies to \(\widehat A \cong T\)." | adic completion, formal fibers, prime contraction | `interface`: now stored as `JensenCompletionWitness.weakCriterion`; the source proof remains in `jensenCompletionWitness_source`. |
+| `adicCompletion_hasGoingDown_of_isNoetherian` | "The completion map is faithfully flat, hence has going-down." | `AdicCompletion.flat_of_isNoetherian`, `Algebra.HasGoingDown.of_flat` | `done`: Mathlib proves the standard adic completion map has going-down. |
+| `adicCompletion_equiv_hasGoingDown_of_isNoetherian` | "Transport \(\widehat A\cong T\) to the chosen target." | `RingHom.Flat.of_bijective`, flatness under composition, `Algebra.HasGoingDown.of_flat` | `done`: if the algebra structure on `T` is transported from `AdicCompletion 𝔪 A`, going-down follows. |
+| `jensenCompletionWitness_source` | "The selected completion map \(A\to T\) is the completed map under \(\widehat A\cong T\)." | equivalence `AdicCompletion 𝔪 A ≃+* nodeRing`, equality `ι = e ∘ algebraMap`, transported Farley criterion | `deep/interface`: this is now the single completion witness source target. |
+| `counterexampleRing_weakCriterion_source` | "Apply Farley's criterion to \(\widehat A\cong T\)." | projection from `JensenCompletionWitness.weakCriterion` | `done`: checked directly from the witness. |
+| `completionMap_hasGoingDown_source` | "The completion map is faithfully flat, hence has going-down." | `jensenCompletionWitness_source`, `adicCompletion_equiv_hasGoingDown_of_isNoetherian` | `done`: checked by rewriting `ι` using witness compatibility and applying the transport lemma. |
+| `liesOver_height_le_of_hasGoingDown_source` | "Going-down gives \(\operatorname{ht}(Q∩A)≤\operatorname{ht}Q\)." | `Ideal.height_eq_height_add_of_liesOver_of_hasGoingDown`, `Ideal.LiesOver` | `done`: checked directly in Lean. |
+| `nonzeroPrime_height_ge_one_source` | "`q ≠ 0` in a domain gives height at least one." | `Ideal.height_strict_mono_of_is_prime`, `Ideal.height_bot` | `done`: checked directly in Lean. |
+| `contractedPrime_height_le_one_source` | completion flatness and going-down give the height upper bound | previous going-down source target plus `nodePrime.height = 1` | `done`: checked by applying `liesOver_height_le_of_hasGoingDown_source`. |
+| `contractedPrime_height_one_source` | combine height upper bound and lower bound | previous two height inequalities | `done`: checked by `le_antisymm`. |
+
+`primeGenerator_source` itself is no longer a proof hole.  It is a checked
+combination proof from Jensen's UFD output, the Jensen completion witness, the
+completed contracted-prime height calculation, and the completed UFD
+height-one principalization theorem.
+
+The completion-map going-down gap has now been absorbed into the Jensen
+completion witness.  Lean proves the standard Mathlib statement
+`adicCompletion_hasGoingDown_of_isNoetherian : Algebra.HasGoingDown A
+(AdicCompletion 𝔪 A)` directly from Noetherian adic-completion flatness.  Lean
+also proves `adicCompletion_equiv_hasGoingDown_of_isNoetherian`, which
+transports this going-down result across a ring equivalence when the target
+algebra structure is defined by the composite
+`A -> AdicCompletion 𝔪 A -> T`.  The remaining completion work is concentrated
+in `jensenCompletionWitness_source`, which must prove both the completion
+equivalence and the compatibility equation for the selected map.
+
+## 3. Bad quotient source targets
 
 Lean targets:
 
 ```lean
-primeGenerator_source :
-  primeGenerator
-
-jensenCompletionWitness_source
-  (d : BadQuotientSourceData) :
-  JensenCompletionWitness d.A d.𝔪 d.ι
-
 quotientCompletionWitness_source
   (d : BadQuotientSourceData)
   (_w : JensenCompletionWitness d.A d.𝔪 d.ι) :
@@ -144,7 +222,7 @@ Source route:
   one-dimensional Noetherian local domain.
 - `source_blueprint.md`, lines 251--256: uses completion commuting with
   quotient by a finitely generated ideal to identify
-  `Bhat ~= Ahat/aAhat ~= T/aT`.
+  `Bhat ~= (AdicCompletion 𝔪 A)/(a) ~= T/aT`.
 - `source_blueprint.md`, lines 256--258: since this completion is not a domain,
   `B` is not analytically irreducible.
 
@@ -152,14 +230,14 @@ Suggested lemma split:
 
 | Proposed Lean lemma | Source sentence | Mathlib needed | Current status |
 |---|---|---|---|
-| `primeGenerator_source` | "`q=Q∩A` is height one, and height-one primes in a UFD are principal." | contracted-prime package, UFD/principal height-one-prime interface, weak quasi-completeness criterion | `interface`: current upstream source theorem; needs the UFD output of Jensen and a height-one-prime principalization theorem. |
+| `primeGenerator_source` | "`q=Q∩A` is height one, and height-one primes in a UFD are principal." | contracted-prime package, UFD output, weak quasi-completeness criterion | `done`: checked from three remaining source targets plus the completed UFD principalization theorem. |
 | `badQuotient_source_data_from_primeGenerator` | "Put `B = A/aA`." | construction from strengthened `primeGenerator`, quotient ring instances | `done`: proved as `badQuotient_sourceData_from_jensen` by destructuring `primeGenerator_source`. |
 | `source_data_to_contractedPrime` | recover "`q=Q∩A` is nonzero prime." | destructuring the source data package | `done`: proved as `BadQuotientSourceData.to_contractedPrime`. |
 | `source_data_to_primeGenerator` | recover "`q=aA` for a chosen generator." | destructuring the source data package | `done`: proved as `BadQuotientSourceData.to_primeGenerator`. |
 | `quotient_by_prime_is_domain` | "`aA = q` is prime, so `B` is a domain." | existing quotient domain instance from `[q.IsPrime]` | `direct`: already used in `badQuotient_dimension_domain`. |
 | `quotient_is_noetherian_local` | "quotients of Noetherian local rings are Noetherian and local." | `Ideal.Quotient.Noetherian`, `IsLocalRing.of_surjective` | `direct`: already essentially proved. |
 | `badQuotient_dimension_one` | "`dim B = 1`." | quotient dimension, prime chains, `ringKrullDim` API | `interface`: current theorem avoids storing dimension; formal proof needs more height-chain work. |
-| `completion_identifies_Ahat_with_nodeRing` | "`Ahat ~= T`." | Jensen construction output should carry a ring equivalence, not just a map `ι` | `interface`: now represented by `JensenCompletionWitness`; the source proof remains. |
+| `completion_identifies_adicCompletion_with_nodeRing` | "`Ahat ~= T`." | standard `AdicCompletion 𝔪 A`, compatibility of the selected map, Farley criterion transport | `interface`: now represented by the strengthened `JensenCompletionWitness`; the source proof remains. |
 | `completion_quotient_equiv` | "`Bhat ~= Ahat/aAhat`." | `AdicCompletion.map_exact`, `AdicCompletion.kerProj`, exactness of completion over Noetherian rings | `deep/interface`: now represented by `QuotientCompletionWitness`; the source proof remains. |
 | `bad_completion_equiv_node_quotient` | "`Bhat ~= T/aT`." | composition of the two equivalences above | `interface`: represented by `QuotientCompletionWitness.quotientCompletionEquiv`. |
 | `dimension_criterion_transport` | move analytic irreducibility criterion from `Bhat` to `T/aT` | ring-equivalence transfer of `IsDomain` | `done`: proved as `QuotientCompletionWitness.dimensionCriterion`. |
@@ -173,7 +251,7 @@ The previous single `badQuotient_structured_source` hole has been split into
 four source-ordered targets, and then the first target was moved further
 upstream to `primeGenerator_source`.  Together they produce a structured source package
 `s`.  The package stores the bad quotient source data, a Jensen completion witness
-`Ahat ≃ nodeRing`, a quotient completion witness equivalent to
+`AdicCompletion 𝔪 A ≃+* nodeRing`, a quotient completion witness equivalent to
 `nodeRing ⧸ Ideal.span ({s.data.ι s.data.a} : Set nodeRing)`, and the
 source quotient criterion.  The dimension-one criterion transport, flattening
 of this package, identity-equivalence bookkeeping, and the proof that the target
@@ -182,15 +260,16 @@ downstream from the nonprimality of the extended principal ideal.  A faithful
 proof needs stronger data from the Jensen stage:
 
 - `A` is a UFD;
-- `Ahat` is explicitly equivalent to `nodeRing`;
+- `AdicCompletion 𝔪 A` is explicitly equivalent to `nodeRing`;
 - the generic formal fiber condition is expressed through that equivalence;
 - `q = comap ι nodePrime`;
 - `q = span {a}` for a height-one prime generator `a`.
 
 Recommended approach:
 
-1. Upgrade the Jensen construction output from a bare map `ι : A -> nodeRing`
-   to an explicit completion equivalence `Ahat ≃+* nodeRing`.
+1. Unfold `jensenCompletionWitness_source` into the actual Jensen completion
+   construction, proving `AdicCompletion 𝔪 A ≃+* nodeRing` and
+   `ι = e ∘ algebraMap`.
 2. Prove or interface completion commuting with the quotient by `q = span {a}`.
 3. Use those equivalences to justify the source fields of
    `BadQuotientStructuredSource`.
@@ -225,15 +304,21 @@ The current `sorry`s are not small gaps.  They are source-level mathematical
 packages:
 
 1. concrete algebra of the node hypersurface ring;
-2. Jensen/UFD production of the prime-generator package;
-3. identification of `Ahat` with the node ring;
+2. Jensen's completion witness for the selected map, including
+   `AdicCompletion 𝔪 A ≃+* nodeRing`, the map-compatibility equation, and the
+   transported weak-completeness criterion;
+3. Jensen's production of the selected UFD;
 4. completion of the bad quotient as an explicit quotient of the node ring;
 5. the quotient criterion for quasi-completeness.
 
 The bad-quotient package has now been expanded enough that the
 quotient-domain/equivalence transfer lemmas are discharged, and
 `BadQuotientStructuredSource` is now assembled by checked Lean code from four
-source targets.  The next technically honest step is to prove one of those
-targets, starting with `badQuotient_sourceData_from_jensen` if continuing the
-paper order.  The node-ring package should be handled as a separate
-source-level formalization pass.
+source targets.  The UFD height-one-prime principalization and the general
+going-down height comparison are now fully proved.  Mathlib also proves the
+standard Noetherian adic-completion going-down input and its transport across a
+completion equivalence.  The weak criterion and completion-map going-down
+inputs are no longer independent `sorry`s; both are checked consequences of
+`JensenCompletionWitness`.  The next technically honest target is to unfold
+`jensenCompletionWitness_source` itself.  The node-ring package should be
+handled as a separate source-level formalization pass.

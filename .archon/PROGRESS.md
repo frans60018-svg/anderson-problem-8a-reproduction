@@ -18,9 +18,9 @@ The mathematical cone is transcribed, all five source targets are local under
 Anderson was supplied as a full Springer volume and split to the target 13-page
 chapter.
 
-Latest local verification: 63 blueprint nodes, 137 dependency edges, 0 gaps,
+Latest local verification: 74 blueprint nodes, 154 dependency edges, 0 gaps,
 0 isolated nodes, 0 Lean-aux nodes, 0 unmatched `\lean{}` references, 5
-declarations with `sorry`, 29,476 Lean chars done, and 1,057 finite-effort
+declarations with `sorry`, 38,025 Lean chars done, and 1,046 finite-effort
 characters remaining.  `leandag build --html`, `leandag --plain stats`,
 `leandag --plain show gaps`, `leandag --plain show isolated`,
 `archon blueprint-doctor --json`, and `lake build` all pass.  The starter
@@ -85,8 +85,9 @@ non-domainness from the remaining source package
 `badQuotient_completion_source` was then proved by taking the completion target
 to be `nodeRing / Ideal.span {ι a}` with the identity equivalence.  The
 remaining bad-quotient hole has been split once more: `BadQuotientSourceData`
-stores the Jensen/UFD output, `JensenCompletionWitness` records the completion
-equivalence `Ahat ≃ nodeRing`, `QuotientCompletionWitness` records the
+stores the Jensen/UFD output, `JensenCompletionWitness` records the standard
+completion equivalence `AdicCompletion 𝔪 A ≃+* nodeRing`,
+`QuotientCompletionWitness` records the
 completion-of-quotient bridge, and
 `QuotientCompletionWitness.dimensionCriterion` transports the dimension-one
 criterion across the quotient equivalence.  The actual remaining bad-quotient
@@ -101,11 +102,44 @@ prime-generator nodes from this package.
 The latest pass intentionally split `badQuotient_structured_source` into four
 source-ordered targets: `badQuotient_sourceData_from_jensen`,
 `jensenCompletionWitness_source`, `quotientCompletionWitness_source`, and
-`badQuotient_quasiCriterion_source`.  Consequently the current `sorry` count is
-5, but the public structured source theorem is now a checked combination proof.
+`badQuotient_quasiCriterion_source`.  That pass raised the count to 5, but the
+public structured source theorem became a checked combination proof.
 `badQuotient_sourceData_from_jensen` is now checked from the new upstream
-`primeGenerator_source`, so the remaining source obligation is aligned with the
-paper's UFD height-one-prime generator step.
+`primeGenerator_source`, and the UFD height-one-prime generator step has now
+also been proved.
+`primeGenerator_source` has now been split further and then consolidated again:
+it is checked from Jensen's UFD output, the strengthened Jensen completion
+witness, the contracted-prime height calculation, and the UFD
+principalization theorem.
+The height-one-prime principalization target is now fully proved: Mathlib gives
+a prime element inside any nonzero prime ideal of a UFD, and `primeHeight`
+strict monotonicity rules out a proper containment between the generated prime
+ideal and the ambient height-one prime.
+The contracted-prime height target has been split further.  The lower bound
+`nonzeroPrime_height_ge_one_source` is now checked directly from
+`Ideal.height_strict_mono_of_is_prime`; the remaining source obligation is the
+faithfully-flat/going-down upper bound
+`contractedPrime_height_le_one_source`.
+The height upper bound was then split again: the general lemma
+`liesOver_height_le_of_hasGoingDown_source` is checked from Mathlib's
+`Ideal.height_eq_height_add_of_liesOver_of_hasGoingDown`, and
+`contractedPrime_height_le_one_source` is now a checked combination proof.
+The standard completion input was then separated: Lean now proves
+`adicCompletion_hasGoingDown_of_isNoetherian` directly from Mathlib's
+Noetherian adic-completion flatness and the flat-algebra going-down instance.
+Lean also proves `adicCompletion_equiv_hasGoingDown_of_isNoetherian`: after a
+ring equivalence `AdicCompletion 𝔪 A ≃+* T`, the transported map `A -> T` has
+going-down, using flatness of the completion map, flatness of bijective ring
+maps, and stability of flatness under composition.
+The latest pass strengthened `JensenCompletionWitness` itself: it now records a
+standard Mathlib completion equivalence
+`AdicCompletion 𝔪 A ≃+* nodeRing`, the compatibility equation identifying
+`ι` with the transported completion map, and the transported weak-completeness
+criterion.  As a result, `counterexampleRing_weakCriterion_source` is now a
+checked projection from the witness, and `completionMap_hasGoingDown_source`
+is now checked by rewriting `ι` with the compatibility equation and applying
+the already-proved completion-equivalence going-down lemma.  The `sorry` count
+has dropped from 7 to 5.
 
 Remaining gate: the prescribed independent `blueprint-reviewer` could not run
 in this sandbox; local doctor/graph/source audits are clean, but they are not a

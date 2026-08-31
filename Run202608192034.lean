@@ -250,23 +250,48 @@ def counterexampleRing : Prop :=
       Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
         ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥
 
+structure JensenCompletionWitness
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing) where
+  completionEquiv : AdicCompletion 𝔪 A ≃+* nodeRing
+  map_compatible :
+    ι = completionEquiv.toRingHom.comp
+      (algebraMap A (AdicCompletion 𝔪 A))
+  weakCriterion :
+    WeaklyQuasiComplete A 𝔪 ↔
+      ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥
+
+noncomputable def jensenCompletionWitness_source
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (_hNoeth : IsNoetherianRing A) (_hLocal : IsLocalRing A)
+    (_hDomain : IsDomain A)
+    (_hBot : Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥)
+    (_hNonzeroContraction :
+      ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥) :
+    JensenCompletionWitness A 𝔪 ι := by
+  sorry
+
+theorem counterexampleRing_weakCriterion_source
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (w : JensenCompletionWitness A 𝔪 ι) :
+    WeaklyQuasiComplete A 𝔪 ↔
+      ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥ := by
+  exact w.weakCriterion
+
 theorem counterexampleRing_properties : counterexampleRing :=
   jensenSpecialCase
 
 theorem counterexampleRing_weaklyQuasiComplete :
-    (∀ (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing),
-      WeaklyQuasiComplete A 𝔪 ↔
-        ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥) →
     counterexampleRing →
       ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring),
         WeaklyQuasiComplete A 𝔪 := by
-  intro hCriterion hA
-  rcases hA with ⟨A, instA, 𝔪, ι, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩
+  intro hA
+  rcases hA with ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hBot, hNonzero⟩
   letI := instA
+  let w : JensenCompletionWitness A 𝔪 ι :=
+    jensenCompletionWitness_source A 𝔪 ι hNoeth hLocal hDomain hBot hNonzero
   exact
     ⟨A, instA, 𝔪,
-      (weaklyQuasiComplete_iff_completion_primes A nodeRing 𝔪 ι
-        (hCriterion A 𝔪 ι)).2 hNonzero⟩
+      (counterexampleRing_weakCriterion_source A 𝔪 ι w).2 hNonzero⟩
 
 def contractedPrime : Prop :=
   ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
@@ -293,8 +318,203 @@ def primeGenerator : Prop :=
           q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧
             q = Ideal.span ({a} : Set A)
 
-theorem primeGenerator_source : primeGenerator := by
+theorem jensenSpecialCase_isUFD_source
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (_hCounter : counterexampleRing) :
+    UniqueFactorizationMonoid A := by
   sorry
+
+theorem nonzeroPrime_height_ge_one_source
+    (A : Type) [CommRing A] [IsDomain A] (q : Ideal A)
+    (_hqPrime : q.IsPrime) (hqNonzero : q ≠ ⊥) :
+    (1 : ℕ∞) ≤ q.height := by
+  have hBotLtQ : (⊥ : Ideal A) < q :=
+    bot_lt_iff_ne_bot.mpr hqNonzero
+  haveI : (⊥ : Ideal A).FiniteHeight := by
+    rw [Ideal.finiteHeight_iff]
+    exact Or.inr (by rw [Ideal.height_bot]; simp)
+  have hStrict : (⊥ : Ideal A).height < q.height :=
+    Ideal.height_strict_mono_of_is_prime hBotLtQ
+  have hPositive : 0 < q.height := by
+    simpa [Ideal.height_bot] using hStrict
+  exact ENat.one_le_iff_ne_zero.mpr (ne_of_gt hPositive)
+
+theorem liesOver_height_le_of_hasGoingDown_source
+    (A T : Type) [CommRing A] [CommRing T] [Algebra A T]
+    [IsNoetherianRing A] [IsNoetherianRing T] [Algebra.HasGoingDown A T]
+    (q : Ideal A) (Q : Ideal T) (hqPrime : q.IsPrime) (hQPrime : Q.IsPrime)
+    (hLiesOver : Q.LiesOver q) :
+    q.height ≤ Q.height := by
+  haveI : q.IsPrime := hqPrime
+  haveI : Q.IsPrime := hQPrime
+  haveI : Q.LiesOver q := hLiesOver
+  have hEq :
+      Q.height =
+        q.height +
+          (Q.map (Ideal.Quotient.mk <| q.map (algebraMap A T))).height :=
+    Ideal.height_eq_height_add_of_liesOver_of_hasGoingDown q Q
+  exact (self_le_add_right q.height _).trans (le_of_eq hEq.symm)
+
+theorem adicCompletion_hasGoingDown_of_isNoetherian
+    (A : Type) [CommRing A] (𝔪 : Ideal A) [IsNoetherianRing A] :
+    Algebra.HasGoingDown A (AdicCompletion 𝔪 A) := by
+  infer_instance
+
+theorem adicCompletion_equiv_hasGoingDown_of_isNoetherian
+    (A T : Type) [CommRing A] [CommRing T] (𝔪 : Ideal A)
+    [IsNoetherianRing A] (e : AdicCompletion 𝔪 A ≃+* T) :
+    letI : Algebra A T :=
+      (e.toRingHom.comp (algebraMap A (AdicCompletion 𝔪 A))).toAlgebra
+    Algebra.HasGoingDown A T := by
+  let f : A →+* AdicCompletion 𝔪 A :=
+    algebraMap A (AdicCompletion 𝔪 A)
+  let g : AdicCompletion 𝔪 A →+* T :=
+    e.toRingHom
+  have hf : f.Flat := by
+    rw [RingHom.flat_algebraMap_iff]
+    infer_instance
+  have hg : g.Flat :=
+    RingHom.Flat.of_bijective e.bijective
+  have hfg : (g.comp f).Flat :=
+    hf.comp hg
+  change
+    letI : Algebra A T := (g.comp f).toAlgebra
+    Algebra.HasGoingDown A T
+  letI : Algebra A T := (g.comp f).toAlgebra
+  haveI : Module.Flat A T := hfg
+  infer_instance
+
+theorem completionMap_hasGoingDown_source
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (hNoeth : IsNoetherianRing A) (_hLocal : IsLocalRing A)
+    (w : JensenCompletionWitness A 𝔪 ι) :
+    letI : Algebra A nodeRing := ι.toAlgebra
+    Algebra.HasGoingDown A nodeRing := by
+  rw [w.map_compatible]
+  exact
+    adicCompletion_equiv_hasGoingDown_of_isNoetherian A nodeRing 𝔪
+      w.completionEquiv
+
+theorem contractedPrime_height_le_one_of_hasGoingDown_source
+    (A : Type) [CommRing A] (_𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (q : Ideal A) (hNoeth : IsNoetherianRing A) (_hLocal : IsLocalRing A)
+    (_hDomain : IsDomain A) (hqComap : q = Ideal.comap ι nodePrime)
+    (hqPrime : q.IsPrime) (_hqNonzero : q ≠ ⊥)
+    (hGoingDown :
+      letI : Algebra A nodeRing := ι.toAlgebra
+      Algebra.HasGoingDown A nodeRing) :
+    q.height ≤ 1 := by
+  letI : Algebra A nodeRing := ι.toAlgebra
+  haveI : IsNoetherianRing A := hNoeth
+  haveI : IsNoetherianRing nodeRing := node_complete_cm_dim.1
+  haveI : Algebra.HasGoingDown A nodeRing := hGoingDown
+  have hNodePrime : nodePrime.IsPrime := nodePrime_prime_height.1
+  have hNodeHeight : nodePrime.height = 1 := nodePrime_prime_height.2.2
+  have hLiesOver : nodePrime.LiesOver q := by
+    constructor
+    simpa [Ideal.under_def, RingHom.algebraMap_toAlgebra] using hqComap
+  exact
+    (liesOver_height_le_of_hasGoingDown_source A nodeRing q nodePrime hqPrime
+      hNodePrime hLiesOver).trans (le_of_eq hNodeHeight)
+
+theorem contractedPrime_height_le_one_source
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (q : Ideal A) (w : JensenCompletionWitness A 𝔪 ι)
+    (hNoeth : IsNoetherianRing A) (hLocal : IsLocalRing A)
+    (hDomain : IsDomain A) (hqComap : q = Ideal.comap ι nodePrime)
+    (hqPrime : q.IsPrime) (hqNonzero : q ≠ ⊥) :
+    q.height ≤ 1 := by
+  exact
+    contractedPrime_height_le_one_of_hasGoingDown_source A 𝔪 ι q hNoeth
+      hLocal hDomain hqComap hqPrime hqNonzero
+      (completionMap_hasGoingDown_source A 𝔪 ι hNoeth hLocal w)
+
+theorem contractedPrime_height_one_source
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (q : Ideal A) (w : JensenCompletionWitness A 𝔪 ι)
+    (hNoeth : IsNoetherianRing A) (hLocal : IsLocalRing A)
+    (hDomain : IsDomain A) (hqComap : q = Ideal.comap ι nodePrime)
+    (hqPrime : q.IsPrime) (hqNonzero : q ≠ ⊥) :
+    q.height = 1 := by
+  haveI : IsDomain A := hDomain
+  exact le_antisymm
+    (contractedPrime_height_le_one_source A 𝔪 ι q w hNoeth hLocal hDomain
+      hqComap hqPrime hqNonzero)
+    (nonzeroPrime_height_ge_one_source A q hqPrime hqNonzero)
+
+theorem heightOnePrime_principal_of_ufd_source
+    (A : Type) [CommRing A] [IsDomain A] [UniqueFactorizationMonoid A]
+    (q : Ideal A) (_hqPrime : q.IsPrime) (_hqNonzero : q ≠ ⊥)
+    (_hqHeight : q.height = 1) :
+    ∃ a : A, q = Ideal.span ({a} : Set A) := by
+  rcases Ideal.IsPrime.exists_mem_prime_of_ne_bot _hqPrime _hqNonzero with
+    ⟨p, hpMem, hpPrime⟩
+  refine ⟨p, ?_⟩
+  have hpSpanPrime : (Ideal.span ({p} : Set A)).IsPrime :=
+    (Ideal.span_singleton_prime hpPrime.ne_zero).2 hpPrime
+  haveI : (Ideal.span ({p} : Set A)).IsPrime := hpSpanPrime
+  have hpSpanLeQ : Ideal.span ({p} : Set A) ≤ q :=
+    (Ideal.span_singleton_le_iff_mem q).mpr hpMem
+  have hpSpanNonzero : Ideal.span ({p} : Set A) ≠ ⊥ :=
+    mt Ideal.span_singleton_eq_bot.mp hpPrime.ne_zero
+  have hpBotLtSpan : (⊥ : Ideal A) < Ideal.span ({p} : Set A) :=
+    bot_lt_iff_ne_bot.mpr hpSpanNonzero
+  haveI : (⊥ : Ideal A).FiniteHeight := by
+    rw [Ideal.finiteHeight_iff]
+    exact Or.inr (by rw [Ideal.height_bot]; simp)
+  have hpSpanHeightPos : 0 < (Ideal.span ({p} : Set A)).height := by
+    have hStrict :
+        (⊥ : Ideal A).height < (Ideal.span ({p} : Set A)).height :=
+      Ideal.height_strict_mono_of_is_prime hpBotLtSpan
+    simpa [Ideal.height_bot] using hStrict
+  have hpSpanPrimeHeightPos : 0 < (Ideal.span ({p} : Set A)).primeHeight := by
+    simpa [Ideal.height_eq_primeHeight] using hpSpanHeightPos
+  haveI : q.FiniteHeight := by
+    rw [Ideal.finiteHeight_iff]
+    exact Or.inr (by rw [_hqHeight]; simp)
+  have hqPrimeHeight : q.primeHeight = 1 := by
+    simpa [Ideal.height_eq_primeHeight] using _hqHeight
+  by_contra hNe
+  have hSpanLtQ : Ideal.span ({p} : Set A) < q :=
+    lt_of_le_of_ne hpSpanLeQ (fun hEq => hNe hEq.symm)
+  have hPrimeHeightLt :
+      (Ideal.span ({p} : Set A)).primeHeight < q.primeHeight :=
+    Ideal.primeHeight_strict_mono hSpanLtQ
+  rw [hqPrimeHeight] at hPrimeHeightLt
+  exact
+    (not_lt_of_ge
+      (ENat.one_le_iff_ne_zero.mpr (ne_of_gt hpSpanPrimeHeightPos)))
+      hPrimeHeightLt
+
+theorem primeGenerator_source : primeGenerator := by
+  rcases jensenSpecialCase with
+    ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
+  letI := instA
+  let q : Ideal A := Ideal.comap ι nodePrime
+  have hCounter : counterexampleRing :=
+    ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
+  have hqComap : q = Ideal.comap ι nodePrime := rfl
+  have hqPrime : q.IsPrime := by
+    haveI : nodePrime.IsPrime := nodePrime_prime_height.1
+    exact Ideal.comap_isPrime ι nodePrime
+  have hqNonzero : q ≠ ⊥ :=
+    hNonzeroContraction nodePrime nodePrime_prime_height.1 nodePrime_prime_height.2.1
+  let w : JensenCompletionWitness A 𝔪 ι :=
+    jensenCompletionWitness_source A 𝔪 ι hNoeth hLocal hDomain hBot
+      hNonzeroContraction
+  have hqHeight : q.height = 1 :=
+    contractedPrime_height_one_source A 𝔪 ι q w hNoeth hLocal hDomain
+      hqComap hqPrime hqNonzero
+  have hWeak : WeaklyQuasiComplete A 𝔪 :=
+    (counterexampleRing_weakCriterion_source A 𝔪 ι w).2 hNonzeroContraction
+  haveI : IsDomain A := hDomain
+  haveI : UniqueFactorizationMonoid A :=
+    jensenSpecialCase_isUFD_source A 𝔪 ι hCounter
+  rcases heightOnePrime_principal_of_ufd_source A q hqPrime hqNonzero hqHeight with
+    ⟨a, hqPrincipal⟩
+  exact
+    ⟨A, instA, 𝔪, ι, q, a, hCounter, hNoeth, hLocal, hDomain, hWeak, hBot,
+      hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩
 
 theorem extendedPrincipal_not_prime_of_generator_data
     (A : Type u) [CommRing A] (ι : A →+* nodeRing) (q : Ideal A) (a : A)
@@ -440,19 +660,6 @@ def BadQuotientSourceData.DimensionCriterion
       AnalyticallyIrreducible (d.A ⧸ d.q)
         (nodeRing ⧸ Ideal.span ({d.ι d.a} : Set nodeRing))
 
-structure JensenCompletionWitness
-    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing) where
-  Ahat : Type
-  [instAhat : CommRing Ahat]
-  completionMap : A →+* Ahat
-  completionEquiv : Ahat ≃+* nodeRing
-  map_compatible : ι = completionEquiv.toRingHom.comp completionMap
-  weakCriterion :
-    WeaklyQuasiComplete A 𝔪 ↔
-      ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥
-
-attribute [instance] JensenCompletionWitness.instAhat
-
 structure QuotientCompletionWitness (d : BadQuotientSourceData) where
   Bhat : Type
   [instBhat : CommRing Bhat]
@@ -553,11 +760,6 @@ theorem badQuotient_sourceData_from_jensen :
       hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩,
       trivial⟩
 
-noncomputable def jensenCompletionWitness_source
-    (d : BadQuotientSourceData) :
-    JensenCompletionWitness d.A d.𝔪 d.ι := by
-  sorry
-
 noncomputable def quotientCompletionWitness_source
     (d : BadQuotientSourceData)
     (_w : JensenCompletionWitness d.A d.𝔪 d.ι) :
@@ -574,7 +776,8 @@ theorem badQuotient_structured_source :
     ∃ _ : BadQuotientStructuredSource, True := by
   rcases badQuotient_sourceData_from_jensen with ⟨d, _hd⟩
   let w : JensenCompletionWitness d.A d.𝔪 d.ι :=
-    jensenCompletionWitness_source d
+    jensenCompletionWitness_source d.A d.𝔪 d.ι d.hNoeth d.hLocal d.hDomain
+      d.hBot d.hNonzeroContraction
   let qw : QuotientCompletionWitness d :=
     quotientCompletionWitness_source d w
   let hQuasi : d.QuasiCriterion :=

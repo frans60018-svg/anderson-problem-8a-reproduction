@@ -579,10 +579,165 @@
   prime element, so \cref{lem:contracted_prime_height} supplies such \(a\).
 \end{proof}
 
+\begin{lemma}[Jensen's selected ring is a UFD]
+  \label{lem:jensen_special_case_ufd_source}
+  \lean{Run202608192034.TODO.jensenSpecialCase_isUFD_source}
+  \uses{lem:jensen_special_case,lem:jensen_union_ufd}
+  The ring \(A\) selected from Jensen's construction is a UFD.
+\end{lemma}
+
+\begin{proof}
+  This is the UFD part of Jensen's theorem: the saturated union is a UFD, and
+  the completion criterion upgrades the same union to the Noetherian local ring
+  used in the counterexample.
+\end{proof}
+
+\begin{lemma}[Weak-completeness criterion for the selected ring]
+  \label{lem:counterexample_weak_criterion_source}
+  \lean{Run202608192034.TODO.counterexampleRing_weakCriterion_source}
+  \uses{def:jensen_completion_witness}
+  The selected ring \(A\) is weakly quasi-complete exactly when every nonzero
+  prime of \(T\) contracts nontrivially to \(A\).
+\end{lemma}
+
+\begin{proof}
+  This is now a projection from the Jensen completion witness, which records
+  the Farley completion-prime criterion already transported along
+  \(\widehat A\cong T\).
+\end{proof}
+
+\begin{lemma}[A nonzero ideal in a domain has positive height]
+  \label{lem:nonzero_prime_height_ge_one_source}
+  \lean{Run202608192034.TODO.nonzeroPrime_height_ge_one_source}
+  If \(A\) is a domain and \(q\neq(0)\), then \(\operatorname{ht}q\geq 1\).
+\end{lemma}
+
+\begin{proof}
+  The zero ideal is prime in a domain.  Since \((0)\subsetneq q\), strict
+  monotonicity of height below a prime ideal gives
+  \(\operatorname{ht}(0)<\operatorname{ht}q\), and
+  \(\operatorname{ht}(0)=0\).
+\end{proof}
+
+\begin{lemma}[Going-down controls height under lies-over]
+  \label{lem:lies_over_height_le_of_has_going_down_source}
+  \lean{Run202608192034.TODO.liesOver_height_le_of_hasGoingDown_source}
+  If \(T\) is a Noetherian \(A\)-algebra satisfying going-down and
+  \(Q\subseteq T\) lies over \(q\subseteq A\), then
+  \(\operatorname{ht}q\leq\operatorname{ht}Q\).
+\end{lemma}
+
+\begin{proof}
+  Use Mathlib's height formula for going-down:
+  \[
+    \operatorname{ht}Q =
+    \operatorname{ht}q +
+    \operatorname{ht}\bigl(Q(T/qT)\bigr).
+  \]
+  Since \(x\leq x+y\) in \(\mathbb N_\infty\), the desired inequality follows.
+\end{proof}
+
+\begin{lemma}[Noetherian adic completions have going-down]
+  \label{lem:adic_completion_has_going_down_of_is_noetherian}
+  \lean{Run202608192034.TODO.adicCompletion_hasGoingDown_of_isNoetherian}
+  If \(A\) is Noetherian, then the canonical algebra map
+  \(A\to\widehat A^{\,\mathfrak m}\) has going-down.
+\end{lemma}
+
+\begin{proof}
+  Mathlib proves that Noetherian adic completions are flat over the original
+  ring.  Flat algebras satisfy going-down, so typeclass inference supplies the
+  result.
+\end{proof}
+
+\begin{lemma}[Going-down transports across a completion equivalence]
+  \label{lem:adic_completion_equiv_has_going_down_of_is_noetherian}
+  \lean{Run202608192034.TODO.adicCompletion_equiv_hasGoingDown_of_isNoetherian}
+  \uses{lem:adic_completion_has_going_down_of_is_noetherian}
+  If \(A\) is Noetherian and \(\widehat A^{\,\mathfrak m}\cong T\), then the
+  transported algebra structure \(A\to T\) has going-down.
+\end{lemma}
+
+\begin{proof}
+  The canonical map \(A\to\widehat A^{\,\mathfrak m}\) is flat, and a bijective
+  ring map \(\widehat A^{\,\mathfrak m}\to T\) is flat.  Flatness is stable
+  under composition, hence the transported map \(A\to T\) is flat.  Apply
+  `Algebra.HasGoingDown.of_flat`.
+\end{proof}
+
+\begin{lemma}[The completion map has going-down]
+  \label{lem:completion_map_has_going_down_source}
+  \lean{Run202608192034.TODO.completionMap_hasGoingDown_source}
+  \uses{def:jensen_completion_witness,lem:adic_completion_equiv_has_going_down_of_is_noetherian}
+  The selected completion map \(A\to T\) satisfies going-down.
+\end{lemma}
+
+\begin{proof}
+  The Jensen completion witness identifies the selected map \(A\to T\) with
+  the standard adic completion map transported across
+  \(\widehat A\cong T\).  Apply the checked transport lemma for going-down
+  across such a completion equivalence.
+\end{proof}
+
+\begin{lemma}[Going-down gives the contracted-prime height upper bound]
+  \label{lem:contracted_prime_height_le_one_of_has_going_down_source}
+  \lean{Run202608192034.TODO.contractedPrime_height_le_one_of_hasGoingDown_source}
+  \uses{lem:lies_over_height_le_of_has_going_down_source,lem:node_prime_height}
+  If the selected completion map has going-down, then
+  \(\operatorname{ht}(Q\cap A)\leq1\).
+\end{lemma}
+
+\begin{proof}
+  The equality \(q=Q\cap A\) says exactly that \(Q\) lies over \(q\).  Apply
+  the going-down height comparison and then use
+  \(\operatorname{ht}Q=1\).
+\end{proof}
+
+\begin{lemma}[Going-down gives the contracted-prime height upper bound]
+  \label{lem:contracted_prime_height_le_one_source}
+  \lean{Run202608192034.TODO.contractedPrime_height_le_one_source}
+  \uses{lem:completion_map_has_going_down_source,lem:contracted_prime_height_le_one_of_has_going_down_source}
+  For \(q=Q\cap A\), the completion map gives
+  \(\operatorname{ht}q\leq 1\).
+\end{lemma}
+
+\begin{proof}
+  Combine the source fact that the selected completion map has going-down with
+  the checked height comparison for ideals satisfying lies-over.
+\end{proof}
+
+\begin{lemma}[The contracted prime has height one]
+  \label{lem:contracted_prime_height_one_source}
+  \lean{Run202608192034.TODO.contractedPrime_height_one_source}
+  \uses{lem:nonzero_prime_height_ge_one_source,lem:contracted_prime_height_le_one_source}
+  For \(q=Q\cap A\), the contracted prime \(q\) has height one.
+\end{lemma}
+
+\begin{proof}
+  Combine the going-down upper bound \(\operatorname{ht}q\leq1\) with the
+  lower bound \(\operatorname{ht}q\geq1\) coming from \(q\neq(0)\) in the
+  domain \(A\).
+\end{proof}
+
+\begin{lemma}[Height-one primes in the selected UFD are principal]
+  \label{lem:height_one_prime_principal_ufd_source}
+  \lean{Run202608192034.TODO.heightOnePrime_principal_of_ufd_source}
+  \uses{lem:jensen_special_case_ufd_source,lem:contracted_prime_height_one_source}
+  A nonzero height-one prime ideal in the selected UFD is principal.
+\end{lemma}
+
+\begin{proof}
+  Mathlib gives a prime element \(p\in q\) inside any nonzero prime ideal of a
+  UFD.  Then \((p)\) is a nonzero prime ideal and \((p)\subseteq q\).  If the
+  containment were strict, strict monotonicity of prime height would give
+  \(\operatorname{ht}(p)<\operatorname{ht}q=1\), contradicting
+  \(\operatorname{ht}(p)>0\).
+\end{proof}
+
 \begin{lemma}[Source theorem for the prime generator]
   \label{lem:prime_generator_source}
   \lean{Run202608192034.TODO.primeGenerator_source}
-  \uses{def:prime_generator,lem:contracted_prime_height,lem:counterexample_ring_weak}
+  \uses{def:prime_generator,lem:jensen_special_case,lem:jensen_completion_witness_source,lem:counterexample_weak_criterion_source,lem:contracted_prime_height_one_source,lem:height_one_prime_principal_ufd_source}
   The Jensen construction and the UFD height-one-prime argument supply the
   prime-generator package used later.
 \end{lemma}
@@ -590,8 +745,9 @@
 \begin{proof}
   Use the constructed ring \(A\), take \(q=Q\cap A\), and apply the
   height-one-prime-in-a-UFD argument to choose \(a\) with \(q=aA\).  The
-  generic-fiber condition gives nonzeroness of the contraction, and the
-  Farley criterion gives weak quasi-completeness of \(A\).
+  generic-fiber condition gives nonzeroness of the contraction.  The Jensen
+  completion witness supplies both the transported Farley criterion and the
+  going-down input used in the height calculation.
 \end{proof}
 
 \begin{lemma}[The chosen extended principal ideal is not prime]
@@ -683,15 +839,16 @@
   \lean{Run202608192034.TODO.JensenCompletionWitness}
   \uses{lem:jensen_special_case,lem:farley_completion_criterion}
   Record the stronger Jensen output needed later: an abstract completion
-  \(\widehat A\), a completion map \(A\to\widehat A\), an equivalence
-  \(\widehat A\cong T\), compatibility with the embedded map \(A\to T\), and
-  the weak quasi-completeness criterion expressed through this completion.
+  equivalence \(\widehat A^{\,\mathfrak m}\cong T\), compatibility with the
+  embedded map \(A\to T\), and the weak quasi-completeness criterion expressed
+  through this completion.
 \end{definition}
 
 \begin{proof}
   This is a source data structure isolating the part of Jensen's construction
   that identifies the completion of \(A\) with the chosen complete local ring
-  \(T\).
+  \(T\).  In Lean the completion is the standard Mathlib object
+  `AdicCompletion \(\mathfrak m\) A`.
 \end{proof}
 
 \begin{definition}[Quotient completion witness]
@@ -787,9 +944,10 @@
 
 \begin{proof}
   This is the strengthened form of Jensen's completion conclusion: besides
-  the embedded map \(A\to T\), it records an abstract completion
-  \(\widehat A\), the completion map \(A\to\widehat A\), and an equivalence
-  \(\widehat A\cong T\) compatible with the embedding.
+  the embedded map \(A\to T\), it records an equivalence from the standard
+  adic completion `AdicCompletion \(\mathfrak m\) A` to \(T\), proves that
+  the embedded map is the transported completion map, and stores the transported
+  Farley weak-completeness criterion.
 \end{proof}
 
 \begin{lemma}[Quotient completion source]

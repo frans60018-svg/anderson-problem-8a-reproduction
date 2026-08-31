@@ -44,14 +44,14 @@ Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明
 
 最近一次本地验证结果如下：
 
-- blueprint 节点数：63
-- 依赖边数：137
+- blueprint 节点数：74
+- 依赖边数：154
 - 未匹配 Lean 声明：0
 - blueprint gaps：0
 - isolated nodes：0
 - 当前仍有 `sorry` 的声明：5 个
-- 已完成 Lean 代码量：29,476 characters
-- `leandag` 估计剩余有限工作量：1,057 characters
+- 已完成 Lean 代码量：38,025 characters
+- `leandag` 估计剩余有限工作量：1,046 characters
 - `lake build` 通过
 - `leandag build --html` 通过
 - `archon blueprint-doctor --json` 通过
@@ -63,7 +63,7 @@ Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明
 
 当前工作已经完成了以下几部分：
 
-1. 整理原论文路线，并把证明拆成 63 个 blueprint 节点。
+1. 整理原论文路线，并把证明拆成 74 个 blueprint 节点。
 2. 下载并核对所需文献，包括 Anderson、Farley、Jensen、Loepp、Heitmann。
 3. 建立 Lean 项目，并把所有 blueprint 节点映射到 Lean 声明。
 4. 将 quasi-complete 和 weakly quasi-complete 写成下降理想链的 Lean 定义。
@@ -121,6 +121,43 @@ Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明
 20. 最新一轮把 `badQuotient_sourceData_from_jensen` 证明掉，并新增更上游的
     `primeGenerator_source`。这一步把 bad quotient 数据的来源移回原论文中
     “\(q=Q\cap A\) 是高度一素理想，因 \(A\) 是 UFD 所以 \(q=aA\)”这一句。
+21. 之前继续把 `primeGenerator_source` 拆成四个源输入：
+    `jensenSpecialCase_isUFD_source`、weak criterion、contracted-prime height
+    和 `heightOnePrime_principal_of_ufd_source`。经过后续整合，weak criterion
+    和 completion-map going-down 都已经统一收束到 `JensenCompletionWitness`。
+22. 本轮进一步证明了 `heightOnePrime_principal_of_ufd_source`：在 UFD 中，
+    非零高度一素理想包含一个素元 \(p\)，而 \((p)\subseteq q\) 的严格包含
+    会违反两个高度一素理想之间的 `primeHeight` 严格单调性。因此这个节点
+    不再是 source 接口，而是实际 Lean 证明。
+23. 本轮继续拆开 `contractedPrime_height_one_source`：已证明
+    `nonzeroPrime_height_ge_one_source`，即整环中非零理想高度至少为 1；
+    真正剩下的高度问题被压缩到
+    `contractedPrime_height_le_one_source`，对应原论文中 completion map
+    faithfully flat 和 going-down 给出的高度上界。
+24. 之前进一步证明了通用 going-down 高度比较
+    `liesOver_height_le_of_hasGoingDown_source`，并把
+    `contractedPrime_height_le_one_source` 本身改成组合证明；后续又把
+    completion-map going-down 从独立 source hole 改成
+    `JensenCompletionWitness` 的 checked consequence。
+25. 最新一轮继续缩小 `completionMap_hasGoingDown_source`：新增并证明
+    `adicCompletion_hasGoingDown_of_isNoetherian`。Lean 现在可以直接从
+    Mathlib 的 Noetherian adic completion 平坦性和 flat algebra going-down
+    实例推出标准 adic completion map 满足 going-down。
+26. 最新一轮进一步证明
+    `adicCompletion_equiv_hasGoingDown_of_isNoetherian`：如果有
+    `AdicCompletion 𝔪 A ≃+* T`，那么通过这个等价传输得到的
+    `A -> T` 也满足 going-down。证明使用完成映射的 flatness、双射环同态的
+    flatness，以及 flatness 对复合的稳定性。现在剩下的不是一般平坦性，
+    而是把 Jensen 选出的 `ι : A -> nodeRing` 严格识别为
+    `AdicCompletion 𝔪 A ≃+* nodeRing` 下的标准完成映射。
+27. 最新一轮把 `JensenCompletionWitness` 改成直接使用 Mathlib 的
+    `AdicCompletion 𝔪 A`，并让它同时保存
+    `AdicCompletion 𝔪 A ≃+* nodeRing`、映射兼容等式
+    `ι = completionEquiv.toRingHom.comp (algebraMap A (AdicCompletion 𝔪 A))`
+    和 weak-completeness criterion。于是
+    `counterexampleRing_weakCriterion_source` 现在只是从 witness 投影，
+    `completionMap_hasGoingDown_source` 现在由映射兼容等式加上已经证明的
+    going-down transport lemma 推出。`sorry` 数量从 7 个降到 5 个。
 
 ## 最近消除的 8 个 `sorry`
 
@@ -192,21 +229,29 @@ Nakayama 非主性论证。
 
 ## 剩余的主要数学工作
 
-当前 5 个 `sorry` 主要集中在两类问题：
+当前 5 个 `sorry` 主要集中在三类问题：
 
 1. node ring 源事实包  
    需要完整形式化 `C[[x,y,z]] / (x^2 - yz)` 的 domain、Noetherian local、
    二维、基数、`Q = (x,y)` 的高度一素性和非主性。
 
-2. bad quotient 的 completion 不是 domain  
+2. prime generator 的 Jensen/UFD 来源  
+   现在还剩两个源级入口：
+   `jensenSpecialCase_isUFD_source` 和 `jensenCompletionWitness_source`。
+   其中“高度一素理想在 UFD 中主”、“非零理想高度至少为 1”、
+   “going-down + lies-over 推高度上界”、标准 adic completion 的
+   going-down、以及沿 ring equivalence 传输 going-down，均已由 Lean 证明。
+   Farley weak criterion 和 selected completion map 的 going-down 现在都集中
+   在 `JensenCompletionWitness` 这个统一接口里。
+
+3. bad quotient 的 completion 不是 domain  
    这是最后构造反例的关键步骤。现在“利用扩张后的主理想不是素理想来证明
-   completion 非整环”的后半段已经完成；剩下的是四个源级入口：
-   `primeGenerator_source`、`jensenCompletionWitness_source`、
+   completion 非整环”的后半段已经完成；剩下的是两个源级入口：
    `quotientCompletionWitness_source` 和 `badQuotient_quasiCriterion_source`。
 
-这一轮有意增加了 `sorry` 的总数，但把最后的 bad quotient 大洞整理成和原论文
-顺序更一致的形式：先由 Jensen/UFD 给出 \(A,q,a\) 数据，再记录
-\(\widehat A\cong T\)，再记录 completion commutes with quotient 给出的
+当前结构已经和原论文顺序更一致：先由 Jensen/UFD 给出 \(A,q,a\) 数据，再用
+统一的 `JensenCompletionWitness` 记录 \(\widehat A\cong T\)、映射兼容性和
+Farley criterion，随后记录 completion commutes with quotient 给出的
 \(\widehat{A/q}\cong T/aT\)，最后才把判别准则展开给后续主证明使用。
 
 如果要继续提高对原论文的贴合度，completion / formal fiber 的三个 source
