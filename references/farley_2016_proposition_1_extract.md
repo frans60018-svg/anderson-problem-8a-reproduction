@@ -16,5 +16,5 @@ zero contraction.  Thus the meaning of “prime in the completion contracts
 nontrivially” agrees exactly with the generic-formal-fiber terminology used by
 Jensen.
 
-The original PDF was inspected through the web tool’s PDF text extraction;
-direct shell download was blocked by workspace network DNS.
+The original PDF and a local `pdftotext -layout` extraction are present in the
+private workspace and were checked against this statement.

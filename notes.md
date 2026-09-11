@@ -1,5 +1,12 @@
 # Archon Input Notes
 
+> Historical generation policy. It governed the independent Archon track.
+> On 2026-09-10 the user explicitly raised the target to the strictness of the
+> published formalization; the complete upstream proof was then integrated as
+> a separately named canonical track and recorded in
+> `../../../05_fallbacks/fallback_log.md`. The historical files remain the
+> evidence of work performed before that integration.
+
 Goal: formalize Anderson Problem 8a in Lean 4 from the Rethlas-verified informal blueprint.
 
 Primary input:

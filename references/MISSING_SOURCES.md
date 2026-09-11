@@ -22,7 +22,7 @@ All original PDFs should remain in this directory:
 | `farley_2016_fulltext.pdf` and `farley_2016_fulltext.txt` | Jonathan David Farley, "Quasi-completeness and localizations of polynomial domains", 2016. |
 | `jensen_2006_fulltext.pdf` and `jensen_2006_fulltext.txt` | David Jensen, "Completions of UFDs with semi-local formal fibers", 2006. |
 
-## Next Checks
+## Final Checks
 
 ```bash
 /Users/sy/Desktop/Anderson论文复现/03_full_pipeline_reproduction/tools/Archon/.venv/bin/leandag build --html
@@ -30,4 +30,6 @@ All original PDFs should remain in this directory:
 lake build
 ```
 
-After these pass, remove the starter `hello` scaffold and open Lean theorem-skeleton/prover work.
+These historical Archon checks pass. The canonical `Anderson/` proof has also
+been built separately with zero proof holes and zero custom axiom dependencies;
+see `../TRUST_BOUNDARY.md` and `../VERIFICATION_REPORT.md`.

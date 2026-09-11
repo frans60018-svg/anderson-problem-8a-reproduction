@@ -1,3 +1,11 @@
+# Historical Archon source blueprint
+
+This blueprint records the independent 257-node paper-relative development
+under `Run202608192034.TODO`. It is retained for process comparison and is not
+the coverage document for the canonical zero-custom-axiom `Anderson/` source
+tree. Current acceptance status is recorded in `README.md` and
+`TRUST_BOUNDARY.md`.
+
 # definition def:quasi_complete
 
 ## statement
@@ -262,7 +270,7 @@ with its source.
 *Quasi-complete Semilocal Rings and Modules*, in *Commutative Algebra: Recent
 Advances in Commutative Rings, Integer-Valued Polynomials, and Polynomial
 Functions*, Springer, 2014, pp. 25--37
-(paper_id: `10.1007/978-1-4939-0925-4_2`; theorem_id: `Corollary 2.2`; arXiv
+(paper_id: `10.1007/978-1-4939-0925-4_2`; theorem_id: `Corollary 2(3)`; arXiv
 id: none): A one-dimensional Noetherian local domain is weakly quasi-complete
 if and only if it is analytically irreducible.  (The same criterion also
 characterizes quasi-completeness in dimension one.)

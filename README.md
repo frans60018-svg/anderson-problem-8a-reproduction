@@ -1,286 +1,232 @@
-# Anderson 问题 8(a) 的 Lean/Archon 复现工作区
+# Anderson 问题 8(a) 的严格 Lean 复现
 
-这个仓库记录的是对 Anderson 关于 quasi-complete / weakly quasi-complete
-局部环问题的形式化复现工作。目标是沿着原论文及相关文献中的路线，在
-Lean + Mathlib 中复现如下结论：
+本仓库形式化证明 Anderson 2014 年提出的 Problem 8(a) 的否定答案：
+
+**来源与贡献说明（2026-09-11）：** 完整规范证明来自 FrenzyMath
+`Anderson-Conjecture` 提交 `b8bd37b`，本项目完成其整合、构建和审计。
+本次 Rethlas/Archon 辅助复现过程与中间证明另行保留；历史轨仍有 5 个
+外部公理，不能声称全部证明由本次独立生成。
+文档入口见 [项目导航](docs/PROJECT_GUIDE.md)，准确的完成范围和待办见
+[当前状态](docs/CURRENT_STATUS.md)。
 
 > 存在一个 Noetherian local ring，它是 weakly quasi-complete，但不是
 > quasi-complete。
 
-目前这个项目还没有完成全部形式化证明，但已经建立了从原论文证明路线到
-Lean 定理骨架的完整工作区，并且已经推进了一部分中间证明节点。
+规范验收入口是：
 
-## 仓库内容
+```lean
+Run202608192034.andersonProblem8a
+```
 
-- `Run202608192034/Basic.lean`  
-  基础定义和判别准则，包括 quasi-complete、weakly quasi-complete、
-  generic formal fiber、analytic irreducibility，以及后续证明需要使用的
-  completion-prime 判别准则。
+其完整类型为：
 
-- `Run202608192034.lean`  
-  主证明骨架，按照原论文思路从显式的 complete local node ring 出发，
-  经过 Jensen 的 N-subring 构造，再进入 bad quotient，最后推出 Anderson
-  问题 8(a) 的反例。
+```lean
+theorem andersonProblem8a :
+    ∃ (R : Type) (_ : CommRing R) (_ : IsLocalRing R)
+      (_ : IsNoetherianRing R),
+      IsWeaklyQuasiComplete R ∧ ¬ IsQuasiComplete R
+```
 
-- `blueprint/src/chapters/`  
-  Archon blueprint。这里保存的是自然语言层面的证明结构，每个节点都和
-  Lean 中的声明对齐。
+`IsWeaklyQuasiComplete` 和 `IsQuasiComplete` 直接使用
+`IsLocalRing.maximalIdeal R`，所以主定理不再量化一个任意理想；这与原题和
+发布版 `Challenge.lean` 的声明完全一致。
 
-- `.archon/PROGRESS.md` 和 `.archon/STRATEGY.md`  
-  当前进度、剩余问题和下一步策略。
+## 验收状态
 
-- `.archon/REMAINING_SORRY_BREAKDOWN.md`  
-  当前 5 个 `sorry` 的细分 lemma 清单，包括对应的原论文/blueprint 句子、
-  需要的 Mathlib API 类型，以及当前是否能直接证明。
+截至 2026-09-11（本地验证；远程状态见 GitHub Actions）：
 
-- `references/`  
-  文献索引和资料完整性说明。论文 PDF 和提取出的全文文本只保存在本地工作区，
-  没有上传到 GitHub，以避免仓库过大和版权问题。
+| 检查项 | 结果 |
+|---|---:|
+| 规范证明源码 | 42 个 `Anderson/` 模块，约 19,448 行 Lean |
+| 规范源码中的 `sorry` / `admit` | 0 |
+| 规范源码中的自定义 `axiom` / `opaque` | 0 |
+| 规范主定理依赖的项目自定义公理 | 0 |
+| `#print axioms` | `propext`、`Classical.choice`、`Quot.sound` |
+| `lake build` | 通过，8255 jobs |
+| 发布版 Comparator | 在独立上游 checkout 本地通过，详见验证报告 |
+| Lean / Mathlib | `v4.29.0-rc8` |
 
-- `lakefile.toml`、`lake-manifest.json`、`lean-toolchain`  
-  Lean/Mathlib 环境配置。
+`propext`、`Classical.choice` 和 `Quot.sound` 是 Lean/Mathlib 正常使用的逻辑
+基础，不是本工程引入的数学假设。
 
-## 当前进度
+## 两条证明轨
 
-最近一次本地验证结果如下：
+### 规范严格证明轨
 
-- blueprint 节点数：74
-- 依赖边数：154
-- 未匹配 Lean 声明：0
-- blueprint gaps：0
-- isolated nodes：0
-- 当前仍有 `sorry` 的声明：5 个
-- 已完成 Lean 代码量：38,025 characters
-- `leandag` 估计剩余有限工作量：1,046 characters
-- `lake build` 通过
-- `leandag build --html` 通过
-- `archon blueprint-doctor --json` 通过
+`Anderson/` 包含从底层交换代数到最终反例的完整 Lean 证明。当前规范主定理
+直接调用该证明轨的 `main_theorem`。这一轨已经内部化：
 
-也就是说，目前的状态是：证明路线、blueprint、Lean 声明和依赖图已经对齐；
-整个 Lean 项目可以构建；当前还有 5 个源级数学节点仍然需要继续形式化。
+- node ring 的整性、Noetherian、局部、完备和维数性质；
+- 非主高度一素理想 `Q` 的构造；
+- Jensen/Heitmann 的 N-subring、A-extension、规避与超限构造；
+- completion criterion、UFD 输出和 trivial generic formal fiber；
+- adic completion 的 local 与 Noetherian 结构；
+- Anderson/Farley 的 weak quasi-complete 素理想判别；
+- 一维情形下 weak quasi-complete 与 analytic irreducibility 的等价；
+- completion/quotient、going-down、高度和 UFD 主化论证；
+- 最终 weakly quasi-complete 但非 quasi-complete 的反例。
 
-## 已完成的主要工作
+### 历史 Archon 分解轨
 
-当前工作已经完成了以下几部分：
+`Run202608192034.TODO.andersonProblem8a`、`Run202608192034/Basic.lean`、
+blueprint 和 257 节点 DAG 保留了本次复现早期的逐层拆解工作。这条轨内部证明
+了大量 completion/quotient 和高度论中间结果，但还声明了五个显式外部事实，
+其中四个进入旧主定理依赖闭包。
 
-1. 整理原论文路线，并把证明拆成 74 个 blueprint 节点。
-2. 下载并核对所需文献，包括 Anderson、Farley、Jensen、Loepp、Heitmann。
-3. 建立 Lean 项目，并把所有 blueprint 节点映射到 Lean 声明。
-4. 将 quasi-complete 和 weakly quasi-complete 写成下降理想链的 Lean 定义。
-5. 将 generic formal fiber 表达为 completion 中素理想对原环的零收缩条件。
-6. 建立 node ring
-   `C[[x,y,z]] / (x^2 - yz)` 和其中的 distinguished prime candidate。
-7. 将最终结论改成真实的存在性命题，而不是 `True` 型占位命题。
-8. 消除了若干纯连接型 `sorry`，包括从 bad quotient 推出最终非
-   quasi-complete 的步骤。
-9. 前一轮把 `sorry` 从 18 个减少到 10 个，主要推进 Jensen 第二层构造接口。
-10. 本轮把 completion / formal fiber 的 3 个判别准则从裸 `sorry` 改成显式
-    source criterion 接口，并把这些准则作为数据沿主证明链传递。
-11. 本轮继续把 5 个 node ring 局部代数事实收束到 `completeDomainChoice`
-    这个源事实包中，其余 node ring 声明从该事实包投影得到。
-12. 已加强 `primeGenerator` 和 `badQuotient` 的数据包，使其保留 completion map
-    `ι`、`q = comap ι nodePrime`、`q = span {a}` 等后续证明需要的数据。
-13. `extendedPrincipal_not_prime` 已写成 Lean 证明：从
-    `q = span {a}` 推出 `map ι q = span {ι a}`，证明该扩张主理想非零且
-    包含于 `nodePrime`，再用 Krull 主理想定理/高度比较推出若它为素理想
-    则等于 `nodePrime`，从而和 `nodePrime` 非主性矛盾。
-14. 已将 bad quotient completion 步骤拆成三个更细的 blueprint/Lean 节点：
-    `extendedPrincipal_not_prime_of_generator_data`、
-    `quotient_not_domain_of_not_prime` 和 `badQuotient_completion_source`。
-    其中商环非整环的 Mathlib 桥已经证明，公开的
-    `badQuotient_completion_not_domain` 现在从 completion source package
-    和扩张主理想非素性推出。
-15. 进一步把 bad quotient 的剩余源缺口前移到
-    `badQuotient_criteria_source`：`badQuotient_completion_source` 现在由
-    Lean 通过选择 completion target 为
-    `nodeRing / Ideal.span {ι a}` 和恒等同构推出。
-16. 最新一轮把 bad quotient 的剩余源缺口拆成结构化数据包
-    `BadQuotientSourceData`、两个判别准则字段
-    `QuasiCriterion` / `DimensionCriterion`，以及无 `sorry` 的展开引理
-    `badQuotient_criteria_source`。真正剩下的 bad quotient 源洞现在是
-    `badQuotient_structured_criteria_source`。
-17. 继续把 bad quotient 源洞向原论文上游拆分：新增
-    `JensenCompletionWitness` 表达 \(\widehat A\cong T\)，新增
-    `QuotientCompletionWitness` 表达 \(\widehat{A/q}\cong T/aT\)，并证明
-    `QuotientCompletionWitness.dimensionCriterion` 可把解析不可约判别准则
-    沿环等价转移到 `nodeRing / Ideal.span {ι a}`。现在真正剩下的
-    bad quotient 源洞是 `badQuotient_structured_source`。
-18. 最新一轮补强 `BadQuotientSourceData`：它现在同时保存
-    `counterexampleRing` 见证和非零素理想收缩非零性质，并新增两个无
-    `sorry` 的投影定理
-    `BadQuotientSourceData.to_contractedPrime` 与
-    `BadQuotientSourceData.to_primeGenerator`。这使剩余 source package
-    不只服务于最终 quotient，也能回推出原论文中间的 contracted prime 和
-    prime generator 节点。
-19. 最新一轮按照原论文顺序把 `badQuotient_structured_source` 拆成四个
-    source 入口：`badQuotient_sourceData_from_jensen`、
-    `jensenCompletionWitness_source`、`quotientCompletionWitness_source` 和
-    `badQuotient_quasiCriterion_source`。因此 `sorry` 数量从 2 个变为
-    5 个，但 `badQuotient_structured_source` 本身现在是组合证明，不再是一个
-    扁平大洞。
-20. 最新一轮把 `badQuotient_sourceData_from_jensen` 证明掉，并新增更上游的
-    `primeGenerator_source`。这一步把 bad quotient 数据的来源移回原论文中
-    “\(q=Q\cap A\) 是高度一素理想，因 \(A\) 是 UFD 所以 \(q=aA\)”这一句。
-21. 之前继续把 `primeGenerator_source` 拆成四个源输入：
-    `jensenSpecialCase_isUFD_source`、weak criterion、contracted-prime height
-    和 `heightOnePrime_principal_of_ufd_source`。经过后续整合，weak criterion
-    和 completion-map going-down 都已经统一收束到 `JensenCompletionWitness`。
-22. 本轮进一步证明了 `heightOnePrime_principal_of_ufd_source`：在 UFD 中，
-    非零高度一素理想包含一个素元 \(p\)，而 \((p)\subseteq q\) 的严格包含
-    会违反两个高度一素理想之间的 `primeHeight` 严格单调性。因此这个节点
-    不再是 source 接口，而是实际 Lean 证明。
-23. 本轮继续拆开 `contractedPrime_height_one_source`：已证明
-    `nonzeroPrime_height_ge_one_source`，即整环中非零理想高度至少为 1；
-    真正剩下的高度问题被压缩到
-    `contractedPrime_height_le_one_source`，对应原论文中 completion map
-    faithfully flat 和 going-down 给出的高度上界。
-24. 之前进一步证明了通用 going-down 高度比较
-    `liesOver_height_le_of_hasGoingDown_source`，并把
-    `contractedPrime_height_le_one_source` 本身改成组合证明；后续又把
-    completion-map going-down 从独立 source hole 改成
-    `JensenCompletionWitness` 的 checked consequence。
-25. 最新一轮继续缩小 `completionMap_hasGoingDown_source`：新增并证明
-    `adicCompletion_hasGoingDown_of_isNoetherian`。Lean 现在可以直接从
-    Mathlib 的 Noetherian adic completion 平坦性和 flat algebra going-down
-    实例推出标准 adic completion map 满足 going-down。
-26. 最新一轮进一步证明
-    `adicCompletion_equiv_hasGoingDown_of_isNoetherian`：如果有
-    `AdicCompletion 𝔪 A ≃+* T`，那么通过这个等价传输得到的
-    `A -> T` 也满足 going-down。证明使用完成映射的 flatness、双射环同态的
-    flatness，以及 flatness 对复合的稳定性。现在剩下的不是一般平坦性，
-    而是把 Jensen 选出的 `ι : A -> nodeRing` 严格识别为
-    `AdicCompletion 𝔪 A ≃+* nodeRing` 下的标准完成映射。
-27. 最新一轮把 `JensenCompletionWitness` 改成直接使用 Mathlib 的
-    `AdicCompletion 𝔪 A`，并让它同时保存
-    `AdicCompletion 𝔪 A ≃+* nodeRing`、映射兼容等式
-    `ι = completionEquiv.toRingHom.comp (algebraMap A (AdicCompletion 𝔪 A))`
-    和 weak-completeness criterion。于是
-    `counterexampleRing_weakCriterion_source` 现在只是从 witness 投影，
-    `completionMap_hasGoingDown_source` 现在由映射兼容等式加上已经证明的
-    going-down transport lemma 推出。`sorry` 数量从 7 个降到 5 个。
+它现在只作为以下内容的研究记录：
 
-## 最近消除的 8 个 `sorry`
+- 如何从自然语言证明建立定理 DAG；
+- 如何把大范围 `sorry` 拆成局部 lemma；
+- 如何逐步内部化 completion/quotient 核心链条；
+- 如何用 `#print axioms` 区分零 `sorry` 与零数学假设。
 
-最近一轮工作主要完成的是 Jensen 构造中的第二层接口。具体包括：
+历史轨不是当前规范验收入口。完整区别见
+[`TRUST_BOUNDARY.md`](TRUST_BOUNDARY.md)。
 
-- `cardinal_prime_avoidance`
-- `jensen_residueField_uncountable`
-- `initialNSubring`
-- `nSubring_prime_extension`
-- `nSubring_ideal_extension`
-- `jensenUnion_isUFD`
-- `jensen_completion_criterion`
-- `jensen_semilocal_genericFiber`
+## 严格证明路线
 
-需要说明的是，这些节点目前还不是对论文中最深构造的完整形式化。当前做法是：
-把论文中需要的关键假设或见证显式写入 Lean 声明，然后让 Lean 检查这些见证确实
-能推出后续需要的结论。这样可以避免保留过强甚至不成立的占位陈述，也让后续
-真正补全 Jensen 构造时有清晰接口。
+### 1. 定义 quasi-completeness
 
-## 本轮消除的 3 个 completion / formal fiber `sorry`
+[`Anderson/Basic.lean`](Anderson/Basic.lean) 按 Anderson Definition 1.1 定义：
 
-本轮处理的是基础文件中的三个判别准则接口：
+```text
+IsQuasiComplete R
+IsWeaklyQuasiComplete R
+```
 
-- `quasiComplete_iff_all_quotients_weak`
-- `weaklyQuasiComplete_iff_completion_primes`
-- `dimensionOne_weaklyQuasiComplete_iff`
+二者使用局部环的唯一极大理想，不接受额外的任意 adic ideal 参数。
 
-原来的 Lean 声明对任意 completion target 都成立，形式上过强。现在的做法是：
-把 Farley / Anderson 中使用的判别标准作为显式 source criterion 假设传入，
-定理本身负责把该 source criterion 变成后续证明可以调用的 Lean 接口。
-这消除了 3 个 `sorry`，同时保留了后续真正形式化这些判别准则的位置。
+### 2. 内部证明 Anderson 判别定理
 
-## 本轮推进的 node ring 部分
+[`Anderson/QuasiCompleteRing/QuasiCompleteRing.lean`](Anderson/QuasiCompleteRing/QuasiCompleteRing.lean)
+证明：
 
-本轮处理的是显式 node ring
-`C[[x,y,z]] / (x^2 - yz)` 相关的 5 个分散 `sorry`：
+- weak quasi-completeness 等价于完备化中每个非零素理想与原环非平凡相交；
+- 一维 Noetherian local domain 弱拟完备当且仅当解析不可约；
+- quasi-complete 当且仅当所有真商环 weakly quasi-complete。
 
-- `nodeRing_isDomain`
-- `node_complete_cm_dim`
-- `node_cardinality`
-- `nodePrime_prime_height`
-- `nodePrime_not_principal`
+这些结果不再作为 Anderson Corollary 2 的外部公理调用。
 
-现在这些节点都不再各自保留裸 `sorry`，而是从 `completeDomainChoice` 投影得到。
-`completeDomainChoice` 被加强为一个包含 node ring 标准事实的 source package：
-domain、Noetherian local、维数为 2、基数为 `|C|`、`nodePrime` 是非零高度一素理想，
-并且 `nodePrime` 非主。
+### 3. 构造 complete local node
 
-这一步把 node ring 缺口从 5 个分散证明压缩成 1 个明确的源事实包。后续如果要
-完全贴合原论文，需要继续把这个 source package 展开成实际证明：构造到
-`C[[u,v]]` 的嵌入、证明 kernel 正好是 `(x^2-yz)`，再形式化维数、基数、高度和
-Nakayama 非主性论证。
+[`Anderson/CompleteDomain/`](Anderson/CompleteDomain/) 构造
 
-## 本轮消除的 extended principal `sorry`
+```text
+T = C[[x,y,z]] / (x^2 - yz),    Q = (x,y)T.
+```
 
-本轮继续完成了 `extendedPrincipal_not_prime`。证明内容与原论文该段一致：
+Lean 内部证明 `T` 是 complete Noetherian local domain，并证明 `Q` 非零、素、
+高度一且非主。实现包含幂级数代入、正规形/系数计算、局部性、adic 完备性、
+维数和 Nakayama 型论证。
 
-- 由 `q = span {a}` 和 `q = comap ι nodePrime` 得到
-  `Ideal.map ι q = Ideal.span {ι a}` 以及 `Ideal.span {ι a} ≤ nodePrime`。
-- 由 `comap ι ⊥ = ⊥` 得到 `ι` 单射，所以扩张主理想非零。
-- 如果 `Ideal.span {ι a}` 是素理想，Mathlib 的
-  `Ideal.height_le_spanRank_toENat` 给出其高度至多为 1。
-- 由于 `nodeRing` 是整环，非零素理想高度至少为 1；于是该主素理想高度为 1。
-- 它包含在同样高度为 1 的 `nodePrime` 中，严格包含会违反
-  `Ideal.primeHeight_strict_mono`，所以二者相等，矛盾于
-  `nodePrime_not_principal`。
+### 4. 内部化 Jensen/Heitmann 构造
 
-这是真正消除的一个实质性 Lean `sorry`，不是改成新的裸接口。
+[`Anderson/Jensen/`](Anderson/Jensen/) 定义原文所需的强 `NSubring`：其字段
+包括 UFD、quasi-local、基数界、极大理想收缩以及 associated-prime 高度界。
 
-## 剩余的主要数学工作
+随后证明：
 
-当前 5 个 `sorry` 主要集中在三类问题：
+- 初始 N-subring；
+- cardinal prime avoidance 和 transcendental adjoining；
+- A-extension 中的素元保持；
+- finitely generated ideals 的 close-up；
+- well-order/transfinite successor 与 limit 阶段；
+- 最终并环的 UFD、Noetherian 和 completion 性质；
+- completion 为 `T` 且 generic formal fiber 为零素理想。
 
-1. node ring 源事实包  
-   需要完整形式化 `C[[x,y,z]] / (x^2 - yz)` 的 domain、Noetherian local、
-   二维、基数、`Q = (x,y)` 的高度一素性和非主性。
+这替代了历史轨中的 `jensen_corollary_2_4_construction_external`。
 
-2. prime generator 的 Jensen/UFD 来源  
-   现在还剩两个源级入口：
-   `jensenSpecialCase_isUFD_source` 和 `jensenCompletionWitness_source`。
-   其中“高度一素理想在 UFD 中主”、“非零理想高度至少为 1”、
-   “going-down + lies-over 推高度上界”、标准 adic completion 的
-   going-down、以及沿 ring equivalence 传输 going-down，均已由 Lean 证明。
-   Farley weak criterion 和 selected completion map 的 going-down 现在都集中
-   在 `JensenCompletionWitness` 这个统一接口里。
+### 5. 得到 weakly quasi-complete 源环
 
-3. bad quotient 的 completion 不是 domain  
-   这是最后构造反例的关键步骤。现在“利用扩张后的主理想不是素理想来证明
-   completion 非整环”的后半段已经完成；剩下的是两个源级入口：
-   `quotientCompletionWitness_source` 和 `badQuotient_quasiCriterion_source`。
+Jensen 构造给出 local UFD `A`，其极大理想完备化同构于 `T`，generic formal
+fiber 只有零素理想。由已经内部证明的 Anderson/Farley 判别，`A` weakly
+quasi-complete。
 
-当前结构已经和原论文顺序更一致：先由 Jensen/UFD 给出 \(A,q,a\) 数据，再用
-统一的 `JensenCompletionWitness` 记录 \(\widehat A\cong T\)、映射兼容性和
-Farley criterion，随后记录 completion commutes with quotient 给出的
-\(\widehat{A/q}\cong T/aT\)，最后才把判别准则展开给后续主证明使用。
+### 6. 构造坏商环
 
-如果要继续提高对原论文的贴合度，completion / formal fiber 的三个 source
-criterion 仍需要在后续阶段从引用文献中完整形式化，而不是长期停留为接口假设。
+在 [`Anderson/Main.lean`](Anderson/Main.lean) 中令 `q = Q ∩ A`。Lean 证明：
 
-更细的剩余任务拆分见 `.archon/REMAINING_SORRY_BREAKDOWN.md`。
+- `q` 非零且高度一；
+- UFD 性给出 `q=(a)`，其中 `a` 是素元；
+- `aT` 严格包含于 `Q`，因此 `aT` 不是素理想；
+- `T/aT` 不是整环；
+- `A/aA` 是一维 Noetherian local domain，且其完备化不是整环；
+- 因而 `A/aA` 不是 weakly quasi-complete。
 
-## 如何本地验证
+### 7. 否定 quasi-completeness
 
-在项目根目录运行：
+若 `A` quasi-complete，则每个真商环都 weakly quasi-complete，这与
+`A/aA` 的结论矛盾。因此 `A` weakly quasi-complete 但不 quasi-complete。
+
+## 目录结构
+
+| 路径 | 内容 |
+|---|---|
+| `Anderson/` | 规范的零项目公理完整证明 |
+| `Anderson/Main.lean` | 严格证明的最终装配 `main_theorem` |
+| `StrictReproduction.lean` | 与历史轨导入隔离的规范入口及主定理别名 |
+| `Run202608192034.lean` | 历史 Archon 主证明轨 |
+| `Run202608192034/Basic.lean` | 历史轨的基础与 completion 开发 |
+| `AxiomAudit.lean` | 同时审计规范轨和历史轨的真实公理闭包 |
+| `StatementAudit.lean` | 检查规范主定理与原题声明完全同型 |
+| `TRUST_BOUNDARY.md` | 两条证明轨的信任边界 |
+| `UPSTREAM_PROVENANCE.md` | 完整源码来源、提交和许可证信息 |
+| `VERIFICATION_REPORT.md` | 本地构建、公理、声明和 Comparator 验收记录 |
+| `LICENSES/` | 引入源码的 Apache 2.0 许可证 |
+| `blueprint/`、`.leandag/` | 历史 Archon 轨的蓝图和依赖图 |
+
+## 构建与审计
 
 ```bash
 lake build
-../../../tools/Archon/.venv/bin/leandag build --html
-../../../tools/Archon/.venv/bin/leandag --plain stats
-../../../tools/Archon/.venv/bin/leandag --plain show gaps
-../../../tools/Archon/.venv/bin/leandag --plain show isolated
-../../../tools/Archon/.venv/bin/archon blueprint-doctor --json
+lake env lean StatementAudit.lean
+lake env lean AxiomAudit.lean
 ```
 
-## 下一步计划
+规范源码 hole/axiom 扫描：
 
-下一步最重要的是把当前轻量级的 `NSubring` scaffold 替换成 Jensen 原文中的完整
-定义，包括：
+```bash
+rg -n '^[[:space:]]*(axiom|opaque)[[:space:]]|^[[:space:]]*sorry[[:space:]]*$|by[[:space:]]+sorry|admit' \
+  Anderson Anderson.lean StrictReproduction.lean
+```
 
-- quasi-local UFD 结构；
-- cardinality bound；
-- associated primes 对子环的零收缩；
-- 对 `T / tT` 的 associated primes 的高度控制。
+该命令应无输出。`AxiomAudit.lean` 的前两项应输出：
 
-完成这一步之后，目前已经打通的 Jensen 接口节点就可以从“见证检查型定理”
-逐步加强为真正的构造定理，从而更贴近原论文的证明顺序和证明内容。
+```text
+'Run202608192034.andersonProblem8a' depends on axioms:
+[propext, Classical.choice, Quot.sound]
+
+'main_theorem' depends on axioms:
+[propext, Classical.choice, Quot.sound]
+```
+
+## 来源与许可证
+
+规范证明源码来自 FrenzyMath 的公开 `Anderson-Conjecture`，固定到提交
+`b8bd37b`，按 Apache License 2.0 使用。没有引入上游带 `sorry` 的挑战模板。
+详见 [`UPSTREAM_PROVENANCE.md`](UPSTREAM_PROVENANCE.md) 和许可证副本。
+发布版 Comparator 的本地重放结果见
+ [`VERIFICATION_REPORT.md`](VERIFICATION_REPORT.md)。
+
+## 主要文献
+
+1. Daniel D. Anderson, “Quasi-complete Semilocal Rings and Modules,”
+   *Commutative Algebra*, Springer, 2014, pp. 25-37,
+   DOI `10.1007/978-1-4939-0925-4_2`。
+2. Jonathan David Farley, “Quasi-completeness and localizations of polynomial
+   domains,” *Bulletin of the Korean Mathematical Society* 53(6), 2016,
+   pp. 1613-1615, DOI `10.4134/BKMS.b140895`。
+3. David Jensen, “Completions of UFDs with Semi-Local Formal Fibers,”
+   *Communications in Algebra* 34(1), 2006, pp. 347-360,
+   DOI `10.1080/00927870500346321`。
+4. Raymond C. Heitmann, “Characterization of completions of unique
+   factorization domains,” *Transactions of the AMS* 337(1), 1993,
+   pp. 379-387, DOI `10.1090/S0002-9947-1993-1102888-9`。
+5. Susan Loepp, “Constructing Local Generic Formal Fibers,” *Journal of
+   Algebra* 187(1), 1997, pp. 16-38, DOI `10.1006/jabr.1997.6768`。
+
+## 完成口径
+
+规范主定理现已达到发布版原文的形式化严格程度：声明一致、无 `sorry`、无
+项目自定义公理，并由相同 Lean/Mathlib 工具链完整构建。历史 Archon 轨仍有
+显式外部边界，但它不进入规范主定理的依赖闭包。

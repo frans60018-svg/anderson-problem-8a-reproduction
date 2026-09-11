@@ -33,5 +33,5 @@ completion `T`.  The depth and associated-prime hypotheses are what permit the
 N-subring construction; the cardinality equality is used in the transfinite
 adjoining step.
 
-The original PDF was inspected through the web tool’s PDF text extraction;
-direct shell download was blocked by workspace network DNS.
+The original PDF and a local `pdftotext -layout` extraction are present in the
+private workspace and were checked against this statement.

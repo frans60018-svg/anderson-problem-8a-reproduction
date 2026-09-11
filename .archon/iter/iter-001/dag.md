@@ -1,5 +1,8 @@
 # DAG elaboration — iteration 001
 
+> Historical first-iteration report.  Its blockers and counts are superseded
+> by `.archon/DAG_STATUS.md`.
+
 ## Outcome
 
 Created both required chapters and expanded the project from the single compilation sentinel into a 43-declaration informal roadmap.  The mathematical part is one cone rooted at `thm:main`: `archon dag-query ancestors --node thm:main` reports all 41 mathematical dependencies in its closure.  No prover objective was opened because citation grounding and the required independent review remain blocked.

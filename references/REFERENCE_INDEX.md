@@ -39,6 +39,7 @@ PDF pages 33--45, corresponding to printed pages 25--37.  Visual spot checks of
 the split chapter confirm that page 1 is the chapter title/abstract page and
 page 13 is the final references page.
 
-The next gate is not source availability but blueprint/proof readiness: rerun
-the blueprint checks after source-comment updates, remove the starter `hello`
-scaffold, and then open Lean theorem-skeleton/prover work.
+The historical Archon blueprint/proof gate is complete: all scanner-visible
+legacy declarations are covered and that track has zero `sorry`. The canonical
+`Anderson/` proof now also internalizes all former published-result boundaries;
+its zero-custom-axiom audit is recorded in `../TRUST_BOUNDARY.md`.

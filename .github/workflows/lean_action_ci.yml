@@ -18,4 +18,6 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       - uses: leanprover/lean-action@v1
+      - name: Verify exact statement and canonical axiom boundary
+        run: bash scripts/verify-strict.sh
       - uses: leanprover-community/docgen-action@v1

@@ -1,7 +1,7 @@
 name = "run-20260819-2034"
 version = "0.1.0"
 keywords = ["math"]
-defaultTargets = ["Run202608192034"]
+defaultTargets = ["StrictReproduction", "StatementAudit", "Run202608192034"]
 
 [leanOptions]
 pp.unicode.fun = true # pretty-prints `fun a ↦ b`
@@ -16,3 +16,12 @@ rev = "v4.29.0-rc8"
 
 [[lean_lib]]
 name = "Run202608192034"
+
+[[lean_lib]]
+name = "Anderson"
+
+[[lean_lib]]
+name = "StrictReproduction"
+
+[[lean_lib]]
+name = "StatementAudit"

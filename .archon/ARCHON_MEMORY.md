@@ -1,5 +1,18 @@
-- Jensen's existence theorem must be formalized through N-subrings, saturation, and completion; never replace it by an axiom.
-- Original Jensen/Farley/Loepp/Heitmann/Anderson source files are now local in `references/`; Anderson was split from the full Springer book into the target chapter PDF.
-- `hello` was removed with the first mathematical Lean scaffold.
-- Current Lean declarations are strengthened theorem skeleton placeholders with 10 `sorry`s.  The latest pass discharged eight Jensen second-layer/interface nodes by adding source-relevant explicit hypotheses or witness data rather than weakening conclusions.
-- Next work is to replace the lightweight `NSubring` scaffold with Jensen's full definition and turn the current witness-checking Jensen lemmas into construction lemmas without using official Lean proofs as input unless logged as fallback.
+# Archon Memory
+
+- Canonical theorem: `Run202608192034.andersonProblem8a`.
+- Its proposition matches the published challenge and uses the local maximal
+  ideal through `IsWeaklyQuasiComplete` / `IsQuasiComplete`.
+- Canonical proof source is the 42-module `Anderson/` tree from upstream
+  `Anderson-Conjecture` commit `b8bd37b`, Apache 2.0.
+- Canonical source has 0 proof holes and 0 custom axiom declarations.
+- Canonical theorem closure is exactly `propext`, `Classical.choice`,
+  `Quot.sound`.
+- `lake build` passes 8255 jobs.
+- Run `bash scripts/verify-strict.sh` for authoritative verification.
+- `Run202608192034.TODO.andersonProblem8a` is the historical paper-relative
+  Archon theorem and still uses four explicit source boundaries.
+- The 257-node LeandAG graph describes only that historical track.
+- Do not claim that the historical DAG covers the complete canonical proof.
+- Source PDFs remain local and excluded from GitHub.
+- Do not push to GitHub without a fresh explicit user instruction.

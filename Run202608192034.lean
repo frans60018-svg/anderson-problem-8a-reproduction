@@ -1,10 +1,13 @@
 import Run202608192034.Basic
 
 /-!
-Main theorem skeletons following the source-ordered blueprint:
-node ring facts, Jensen/Loepp/Heitmann construction machinery, and the final
-Anderson counterexample.  These are scaffolding declarations for Archon's prover
-queue, not completed formal proofs.
+Historical source-ordered Archon development of the node-ring facts, Jensen
+construction, bad quotient, and Anderson counterexample. Published results
+that were not internalized in this track are exposed as named external
+boundaries rather than hidden proof holes.
+
+The canonical zero-custom-axiom theorem is declared in
+`StrictReproduction.lean`; this module is retained for process comparison.
 -/
 
 universe u
@@ -42,15 +45,30 @@ theorem node_normal_form :
         Ideal.span
           ({(MvPowerSeries.X (0 : Fin 3) : MvPowerSeries (Fin 3) ℂ) ^ 2 -
               MvPowerSeries.X (1 : Fin 3) * MvPowerSeries.X (2 : Fin 3)} :
-            Set (MvPowerSeries (Fin 3) ℂ))) := by
+        Set (MvPowerSeries (Fin 3) ℂ))) := by
   rfl
+
+/--
+External commutative-algebra boundary for the concrete quadratic node
+`C[[x,y,z]]/(x^2-yz)` and `Q = (x,y)`.  The accompanying blueprint gives the
+coefficient-normal-form/domain argument, the hypersurface dimension argument,
+the cardinality calculation, the quotient identification `T/Q ≃ C[[z]]`, and
+the Nakayama proof that `Q` is not principal.  Mathlib v4.29 does not yet expose
+the required finite-variable power-series Noetherian/dimension and formal
+division APIs, so these standard facts are kept as one visible assumption.
+-/
+axiom nodeRing_standard_facts_external :
+    IsDomain nodeRing ∧ IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧
+      ringKrullDim nodeRing = 2 ∧ Cardinal.mk nodeRing = Cardinal.mk ℂ ∧
+        nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧ nodePrime.height = 1 ∧
+          ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing)
 
 theorem completeDomainChoice :
     IsDomain nodeRing ∧ IsNoetherianRing nodeRing ∧ IsLocalRing nodeRing ∧
       ringKrullDim nodeRing = 2 ∧ Cardinal.mk nodeRing = Cardinal.mk ℂ ∧
         nodePrime.IsPrime ∧ nodePrime ≠ ⊥ ∧ nodePrime.height = 1 ∧
           ¬ ∃ a : nodeRing, nodePrime = Ideal.span ({a} : Set nodeRing) := by
-  sorry
+  exact nodeRing_standard_facts_external
 
 theorem nodeRing_isDomain : IsDomain nodeRing := by
   exact completeDomainChoice.1
@@ -82,6 +100,17 @@ theorem nodePrime_not_principal :
     ⟨_hDomain, _hNoeth, _hLocal, _hDim, _hCard, _hPrime, _hNonzero, _hHeight,
       hNotPrincipal⟩
   exact hNotPrincipal
+
+theorem isNoetherianRing_of_ringEquiv_source
+    {R S : Type u} [CommRing R] [CommRing S] (e : R ≃+* S)
+    [IsNoetherianRing R] :
+    IsNoetherianRing S := by
+  rw [isNoetherianRing_iff]
+  have hR : IsNoetherian R R := isNoetherianRing_iff.mp inferInstance
+  let l : R →ₛₗ[(e : R →+* S)] S := e.toSemilinearEquiv
+  exact
+    (LinearMap.isNoetherian_iff_of_bijective l
+      (LinearEquiv.bijective e.toSemilinearEquiv)).mp hR
 
 def NSubring (T : Type u) [CommRing T] : Type u :=
   {R : Subring T //
@@ -230,35 +259,378 @@ theorem node_jensen_hypotheses :
   haveI : IsDomain nodeRing := h.1
   exact ⟨h.1, h.2.1, h.2.2.1, Ideal.isPrime_bot⟩
 
-theorem jensenSpecialCase :
-    ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
-      (ι : A →+* nodeRing),
-      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧
-        Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
-          ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥ := by
-  rcases jensen_local_genericFiber nodeRing (⊥ : Ideal nodeRing) rfl
-      node_jensen_hypotheses.2.2.2
-      ⟨node_jensen_hypotheses.2.1, node_jensen_hypotheses.2.2.1,
-        node_jensen_hypotheses.1⟩ with
-    ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, _hPrime, hComap, hNonzero⟩
-  exact ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hComap, hNonzero⟩
-
-def counterexampleRing : Prop :=
-  ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
-    (ι : A →+* nodeRing),
-    IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧
-      Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
-        ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥
-
 structure JensenCompletionWitness
     (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing) where
   completionEquiv : AdicCompletion 𝔪 A ≃+* nodeRing
   map_compatible :
     ι = completionEquiv.toRingHom.comp
       (algebraMap A (AdicCompletion 𝔪 A))
+  sourceIsUFD : UniqueFactorizationMonoid A
+  adicIdeal_eq_maximalIdeal :
+    ∀ hLocal : IsLocalRing A,
+      𝔪 = @IsLocalRing.maximalIdeal A inferInstance hLocal
+  sourceRingKrullDim_eq_two : ringKrullDim A = 2
   weakCriterion :
     WeaklyQuasiComplete A 𝔪 ↔
       ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥
+
+structure JensenNSubringSeedData where
+  G : Set (Ideal nodeRing)
+  hG_eq : G = ({⊥} : Set (Ideal nodeRing))
+  R₀ : NSubring nodeRing
+  hInitialAvoid : ∀ P ∈ G, Ideal.comap R₀.1.subtype P = ⊥
+
+structure JensenSaturationTaskEnumeration (seed : JensenNSubringSeedData) where
+  primeTasks : Set (Ideal nodeRing)
+  hPrimeCoverage :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ∉ seed.G →
+      Q ∈ primeTasks
+  idealTasks : Set (Ideal seed.R₀.1)
+
+structure JensenSaturationRecursiveChainData
+    (seed : JensenNSubringSeedData)
+    (tasks : JensenSaturationTaskEnumeration seed) where
+  chain : jensenSaturationChain nodeRing
+  hStarts : seed.R₀.1 ≤ (chain.1 0).1
+  hStageAvoid :
+    ∀ n : ℕ, ∀ P ∈ seed.G,
+      Ideal.comap (chain.1 n).1.subtype P = ⊥
+  hStageHits :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ∉ seed.G →
+      ∃ n : ℕ, Ideal.comap (chain.1 n).1.subtype Q ≠ ⊥
+
+structure JensenSaturationUnionData
+    (seed : JensenNSubringSeedData)
+    {tasks : JensenSaturationTaskEnumeration seed}
+    (rec : JensenSaturationRecursiveChainData seed tasks) where
+  A : Subring nodeRing
+  hChain_le : ∀ n : ℕ, (rec.chain.1 n).1 ≤ A
+  hAvoid : ∀ P ∈ seed.G, Ideal.comap A.subtype P = ⊥
+  hHitsOutsideG :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ∉ seed.G →
+      Ideal.comap A.subtype Q ≠ ⊥
+
+structure JensenSaturationData (seed : JensenNSubringSeedData) where
+  chain : jensenSaturationChain nodeRing
+  A : Subring nodeRing
+  hStarts : seed.R₀.1 ≤ (chain.1 0).1
+  hChain_le : ∀ n : ℕ, (chain.1 n).1 ≤ A
+  hAvoid : ∀ P ∈ seed.G, Ideal.comap A.subtype P = ⊥
+  hHitsOutsideG :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ∉ seed.G → Ideal.comap A.subtype Q ≠ ⊥
+
+structure JensenUFDOutputData
+    (seed : JensenNSubringSeedData) (sat : JensenSaturationData seed) where
+  sourceIsUFD : UniqueFactorizationMonoid sat.A
+
+structure JensenCompletionCriterionOutputData
+    (seed : JensenNSubringSeedData) (sat : JensenSaturationData seed) where
+  𝔪 : Ideal sat.A
+  hNoeth : IsNoetherianRing sat.A
+  hLocal : IsLocalRing sat.A
+  hDomain : IsDomain sat.A
+  completionEquiv : AdicCompletion 𝔪 sat.A ≃+* nodeRing
+  map_compatible :
+    sat.A.subtype = completionEquiv.toRingHom.comp
+      (algebraMap sat.A (AdicCompletion 𝔪 sat.A))
+  adicIdeal_eq_maximalIdeal :
+    ∀ hLocal : IsLocalRing sat.A,
+      𝔪 = @IsLocalRing.maximalIdeal sat.A inferInstance hLocal
+  sourceRingKrullDim_eq_two : ringKrullDim sat.A = 2
+
+structure JensenGenericFiberOutputData
+    (seed : JensenNSubringSeedData) (sat : JensenSaturationData seed)
+    (comp : JensenCompletionCriterionOutputData seed sat) where
+  hBot : Ideal.comap sat.A.subtype (⊥ : Ideal nodeRing) = ⊥
+  hNonzeroContraction :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap sat.A.subtype Q ≠ ⊥
+
+theorem jensen_saturation_task_enumeration_source
+    (seed : JensenNSubringSeedData) :
+    Nonempty (JensenSaturationTaskEnumeration seed) := by
+  exact
+    ⟨{ primeTasks := {Q : Ideal nodeRing | Q.IsPrime ∧ Q ∉ seed.G}
+       hPrimeCoverage := by
+        intro Q hQPrime hQnotG
+        exact ⟨hQPrime, hQnotG⟩
+       idealTasks := Set.univ }⟩
+
+theorem jensen_saturation_union_source
+    (seed : JensenNSubringSeedData)
+    {tasks : JensenSaturationTaskEnumeration seed}
+    (rec : JensenSaturationRecursiveChainData seed tasks) :
+    Nonempty (JensenSaturationUnionData seed rec) := by
+  let R : ℕ → Subring nodeRing := fun n => (rec.chain.1 n).1
+  have hRmono : Monotone R :=
+    monotone_nat_of_le_succ rec.chain.2
+  let A : Subring nodeRing := ⨆ n, R n
+  refine
+    ⟨{ A := A
+       hChain_le := fun n => le_iSup R n
+       hAvoid := ?_
+       hHitsOutsideG := ?_ }⟩
+  · intro P hPG
+    apply le_antisymm ?_ bot_le
+    intro x hx
+    obtain ⟨n, hxn⟩ :=
+      (Subring.mem_iSup_of_directed hRmono.directed_le).mp x.property
+    let xn : R n := ⟨x, hxn⟩
+    have hxnP : xn ∈ Ideal.comap (R n).subtype P := hx
+    rw [rec.hStageAvoid n P hPG] at hxnP
+    have hxn0 : xn = 0 := by simpa using hxnP
+    have hxval0 : (x : nodeRing) = 0 :=
+      Subtype.ext_iff.mp hxn0
+    have hx0 : x = 0 := by
+      apply Subtype.ext
+      exact hxval0
+    simp [hx0]
+  · intro Q hQPrime hQnotG
+    obtain ⟨n, hn⟩ := rec.hStageHits Q hQPrime hQnotG
+    intro hA
+    apply hn
+    apply le_antisymm ?_ bot_le
+    intro x hx
+    let hRA : R n ≤ A := le_iSup R n
+    have hxA :
+        Subring.inclusion hRA x ∈ Ideal.comap A.subtype Q := by
+      exact hx
+    rw [hA] at hxA
+    have hxA0 : Subring.inclusion hRA x = 0 := by
+      simpa using hxA
+    have hxval0 : (x : nodeRing) = 0 :=
+      Subtype.ext_iff.mp hxA0
+    have hx0 : x = 0 := by
+      apply Subtype.ext
+      exact hxval0
+    simp [hx0]
+
+theorem JensenSaturationRecursiveChainData.starts
+    {seed : JensenNSubringSeedData}
+    {tasks : JensenSaturationTaskEnumeration seed}
+    (rec : JensenSaturationRecursiveChainData seed tasks) :
+    seed.R₀.1 ≤ (rec.chain.1 0).1 :=
+  rec.hStarts
+
+theorem JensenSaturationUnionData.chain_le
+    {seed : JensenNSubringSeedData}
+    {tasks : JensenSaturationTaskEnumeration seed}
+    {rec : JensenSaturationRecursiveChainData seed tasks}
+    (union : JensenSaturationUnionData seed rec) (n : ℕ) :
+    (rec.chain.1 n).1 ≤ union.A :=
+  union.hChain_le n
+
+theorem JensenSaturationUnionData.avoid
+    {seed : JensenNSubringSeedData}
+    {tasks : JensenSaturationTaskEnumeration seed}
+    {rec : JensenSaturationRecursiveChainData seed tasks}
+    (union : JensenSaturationUnionData seed rec) :
+    ∀ P ∈ seed.G, Ideal.comap union.A.subtype P = ⊥ :=
+  union.hAvoid
+
+theorem JensenSaturationUnionData.hitsOutsideG
+    {seed : JensenNSubringSeedData}
+    {tasks : JensenSaturationTaskEnumeration seed}
+    {rec : JensenSaturationRecursiveChainData seed tasks}
+    (union : JensenSaturationUnionData seed rec) :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ∉ seed.G →
+      Ideal.comap union.A.subtype Q ≠ ⊥ :=
+  union.hHitsOutsideG
+
+def JensenSaturationUnionData.toSaturationData
+    {seed : JensenNSubringSeedData}
+    {tasks : JensenSaturationTaskEnumeration seed}
+    {rec : JensenSaturationRecursiveChainData seed tasks}
+    (union : JensenSaturationUnionData seed rec) :
+    JensenSaturationData seed :=
+  { chain := rec.chain
+    A := union.A
+    hStarts := rec.starts
+    hChain_le := union.chain_le
+    hAvoid := union.avoid
+    hHitsOutsideG := union.hitsOutsideG }
+
+noncomputable def jensenSaturationDataOfRecursiveChain
+    (seed : JensenNSubringSeedData)
+    {tasks : JensenSaturationTaskEnumeration seed}
+    (rec : JensenSaturationRecursiveChainData seed tasks) :
+    JensenSaturationData seed :=
+  (Classical.choice (jensen_saturation_union_source seed rec)).toSaturationData
+
+/--
+The complete witness trace supplied by the construction in Jensen, Corollary 2.4.
+Keeping the dependent stages in one package prevents the invalid stronger claim
+that every subring satisfying only the lightweight saturation bookkeeping is a UFD
+or has completion `nodeRing`.
+-/
+structure JensenPublishedConstructionData where
+  seed : JensenNSubringSeedData
+  tasks : JensenSaturationTaskEnumeration seed
+  recursiveChain : JensenSaturationRecursiveChainData seed tasks
+  ufdOutput :
+    JensenUFDOutputData seed
+      (jensenSaturationDataOfRecursiveChain seed recursiveChain)
+  completionOutput :
+    JensenCompletionCriterionOutputData seed
+      (jensenSaturationDataOfRecursiveChain seed recursiveChain)
+  genericFiberOutput :
+    JensenGenericFiberOutputData seed
+      (jensenSaturationDataOfRecursiveChain seed recursiveChain)
+      completionOutput
+
+/--
+Published-source boundary: the sufficiency construction in D. Jensen,
+"Completions of UFDs with Semi-Local Formal Fibers", Communications in
+Algebra 34 (2006), Corollary 2.4, specialized to `nodeRing` and `P = (0)`.
+The downstream Anderson argument is kernel-checked from this witness package.
+-/
+axiom jensen_corollary_2_4_construction_external :
+  Nonempty JensenPublishedConstructionData
+
+theorem jensen_nSubring_seed_source
+    (c : JensenPublishedConstructionData) :
+    Nonempty JensenNSubringSeedData := by
+  exact ⟨c.seed⟩
+
+theorem jensen_saturation_recursive_chain_source
+    (c : JensenPublishedConstructionData) :
+    Nonempty
+      (JensenSaturationRecursiveChainData c.seed c.tasks) := by
+  exact ⟨c.recursiveChain⟩
+
+theorem jensen_saturation_source
+    (c : JensenPublishedConstructionData) :
+    Nonempty (JensenSaturationData c.seed) := by
+  exact
+    ⟨jensenSaturationDataOfRecursiveChain c.seed c.recursiveChain⟩
+
+theorem jensen_ufd_output_source
+    (c : JensenPublishedConstructionData) :
+    Nonempty
+      (JensenUFDOutputData c.seed
+        (jensenSaturationDataOfRecursiveChain c.seed c.recursiveChain)) := by
+  exact ⟨c.ufdOutput⟩
+
+theorem jensen_completion_output_source
+    (c : JensenPublishedConstructionData) :
+    Nonempty
+      (JensenCompletionCriterionOutputData c.seed
+        (jensenSaturationDataOfRecursiveChain c.seed c.recursiveChain)) := by
+  exact ⟨c.completionOutput⟩
+
+theorem jensen_generic_formal_fiber_output_source
+    (c : JensenPublishedConstructionData) :
+    Nonempty
+      (JensenGenericFiberOutputData c.seed
+        (jensenSaturationDataOfRecursiveChain c.seed c.recursiveChain)
+        c.completionOutput) := by
+  exact ⟨c.genericFiberOutput⟩
+
+structure JensenSelectedSource where
+  A : Type
+  [instA : CommRing A]
+  𝔪 : Ideal A
+  ι : A →+* nodeRing
+  hNoeth : IsNoetherianRing A
+  hLocal : IsLocalRing A
+  hDomain : IsDomain A
+  witness : JensenCompletionWitness A 𝔪 ι
+  hBot : Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥
+  hNonzeroContraction :
+    ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥
+
+attribute [instance] JensenSelectedSource.instA
+
+theorem jensenSelectedSource_exists_source : Nonempty JensenSelectedSource := by
+  rcases jensen_corollary_2_4_construction_external with ⟨c⟩
+  let sat : JensenSaturationData c.seed :=
+    jensenSaturationDataOfRecursiveChain c.seed c.recursiveChain
+  let ufd := c.ufdOutput
+  let comp := c.completionOutput
+  let fiber := c.genericFiberOutput
+  letI : IsNoetherianRing sat.A := comp.hNoeth
+  letI : IsLocalRing sat.A := comp.hLocal
+  letI : IsDomain sat.A := comp.hDomain
+  have hMax : comp.𝔪 = IsLocalRing.maximalIdeal sat.A :=
+    comp.adicIdeal_eq_maximalIdeal comp.hLocal
+  have hWeakCompletion :
+      WeaklyQuasiComplete sat.A comp.𝔪 ↔
+        AdicCompletionPrimeContractionCondition sat.A comp.𝔪 :=
+    anderson_corollary2_part1_external sat.A comp.𝔪 hMax
+  have hCompletionTarget :
+      AdicCompletionPrimeContractionCondition sat.A comp.𝔪 ↔
+        ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ →
+          Ideal.comap sat.A.subtype P ≠ ⊥ :=
+    adicCompletionPrimeContractionCondition_iff_target
+      sat.A nodeRing comp.𝔪 sat.A.subtype comp.completionEquiv
+      comp.map_compatible
+  let w : JensenCompletionWitness sat.A comp.𝔪 sat.A.subtype :=
+    { completionEquiv := comp.completionEquiv
+      map_compatible := comp.map_compatible
+      sourceIsUFD := ufd.sourceIsUFD
+      adicIdeal_eq_maximalIdeal := comp.adicIdeal_eq_maximalIdeal
+      sourceRingKrullDim_eq_two := comp.sourceRingKrullDim_eq_two
+      weakCriterion := hWeakCompletion.trans hCompletionTarget }
+  exact
+    ⟨{ A := sat.A
+       instA := inferInstance
+       𝔪 := comp.𝔪
+       ι := sat.A.subtype
+       hNoeth := comp.hNoeth
+       hLocal := comp.hLocal
+       hDomain := comp.hDomain
+       witness := w
+       hBot := fiber.hBot
+       hNonzeroContraction := fiber.hNonzeroContraction }⟩
+
+theorem jensen_selected_ring_exists_source :
+    ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
+      (_ι : A →+* nodeRing),
+      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A := by
+  rcases jensenSelectedSource_exists_source with ⟨s⟩
+  exact ⟨s.A, s.instA, s.𝔪, s.ι, s.hNoeth, s.hLocal, s.hDomain⟩
+
+theorem jensen_selected_ring_completion_equiv_source :
+    ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
+      (ι : A →+* nodeRing), ∃ (_w : JensenCompletionWitness A _𝔪 ι), True := by
+  rcases jensenSelectedSource_exists_source with ⟨s⟩
+  exact ⟨s.A, s.instA, s.𝔪, s.ι, s.witness, trivial⟩
+
+theorem jensen_selected_ring_ufd_source :
+    ∃ (A : Type) (_inst : CommRing A), ∃ (_ufd : UniqueFactorizationMonoid A), True := by
+  rcases jensenSelectedSource_exists_source with ⟨s⟩
+  exact ⟨s.A, s.instA, s.witness.sourceIsUFD, trivial⟩
+
+theorem jensen_selected_ring_generic_fiber_source :
+    ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
+      (ι : A →+* nodeRing),
+      Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
+        ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥ := by
+  rcases jensenSelectedSource_exists_source with ⟨s⟩
+  exact ⟨s.A, s.instA, s.𝔪, s.ι, s.hBot, s.hNonzeroContraction⟩
+
+def counterexampleRing : Prop :=
+  ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
+    (ι : A →+* nodeRing) (_w : JensenCompletionWitness A _𝔪 ι),
+    IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧
+      Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
+        ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥
+
+theorem jensenSpecialCase_source :
+    ∃ (A : Type) (_inst : CommRing A) (_𝔪 : @Ideal A _inst.toSemiring)
+      (ι : A →+* nodeRing) (_w : JensenCompletionWitness A _𝔪 ι),
+      IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧
+        Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
+          ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥ := by
+  rcases jensenSelectedSource_exists_source with ⟨s⟩
+  exact
+    ⟨s.A, s.instA, s.𝔪, s.ι, s.witness, s.hNoeth, s.hLocal, s.hDomain, s.hBot,
+      s.hNonzeroContraction⟩
+
+theorem jensenSpecialCase : counterexampleRing := by
+  rcases jensenSpecialCase_source with
+    ⟨A, instA, 𝔪, ι, w, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
+  exact
+    ⟨A, instA, 𝔪, ι, w, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
 
 noncomputable def jensenCompletionWitness_source
     (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
@@ -266,9 +638,10 @@ noncomputable def jensenCompletionWitness_source
     (_hDomain : IsDomain A)
     (_hBot : Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥)
     (_hNonzeroContraction :
-      ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥) :
+      ∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥)
+    (w : JensenCompletionWitness A 𝔪 ι) :
     JensenCompletionWitness A 𝔪 ι := by
-  sorry
+  exact w
 
 theorem counterexampleRing_weakCriterion_source
     (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
@@ -276,6 +649,13 @@ theorem counterexampleRing_weakCriterion_source
     WeaklyQuasiComplete A 𝔪 ↔
       ∀ P : Ideal nodeRing, P.IsPrime → P ≠ ⊥ → Ideal.comap ι P ≠ ⊥ := by
   exact w.weakCriterion
+
+theorem adicCompletion_isNoetherianRing_from_jensen
+    (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
+    (w : JensenCompletionWitness A 𝔪 ι) :
+    IsNoetherianRing (AdicCompletion 𝔪 A) := by
+  haveI : IsNoetherianRing nodeRing := node_complete_cm_dim.1
+  exact isNoetherianRing_of_ringEquiv_source w.completionEquiv.symm
 
 theorem counterexampleRing_properties : counterexampleRing :=
   jensenSpecialCase
@@ -285,10 +665,9 @@ theorem counterexampleRing_weaklyQuasiComplete :
       ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring),
         WeaklyQuasiComplete A 𝔪 := by
   intro hA
-  rcases hA with ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hBot, hNonzero⟩
+  rcases hA with
+    ⟨A, instA, 𝔪, ι, w, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩
   letI := instA
-  let w : JensenCompletionWitness A 𝔪 ι :=
-    jensenCompletionWitness_source A 𝔪 ι hNoeth hLocal hDomain hBot hNonzero
   exact
     ⟨A, instA, 𝔪,
       (counterexampleRing_weakCriterion_source A 𝔪 ι w).2 hNonzero⟩
@@ -300,7 +679,7 @@ def contractedPrime : Prop :=
 
 theorem contractedPrime_nonzero_height_one : contractedPrime := by
   rcases counterexampleRing_properties with
-    ⟨A, instA, 𝔪, ι, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩
+    ⟨A, instA, 𝔪, ι, _w, _hNoeth, _hLocal, _hDomain, _hBot, hNonzero⟩
   letI := instA
   refine
     ⟨A, instA, 𝔪, ι, Ideal.comap ι nodePrime, counterexampleRing_properties, rfl,
@@ -311,18 +690,20 @@ theorem contractedPrime_nonzero_height_one : contractedPrime := by
 
 def primeGenerator : Prop :=
   ∃ (A : Type) (_inst : CommRing A) (𝔪 : @Ideal A _inst.toSemiring)
-    (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring) (a : A),
+    (ι : A →+* nodeRing) (q : @Ideal A _inst.toSemiring) (a : A)
+    (_w : JensenCompletionWitness A 𝔪 ι),
     counterexampleRing ∧ IsNoetherianRing A ∧ IsLocalRing A ∧ IsDomain A ∧
-      WeaklyQuasiComplete A 𝔪 ∧ Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
+      WeaklyQuasiComplete A 𝔪 ∧
+        Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥ ∧
         (∀ Q : Ideal nodeRing, Q.IsPrime → Q ≠ ⊥ → Ideal.comap ι Q ≠ ⊥) ∧
           q = Ideal.comap ι nodePrime ∧ q.IsPrime ∧ q ≠ ⊥ ∧
             q = Ideal.span ({a} : Set A)
 
 theorem jensenSpecialCase_isUFD_source
     (A : Type) [CommRing A] (𝔪 : Ideal A) (ι : A →+* nodeRing)
-    (_hCounter : counterexampleRing) :
+    (w : JensenCompletionWitness A 𝔪 ι) :
     UniqueFactorizationMonoid A := by
-  sorry
+  exact w.sourceIsUFD
 
 theorem nonzeroPrime_height_ge_one_source
     (A : Type) [CommRing A] [IsDomain A] (q : Ideal A)
@@ -488,20 +869,17 @@ theorem heightOnePrime_principal_of_ufd_source
 
 theorem primeGenerator_source : primeGenerator := by
   rcases jensenSpecialCase with
-    ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
+    ⟨A, instA, 𝔪, ι, w, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
   letI := instA
   let q : Ideal A := Ideal.comap ι nodePrime
   have hCounter : counterexampleRing :=
-    ⟨A, instA, 𝔪, ι, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
+    ⟨A, instA, 𝔪, ι, w, hNoeth, hLocal, hDomain, hBot, hNonzeroContraction⟩
   have hqComap : q = Ideal.comap ι nodePrime := rfl
   have hqPrime : q.IsPrime := by
     haveI : nodePrime.IsPrime := nodePrime_prime_height.1
     exact Ideal.comap_isPrime ι nodePrime
   have hqNonzero : q ≠ ⊥ :=
     hNonzeroContraction nodePrime nodePrime_prime_height.1 nodePrime_prime_height.2.1
-  let w : JensenCompletionWitness A 𝔪 ι :=
-    jensenCompletionWitness_source A 𝔪 ι hNoeth hLocal hDomain hBot
-      hNonzeroContraction
   have hqHeight : q.height = 1 :=
     contractedPrime_height_one_source A 𝔪 ι q w hNoeth hLocal hDomain
       hqComap hqPrime hqNonzero
@@ -509,12 +887,12 @@ theorem primeGenerator_source : primeGenerator := by
     (counterexampleRing_weakCriterion_source A 𝔪 ι w).2 hNonzeroContraction
   haveI : IsDomain A := hDomain
   haveI : UniqueFactorizationMonoid A :=
-    jensenSpecialCase_isUFD_source A 𝔪 ι hCounter
+    jensenSpecialCase_isUFD_source A 𝔪 ι w
   rcases heightOnePrime_principal_of_ufd_source A q hqPrime hqNonzero hqHeight with
     ⟨a, hqPrincipal⟩
   exact
-    ⟨A, instA, 𝔪, ι, q, a, hCounter, hNoeth, hLocal, hDomain, hWeak, hBot,
-      hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩
+    ⟨A, instA, 𝔪, ι, q, a, w, hCounter, hNoeth, hLocal, hDomain, hWeak,
+      hBot, hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩
 
 theorem extendedPrincipal_not_prime_of_generator_data
     (A : Type u) [CommRing A] (ι : A →+* nodeRing) (q : Ideal A) (a : A)
@@ -607,8 +985,8 @@ theorem extendedPrincipal_not_prime :
       ∃ (a : nodeRing), ¬ (Ideal.span ({a} : Set nodeRing)).IsPrime := by
   intro hGen
   rcases hGen with
-    ⟨A, instA, _𝔪, ι, q, a, _hCounter, _hNoeth, _hLocal, _hDomain, _hWeak,
-      hBot, _hNonzeroContraction, hqComap, _hqPrime, _hqNonzero,
+    ⟨A, instA, _𝔪, ι, q, a, _w, _hCounter, _hNoeth, _hLocal, _hDomain,
+      _hWeak, hBot, _hNonzeroContraction, hqComap, _hqPrime, _hqNonzero,
       hqPrincipal⟩
   letI := instA
   exact
@@ -636,6 +1014,7 @@ structure BadQuotientSourceData where
   hNoeth : IsNoetherianRing A
   hLocal : IsLocalRing A
   hDomain : IsDomain A
+  jensenCompletion : JensenCompletionWitness A 𝔪 ι
   hWeak : WeaklyQuasiComplete A 𝔪
   hBot : Ideal.comap ι (⊥ : Ideal nodeRing) = ⊥
   hNonzeroContraction :
@@ -660,6 +1039,145 @@ def BadQuotientSourceData.DimensionCriterion
       AnalyticallyIrreducible (d.A ⧸ d.q)
         (nodeRing ⧸ Ideal.span ({d.ι d.a} : Set nodeRing))
 
+theorem BadQuotientSourceData.quotient_isNoetherian
+    (d : BadQuotientSourceData) :
+    IsNoetherianRing (d.A ⧸ d.q) := by
+  letI : IsNoetherianRing d.A := d.hNoeth
+  infer_instance
+
+theorem BadQuotientSourceData.quotient_isDomain
+    (d : BadQuotientSourceData) :
+    IsDomain (d.A ⧸ d.q) := by
+  exact (Ideal.Quotient.isDomain_iff_prime d.q).mpr d.hqPrime
+
+theorem BadQuotientSourceData.quotient_nontrivial
+    (d : BadQuotientSourceData) :
+    Nontrivial (d.A ⧸ d.q) :=
+  Ideal.Quotient.nontrivial_iff.mpr d.hqPrime.ne_top
+
+theorem BadQuotientSourceData.quotient_mk_isLocalHom
+    (d : BadQuotientSourceData) :
+    IsLocalHom (Ideal.Quotient.mk d.q) := by
+  letI : IsLocalRing d.A := d.hLocal
+  letI : Nontrivial (d.A ⧸ d.q) := d.quotient_nontrivial
+  exact
+    IsLocalHom.of_surjective (Ideal.Quotient.mk d.q)
+      Ideal.Quotient.mk_surjective
+
+theorem BadQuotientSourceData.quotient_isLocal
+    (d : BadQuotientSourceData) :
+    IsLocalRing (d.A ⧸ d.q) := by
+  letI : IsLocalRing d.A := d.hLocal
+  letI : Nontrivial (d.A ⧸ d.q) := d.quotient_nontrivial
+  letI : IsLocalHom (Ideal.Quotient.mk d.q) :=
+    d.quotient_mk_isLocalHom
+  exact
+    IsLocalRing.of_surjective (Ideal.Quotient.mk d.q)
+      Ideal.Quotient.mk_surjective
+
+theorem BadQuotientSourceData.quotient_noetherian_local_domain
+    (d : BadQuotientSourceData) :
+    IsNoetherianRing (d.A ⧸ d.q) ∧ IsLocalRing (d.A ⧸ d.q) ∧
+      IsDomain (d.A ⧸ d.q) :=
+  ⟨d.quotient_isNoetherian, d.quotient_isLocal, d.quotient_isDomain⟩
+
+noncomputable def BadQuotientSourceData.jensenCompletionWitness
+    (d : BadQuotientSourceData) :
+    JensenCompletionWitness d.A d.𝔪 d.ι :=
+  d.jensenCompletion
+
+theorem BadQuotientSourceData.source_ringKrullDim_eq_two
+    (d : BadQuotientSourceData) :
+    ringKrullDim d.A = 2 :=
+  d.jensenCompletionWitness.sourceRingKrullDim_eq_two
+
+theorem BadQuotientSourceData.adicCompletion_isNoetherianRing
+    (d : BadQuotientSourceData) :
+    IsNoetherianRing (AdicCompletion d.𝔪 d.A) :=
+  adicCompletion_isNoetherianRing_from_jensen d.A d.𝔪 d.ι
+    d.jensenCompletionWitness
+
+theorem BadQuotientSourceData.q_height_one_source
+    (d : BadQuotientSourceData) :
+    d.q.height = 1 :=
+  contractedPrime_height_one_source d.A d.𝔪 d.ι d.q
+    d.jensenCompletionWitness d.hNoeth d.hLocal d.hDomain d.hqComap
+    d.hqPrime d.hqNonzero
+
+theorem BadQuotientSourceData.generator_mem_q
+    (d : BadQuotientSourceData) :
+    d.a ∈ d.q := by
+  rw [d.hqPrincipal]
+  exact Ideal.subset_span (Set.mem_singleton d.a)
+
+theorem BadQuotientSourceData.generator_ne_zero
+    (d : BadQuotientSourceData) :
+    d.a ≠ 0 := by
+  intro ha
+  apply d.hqNonzero
+  rw [d.hqPrincipal, ha]
+  simp
+
+theorem BadQuotientSourceData.generator_mem_nonZeroDivisors
+    (d : BadQuotientSourceData) :
+    d.a ∈ nonZeroDivisors d.A := by
+  haveI : IsDomain d.A := d.hDomain
+  exact mem_nonZeroDivisors_iff_ne_zero.mpr d.generator_ne_zero
+
+theorem BadQuotientSourceData.generator_mem_maximalIdeal
+    (d : BadQuotientSourceData) :
+    d.a ∈ @IsLocalRing.maximalIdeal d.A inferInstance d.hLocal := by
+  letI : IsLocalRing d.A := d.hLocal
+  have hqLe : d.q ≤ IsLocalRing.maximalIdeal d.A :=
+    IsLocalRing.le_maximalIdeal d.hqPrime.ne_top
+  exact hqLe d.generator_mem_q
+
+theorem BadQuotientSourceData.quotient_span_generator_dimension_add_one
+    (d : BadQuotientSourceData) :
+    ringKrullDim (d.A ⧸ Ideal.span ({d.a} : Set d.A)) + 1 =
+      ringKrullDim d.A := by
+  letI : IsNoetherianRing d.A := d.hNoeth
+  letI : IsLocalRing d.A := d.hLocal
+  exact
+    ringKrullDim_quotient_span_singleton_succ_eq_ringKrullDim_of_mem_nonZeroDivisors
+      d.generator_mem_nonZeroDivisors d.generator_mem_maximalIdeal
+
+theorem BadQuotientSourceData.quotient_dimension_add_one_eq_two_source
+    (d : BadQuotientSourceData) :
+    ringKrullDim (d.A ⧸ d.q) + 1 = 2 := by
+  have h := d.quotient_span_generator_dimension_add_one
+  rw [← d.hqPrincipal] at h
+  exact h.trans d.source_ringKrullDim_eq_two
+
+theorem withBotENat_eq_one_of_add_one_eq_two
+    {x : WithBot ℕ∞} (h : x + 1 = 2) :
+    x = 1 := by
+  rw [← one_add_one_eq_two] at h
+  apply le_antisymm
+  · exact ENat.WithBot.add_le_add_one_right_iff.mp (le_of_eq h)
+  · exact ENat.WithBot.add_le_add_one_right_iff.mp (ge_of_eq h)
+
+theorem BadQuotientSourceData.quotient_ringKrullDim_eq_one_source
+    (d : BadQuotientSourceData) :
+    ringKrullDim (d.A ⧸ d.q) = 1 :=
+  withBotENat_eq_one_of_add_one_eq_two
+    d.quotient_dimension_add_one_eq_two_source
+
+structure QuotientDimensionOneFacts (d : BadQuotientSourceData) : Prop where
+  quotient_isNoetherian : IsNoetherianRing (d.A ⧸ d.q)
+  quotient_isLocal : IsLocalRing (d.A ⧸ d.q)
+  quotient_isDomain : IsDomain (d.A ⧸ d.q)
+  quotient_ringKrullDim_eq_one : ringKrullDim (d.A ⧸ d.q) = 1
+
+theorem BadQuotientSourceData.quotientDimensionOneFacts_of_dim
+    (d : BadQuotientSourceData)
+    (hDim : ringKrullDim (d.A ⧸ d.q) = 1) :
+    QuotientDimensionOneFacts d :=
+  { quotient_isNoetherian := d.quotient_isNoetherian
+    quotient_isLocal := d.quotient_isLocal
+    quotient_isDomain := d.quotient_isDomain
+    quotient_ringKrullDim_eq_one := hDim }
+
 structure QuotientCompletionWitness (d : BadQuotientSourceData) where
   Bhat : Type
   [instBhat : CommRing Bhat]
@@ -671,6 +1189,840 @@ structure QuotientCompletionWitness (d : BadQuotientSourceData) where
         AnalyticallyIrreducible (d.A ⧸ d.q) Bhat
 
 attribute [instance] QuotientCompletionWitness.instBhat
+
+def quotientLinearMap (d : BadQuotientSourceData) :
+    d.A →ₗ[d.A] d.A ⧸ d.q :=
+  (Ideal.Quotient.mkₐ d.A d.q).toLinearMap
+
+theorem quotient_mk_linear_surjective
+    (d : BadQuotientSourceData) :
+    Function.Surjective (quotientLinearMap d) := by
+  simpa [quotientLinearMap, Ideal.Quotient.mkₐ_eq_mk] using
+    (Ideal.Quotient.mk_surjective : Function.Surjective (Ideal.Quotient.mk d.q))
+
+theorem quotient_completion_map_surjective
+    (d : BadQuotientSourceData) :
+    Function.Surjective
+      (AdicCompletion.map d.𝔪 (quotientLinearMap d)) := by
+  exact AdicCompletion.map_surjective d.𝔪 (quotient_mk_linear_surjective d)
+
+theorem quotient_module_filtration_eq_restrictScalars
+    (d : BadQuotientSourceData) (n : ℕ) :
+    (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q))) =
+      ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n).restrictScalars d.A := by
+  rw [Ideal.smul_top_eq_map]
+  rw [show algebraMap d.A (d.A ⧸ d.q) = Ideal.Quotient.mk d.q by
+    exact Ideal.Quotient.algebraMap_eq d.q]
+  rw [Ideal.map_pow]
+
+noncomputable def quotientModuleLevelEquiv
+    (d : BadQuotientSourceData) (n : ℕ) :
+    ((d.A ⧸ d.q) ⧸
+        (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))) ≃ₗ[d.A]
+      ((d.A ⧸ d.q) ⧸
+        (((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n).restrictScalars d.A)) :=
+  Submodule.Quotient.equiv
+    (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))
+    (((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n).restrictScalars d.A)
+    (LinearEquiv.refl d.A (d.A ⧸ d.q))
+    (by
+      simpa using quotient_module_filtration_eq_restrictScalars d n)
+
+@[simp]
+theorem quotientModuleLevelEquiv_mk
+    (d : BadQuotientSourceData) (n : ℕ) (x : d.A ⧸ d.q) :
+    quotientModuleLevelEquiv d n
+        (Submodule.Quotient.mk
+          (p := d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q))) x) =
+      Submodule.Quotient.mk
+        (p := ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n).restrictScalars d.A) x := by
+  rfl
+
+noncomputable def quotientModuleLevelToRingLevelEquiv
+    (d : BadQuotientSourceData) (n : ℕ) :
+    ((d.A ⧸ d.q) ⧸
+        (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))) ≃ₗ[d.A]
+      ((d.A ⧸ d.q) ⧸
+        ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n)) :=
+  quotientModuleLevelEquiv d n
+
+theorem quotient_module_filtration_eq_adic_restrictScalars
+    (d : BadQuotientSourceData) (n : ℕ) :
+    (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q))) =
+      ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n •
+        (⊤ : Submodule (d.A ⧸ d.q) (d.A ⧸ d.q))).restrictScalars d.A := by
+  rw [quotient_module_filtration_eq_restrictScalars]
+  simp
+
+noncomputable def quotientModuleLevelToAdicLevelEquiv
+    (d : BadQuotientSourceData) (n : ℕ) :
+    ((d.A ⧸ d.q) ⧸
+        (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))) ≃ₗ[d.A]
+      ((d.A ⧸ d.q) ⧸
+        ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n •
+          (⊤ : Submodule (d.A ⧸ d.q) (d.A ⧸ d.q)))) :=
+  Submodule.Quotient.equiv
+    (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))
+    (((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n •
+      (⊤ : Submodule (d.A ⧸ d.q) (d.A ⧸ d.q))).restrictScalars d.A)
+    (LinearEquiv.refl d.A (d.A ⧸ d.q))
+    (by
+      rw [quotient_module_filtration_eq_restrictScalars]
+      simp)
+
+theorem quotientModuleLevelToAdicLevelEquiv_eq_factor_ringLevel
+    (d : BadQuotientSourceData) (n : ℕ)
+    (v : (d.A ⧸ d.q) ⧸
+      (d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))) :
+    quotientModuleLevelToAdicLevelEquiv d n v =
+      Ideal.Quotient.factor
+        (show (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n ≤
+          ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n •
+            (⊤ : Ideal (d.A ⧸ d.q))) by
+          exact le_of_eq (by ext x; simp))
+        (quotientModuleLevelToRingLevelEquiv d n v) := by
+  induction v using Submodule.Quotient.induction_on with
+  | H z =>
+      rfl
+
+theorem completed_q_eq_span_a
+    (d : BadQuotientSourceData) :
+    Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q =
+      Ideal.span
+        ({algebraMap d.A (AdicCompletion d.𝔪 d.A) d.a} :
+          Set (AdicCompletion d.𝔪 d.A)) := by
+  rw [d.hqPrincipal, Ideal.map_span]
+  simp
+
+theorem completionEquiv_maps_completed_q
+    (d : BadQuotientSourceData)
+    (w : JensenCompletionWitness d.A d.𝔪 d.ι) :
+    Ideal.map (w.completionEquiv : AdicCompletion d.𝔪 d.A →+* nodeRing)
+        (Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q) =
+      Ideal.span ({d.ι d.a} : Set nodeRing) := by
+  rw [completed_q_eq_span_a d, Ideal.map_span]
+  simp [w.map_compatible]
+
+noncomputable def completedQuotientTargetEquivNode
+    (d : BadQuotientSourceData)
+    (w : JensenCompletionWitness d.A d.𝔪 d.ι) :
+    (AdicCompletion d.𝔪 d.A ⧸
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q)
+      ≃+*
+    (nodeRing ⧸ Ideal.span ({d.ι d.a} : Set nodeRing)) :=
+  Ideal.quotientEquiv
+    (Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q)
+    (Ideal.span ({d.ι d.a} : Set nodeRing))
+    w.completionEquiv
+    (completionEquiv_maps_completed_q d w).symm
+
+abbrev quotientAdicCompletion (d : BadQuotientSourceData) : Type :=
+  @AdicCompletion (d.A ⧸ d.q) inferInstance
+    (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪)
+    (d.A ⧸ d.q) inferInstance inferInstance
+
+noncomputable instance quotientAdicCompletion.instCommRing
+    (d : BadQuotientSourceData) :
+    CommRing (quotientAdicCompletion d) :=
+  @AdicCompletion.instCommRing (d.A ⧸ d.q) inferInstance
+    (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪)
+
+noncomputable def quotientModuleCompletionToQuotientAdicCompletion
+    (d : BadQuotientSourceData) :
+    AdicCompletion d.𝔪 (d.A ⧸ d.q) → quotientAdicCompletion d :=
+  fun x =>
+    ⟨fun n => quotientModuleLevelToAdicLevelEquiv d n (x.val n),
+      by
+        intro m n hmn
+        change
+          AdicCompletion.transitionMap
+              (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) (d.A ⧸ d.q) hmn
+              (quotientModuleLevelToAdicLevelEquiv d n (x.val n)) =
+            quotientModuleLevelToAdicLevelEquiv d m (x.val m)
+        rw [← x.property hmn]
+        induction x.val n using Submodule.Quotient.induction_on with
+        | H z =>
+            change
+              Submodule.Quotient.mk
+                  (p := (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ m •
+                    (⊤ : Submodule (d.A ⧸ d.q) (d.A ⧸ d.q))) z =
+                Submodule.Quotient.mk
+                  (p := (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ m •
+                    (⊤ : Submodule (d.A ⧸ d.q) (d.A ⧸ d.q))) z
+            rfl⟩
+
+noncomputable def quotientAdicCompletionToQuotientModuleCompletion
+    (d : BadQuotientSourceData) :
+    quotientAdicCompletion d → AdicCompletion d.𝔪 (d.A ⧸ d.q) :=
+  fun x =>
+    ⟨fun n => (quotientModuleLevelToAdicLevelEquiv d n).symm (x.val n),
+      by
+        intro m n hmn
+        change
+          AdicCompletion.transitionMap d.𝔪 (d.A ⧸ d.q) hmn
+              ((quotientModuleLevelToAdicLevelEquiv d n).symm (x.val n)) =
+            (quotientModuleLevelToAdicLevelEquiv d m).symm (x.val m)
+        rw [← x.property hmn]
+        induction x.val n using Submodule.Quotient.induction_on with
+        | H z =>
+            change
+              Submodule.Quotient.mk
+                  (p := d.𝔪 ^ m • (⊤ : Submodule d.A (d.A ⧸ d.q))) z =
+                Submodule.Quotient.mk
+                  (p := d.𝔪 ^ m • (⊤ : Submodule d.A (d.A ⧸ d.q))) z
+            rfl⟩
+
+theorem quotientModuleCompletionToQuotientAdicCompletion_leftInverse
+    (d : BadQuotientSourceData) :
+    Function.LeftInverse
+      (quotientAdicCompletionToQuotientModuleCompletion d)
+      (quotientModuleCompletionToQuotientAdicCompletion d) := by
+  intro x
+  ext n
+  exact LinearEquiv.symm_apply_apply
+    (quotientModuleLevelToAdicLevelEquiv d n) (x.val n)
+
+theorem quotientModuleCompletionToQuotientAdicCompletion_rightInverse
+    (d : BadQuotientSourceData) :
+    Function.RightInverse
+      (quotientAdicCompletionToQuotientModuleCompletion d)
+      (quotientModuleCompletionToQuotientAdicCompletion d) := by
+  intro x
+  ext n
+  exact LinearEquiv.apply_symm_apply
+    (quotientModuleLevelToAdicLevelEquiv d n) (x.val n)
+
+noncomputable def quotientModuleCompletionEquivQuotientAdicCompletion
+    (d : BadQuotientSourceData) :
+    AdicCompletion d.𝔪 (d.A ⧸ d.q) ≃ quotientAdicCompletion d where
+  toFun := quotientModuleCompletionToQuotientAdicCompletion d
+  invFun := quotientAdicCompletionToQuotientModuleCompletion d
+  left_inv := quotientModuleCompletionToQuotientAdicCompletion_leftInverse d
+  right_inv := quotientModuleCompletionToQuotientAdicCompletion_rightInverse d
+
+theorem quotientModuleCompletionToQuotientAdicCompletion_surjective
+    (d : BadQuotientSourceData) :
+    Function.Surjective (quotientModuleCompletionToQuotientAdicCompletion d) :=
+  (quotientModuleCompletionToQuotientAdicCompletion_rightInverse d).surjective
+
+theorem QuotientDimensionOneFacts.dimensionOneCriterion_of_source
+    (d : BadQuotientSourceData) (_facts : QuotientDimensionOneFacts d)
+    (hCriterion :
+      WeaklyQuasiComplete (d.A ⧸ d.q)
+        (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔
+          AnalyticallyIrreducible (d.A ⧸ d.q) (quotientAdicCompletion d)) :
+    WeaklyQuasiComplete (d.A ⧸ d.q)
+      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔
+        AnalyticallyIrreducible (d.A ⧸ d.q) (quotientAdicCompletion d) :=
+  dimensionOne_weaklyQuasiComplete_iff (d.A ⧸ d.q)
+    (quotientAdicCompletion d)
+    (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪)
+    hCriterion
+
+theorem quotient_dimensionOneCriterionOnQuotientCompletion_of_source
+    (d : BadQuotientSourceData)
+    (hDim : ringKrullDim (d.A ⧸ d.q) = 1)
+    (hCriterion :
+      WeaklyQuasiComplete (d.A ⧸ d.q)
+        (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔
+          AnalyticallyIrreducible (d.A ⧸ d.q) (quotientAdicCompletion d)) :
+    WeaklyQuasiComplete (d.A ⧸ d.q)
+      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔
+        AnalyticallyIrreducible (d.A ⧸ d.q) (quotientAdicCompletion d) :=
+  QuotientDimensionOneFacts.dimensionOneCriterion_of_source d
+    (d.quotientDimensionOneFacts_of_dim hDim) hCriterion
+
+theorem BadQuotientSourceData.adicIdeal_eq_maximalIdeal_source
+    (d : BadQuotientSourceData) :
+    d.𝔪 = @IsLocalRing.maximalIdeal d.A inferInstance d.hLocal := by
+  exact d.jensenCompletionWitness.adicIdeal_eq_maximalIdeal d.hLocal
+
+theorem BadQuotientSourceData.quotient_adicIdeal_eq_maximalIdeal_of_source
+    (d : BadQuotientSourceData)
+    [IsLocalRing (d.A ⧸ d.q)]
+    (hMax : d.𝔪 = @IsLocalRing.maximalIdeal d.A inferInstance d.hLocal) :
+    Ideal.map (Ideal.Quotient.mk d.q) d.𝔪 =
+      IsLocalRing.maximalIdeal (d.A ⧸ d.q) := by
+  letI : IsLocalRing d.A := d.hLocal
+  letI : Nontrivial (d.A ⧸ d.q) := d.quotient_nontrivial
+  letI : IsLocalHom (Ideal.Quotient.mk d.q) := d.quotient_mk_isLocalHom
+  have hmap :
+      Ideal.map (Ideal.Quotient.mk d.q) (IsLocalRing.maximalIdeal d.A) =
+        IsLocalRing.maximalIdeal (d.A ⧸ d.q) :=
+    IsLocalRing.map_maximalIdeal_of_surjective
+      (Ideal.Quotient.mk d.q) Ideal.Quotient.mk_surjective
+  simpa [hMax] using hmap
+
+theorem BadQuotientSourceData.quotient_adicIdeal_eq_maximalIdeal_source
+    (d : BadQuotientSourceData)
+    [IsLocalRing (d.A ⧸ d.q)] :
+    Ideal.map (Ideal.Quotient.mk d.q) d.𝔪 =
+      IsLocalRing.maximalIdeal (d.A ⧸ d.q) := by
+  exact
+    d.quotient_adicIdeal_eq_maximalIdeal_of_source
+      d.adicIdeal_eq_maximalIdeal_source
+
+theorem BadQuotientSourceData.adicCompletion_quotient_hausdorff_source
+    (d : BadQuotientSourceData)
+    (P : Ideal (AdicCompletion d.𝔪 d.A)) :
+    IsHausdorff (adicCompletionPowerImage d.A d.𝔪 1)
+      (AdicCompletion d.𝔪 d.A ⧸ P) := by
+  letI : IsNoetherianRing d.A := d.hNoeth
+  letI : IsNoetherianRing (AdicCompletion d.𝔪 d.A) :=
+    d.adicCompletion_isNoetherianRing
+  exact adicCompletion_quotient_hausdorff_of_noetherian_completion
+    d.A d.𝔪 P
+
+theorem BadQuotientSourceData.adicCompletion_neighborhood_iInf_le_prime_source
+    (d : BadQuotientSourceData)
+    (P : Ideal (AdicCompletion d.𝔪 d.A)) :
+    (⨅ n, P ⊔ adicCompletionPowerImage d.A d.𝔪 n) ≤ P := by
+  letI : IsNoetherianRing d.A := d.hNoeth
+  letI : IsLocalRing d.A := d.hLocal
+  letI : IsDomain d.A := d.hDomain
+  letI :
+      IsHausdorff (adicCompletionPowerImage d.A d.𝔪 1)
+        (AdicCompletion d.𝔪 d.A ⧸ P) :=
+    d.adicCompletion_quotient_hausdorff_source P
+  exact adicCompletion_neighborhood_iInf_le_prime_of_hausdorff d.A d.𝔪 P
+
+theorem BadQuotientSourceData.badPrimeContractionChain_iInf_le_comap_source
+    (d : BadQuotientSourceData)
+    (P : Ideal (AdicCompletion d.𝔪 d.A)) :
+    (⨅ n, badPrimeContractionChain d.A d.𝔪 P n) ≤
+      Ideal.comap (algebraMap d.A (AdicCompletion d.𝔪 d.A)) P := by
+  intro x hx
+  have hxhat :
+      algebraMap d.A (AdicCompletion d.𝔪 d.A) x ∈
+        ⨅ n, P ⊔ adicCompletionPowerImage d.A d.𝔪 n := by
+    rw [Ideal.mem_iInf]
+    intro n
+    exact (mem_badPrimeContractionChain d.A d.𝔪 P n x).mp
+      ((Ideal.mem_iInf.mp hx) n)
+  exact d.adicCompletion_neighborhood_iInf_le_prime_source P hxhat
+
+theorem BadQuotientSourceData.badPrimeContractionChain_iInf_eq_comap_source
+    (d : BadQuotientSourceData)
+    (P : Ideal (AdicCompletion d.𝔪 d.A)) :
+    (⨅ n, badPrimeContractionChain d.A d.𝔪 P n) =
+      Ideal.comap (algebraMap d.A (AdicCompletion d.𝔪 d.A)) P := by
+  exact le_antisymm
+    (d.badPrimeContractionChain_iInf_le_comap_source P)
+    (comap_le_badPrimeContractionChain_iInf d.A d.𝔪 P)
+
+theorem BadQuotientSourceData.badPrimeContractionChain_iInf_eq_bot_source
+    (d : BadQuotientSourceData)
+    (P : Ideal (AdicCompletion d.𝔪 d.A))
+    (hPzero :
+      Ideal.comap (algebraMap d.A (AdicCompletion d.𝔪 d.A)) P = ⊥) :
+    (⨅ n, badPrimeContractionChain d.A d.𝔪 P n) = ⊥ := by
+  rw [d.badPrimeContractionChain_iInf_eq_comap_source P, hPzero]
+
+theorem BadQuotientSourceData.adicCompletion_badPrime_to_badChain_source
+    (d : BadQuotientSourceData) :
+    AdicCompletionBadPrime d.A d.𝔪 →
+      WeaklyQuasiCompleteBadChain d.A d.𝔪 := by
+  intro hBad
+  letI : IsNoetherianRing d.A := d.hNoeth
+  letI : IsLocalRing d.A := d.hLocal
+  letI : IsDomain d.A := d.hDomain
+  rcases hBad with ⟨P, hPprime, hPne, hPzero⟩
+  refine ⟨badPrimeContractionChain d.A d.𝔪 P, ?_, ?_, ?_⟩
+  · exact badPrimeContractionChain_antitone d.A d.𝔪 P
+  · exact d.badPrimeContractionChain_iInf_eq_bot_source P hPzero
+  · exact
+      badPrimeContractionChain_avoids_fixed_power_source d.A d.𝔪
+        d.adicIdeal_eq_maximalIdeal_source P hPprime hPne hPzero
+
+theorem BadQuotientSourceData.weaklyQuasiComplete_to_adicCompletionPrimeContraction_source
+    (d : BadQuotientSourceData) :
+    AdicCompletionPrimeContractionCondition d.A d.𝔪 := by
+  classical
+  by_contra hNot
+  have hBadPrime :
+      AdicCompletionBadPrime d.A d.𝔪 :=
+    (not_adicCompletionPrimeContractionCondition_iff_badPrime d.A d.𝔪).1 hNot
+  have hBadChain :
+      WeaklyQuasiCompleteBadChain d.A d.𝔪 :=
+    d.adicCompletion_badPrime_to_badChain_source hBadPrime
+  exact (not_weaklyQuasiComplete_iff_badChain d.A d.𝔪).2 hBadChain d.hWeak
+
+theorem quotient_map_sup_power
+    (d : BadQuotientSourceData) (n : ℕ) :
+    Ideal.map (Ideal.Quotient.mk d.q) (d.q ⊔ d.𝔪 ^ n) =
+      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n := by
+  rw [Ideal.map_sup, Ideal.map_quotient_self, bot_sup_eq, Ideal.map_pow]
+
+noncomputable def quotientPowerQuotientEquiv
+    (d : BadQuotientSourceData) (n : ℕ) :
+    d.A ⧸ (d.q ⊔ d.𝔪 ^ n) ≃+*
+      (d.A ⧸ d.q) ⧸
+        (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n :=
+  (quotientSupQuotientEquiv d.A d.q (d.𝔪 ^ n)).trans
+    (Ideal.quotEquivOfEq (by rw [Ideal.map_pow]))
+
+@[simp]
+theorem quotientPowerQuotientEquiv_mk
+    (d : BadQuotientSourceData) (n : ℕ) (x : d.A) :
+    quotientPowerQuotientEquiv d n (Ideal.Quotient.mk (d.q ⊔ d.𝔪 ^ n) x) =
+      Ideal.Quotient.mk ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n)
+        (Ideal.Quotient.mk d.q x) := by
+  simp [quotientPowerQuotientEquiv]
+
+noncomputable def completedRingToQuotientFinite
+    (d : BadQuotientSourceData) (n : ℕ) :
+    AdicCompletion d.𝔪 d.A →+*
+      (d.A ⧸ d.q) ⧸ (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n :=
+  (quotientPowerQuotientEquiv d n).toRingHom.comp
+    ((Ideal.Quotient.factor
+      (show d.𝔪 ^ n ≤ d.q ⊔ d.𝔪 ^ n by exact le_sup_right)).comp
+        (AdicCompletion.evalₐ d.𝔪 n).toRingHom)
+
+@[simp]
+theorem completedRingToQuotientFinite_of
+    (d : BadQuotientSourceData) (n : ℕ) (x : d.A) :
+    completedRingToQuotientFinite d n (AdicCompletion.of d.𝔪 d.A x) =
+      Ideal.Quotient.mk ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n)
+        (Ideal.Quotient.mk d.q x) := by
+  simp [completedRingToQuotientFinite]
+
+theorem quotientModuleLevelToRingLevelEquiv_eval_map_of
+    (d : BadQuotientSourceData) (n : ℕ) (x : d.A) :
+    quotientModuleLevelToRingLevelEquiv d n
+        (AdicCompletion.eval d.𝔪 (d.A ⧸ d.q) n
+          (AdicCompletion.map d.𝔪 (quotientLinearMap d)
+            (AdicCompletion.of d.𝔪 d.A x))) =
+      completedRingToQuotientFinite d n (AdicCompletion.of d.𝔪 d.A x) := by
+  rw [AdicCompletion.map_of]
+  rw [AdicCompletion.eval_of]
+  change quotientModuleLevelEquiv d n
+      (Submodule.Quotient.mk
+        (p := d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))
+        ((quotientLinearMap d) x)) =
+    completedRingToQuotientFinite d n (AdicCompletion.of d.𝔪 d.A x)
+  rw [quotientModuleLevelEquiv_mk]
+  rw [completedRingToQuotientFinite_of]
+  rfl
+
+theorem quotientModuleLevelToRingLevelEquiv_eval_map
+    (d : BadQuotientSourceData) (n : ℕ)
+    (x : AdicCompletion d.𝔪 d.A) :
+    quotientModuleLevelToRingLevelEquiv d n
+        (AdicCompletion.eval d.𝔪 (d.A ⧸ d.q) n
+          (AdicCompletion.map d.𝔪 (quotientLinearMap d) x)) =
+      completedRingToQuotientFinite d n x := by
+  induction x using AdicCompletion.induction_on with
+  | h a =>
+      simp only [AdicCompletion.map_mk, AdicCompletion.coe_eval,
+        AdicCompletion.mk_apply_coe, AdicCompletion.AdicCauchySequence.map_apply_coe,
+        Submodule.mkQ_apply]
+      change quotientModuleLevelEquiv d n
+          (Submodule.Quotient.mk
+            (p := d.𝔪 ^ n • (⊤ : Submodule d.A (d.A ⧸ d.q)))
+            (Ideal.Quotient.mk d.q (a n))) =
+        Ideal.Quotient.mk ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n)
+          (Ideal.Quotient.mk d.q (a n))
+      rw [quotientModuleLevelEquiv_mk]
+      rfl
+
+theorem completedRingToQuotientFinite_surjective
+    (d : BadQuotientSourceData) (n : ℕ) :
+    Function.Surjective (completedRingToQuotientFinite d n) := by
+  intro y
+  obtain ⟨z, hz⟩ := (quotientPowerQuotientEquiv d n).surjective y
+  obtain ⟨u, hu⟩ :=
+    Ideal.Quotient.factor_surjective
+      (show d.𝔪 ^ n ≤ d.q ⊔ d.𝔪 ^ n by exact le_sup_right) z
+  obtain ⟨x, hx⟩ := AdicCompletion.surjective_evalₐ d.𝔪 n u
+  refine ⟨x, ?_⟩
+  simp [completedRingToQuotientFinite, hx, hu, hz]
+
+theorem completedRingToQuotientFinite_compatible
+    (d : BadQuotientSourceData) {m n : ℕ} (hmn : m ≤ n) :
+    (Ideal.Quotient.factorPow
+      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) hmn).comp
+        (completedRingToQuotientFinite d n) =
+      completedRingToQuotientFinite d m := by
+  ext x
+  induction x using AdicCompletion.induction_on with
+  | h a =>
+      suffices
+          Ideal.Quotient.mk ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ m)
+              (Ideal.Quotient.mk d.q (a n)) =
+            Ideal.Quotient.mk ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ m)
+              (Ideal.Quotient.mk d.q (a m)) by
+        simpa [completedRingToQuotientFinite] using this
+      rw [Ideal.Quotient.eq]
+      change Ideal.Quotient.mk d.q (a n) - Ideal.Quotient.mk d.q (a m) ∈
+        (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ m
+      rw [← map_sub]
+      rw [← Ideal.map_pow]
+      have hmSub : a n - a m ∈ (d.𝔪 ^ m • ⊤ : Submodule d.A d.A) :=
+        SModEq.sub_mem.mp (a.property hmn).symm
+      have hmIdeal : a n - a m ∈ d.𝔪 ^ m := by
+        simpa using hmSub
+      exact Ideal.mem_map_of_mem (Ideal.Quotient.mk d.q) hmIdeal
+
+noncomputable def completedRingToQuotientCompletion
+    (d : BadQuotientSourceData) :
+    AdicCompletion d.𝔪 d.A →+* quotientAdicCompletion d :=
+  AdicCompletion.liftRingHom
+    (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪)
+    (fun n => completedRingToQuotientFinite d n)
+    (fun hmn => completedRingToQuotientFinite_compatible d hmn)
+
+@[simp]
+theorem completedRingToQuotientCompletion_eval
+    (d : BadQuotientSourceData) (n : ℕ)
+    (x : AdicCompletion d.𝔪 d.A) :
+    AdicCompletion.evalₐ (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) n
+        (completedRingToQuotientCompletion d x) =
+      completedRingToQuotientFinite d n x := by
+  exact AdicCompletion.evalₐ_liftRingHom
+    (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪)
+    (fun n => completedRingToQuotientFinite d n)
+    (fun hmn => completedRingToQuotientFinite_compatible d hmn) n x
+
+@[simp]
+theorem completedRingToQuotientCompletion_of_eval
+    (d : BadQuotientSourceData) (n : ℕ) (x : d.A) :
+    AdicCompletion.evalₐ (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) n
+        (completedRingToQuotientCompletion d (AdicCompletion.of d.𝔪 d.A x)) =
+      Ideal.Quotient.mk ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n)
+        (Ideal.Quotient.mk d.q x) := by
+  simp [completedRingToQuotientCompletion_eval]
+
+theorem quotientModuleCompletionToQuotientAdicCompletion_comp_map
+    (d : BadQuotientSourceData)
+    (x : AdicCompletion d.𝔪 d.A) :
+    quotientModuleCompletionToQuotientAdicCompletion d
+        (AdicCompletion.map d.𝔪 (quotientLinearMap d) x) =
+      completedRingToQuotientCompletion d x := by
+  apply AdicCompletion.ext
+  intro n
+  change quotientModuleLevelToAdicLevelEquiv d n
+      ((AdicCompletion.map d.𝔪 (quotientLinearMap d) x).val n) =
+    (completedRingToQuotientCompletion d x).val n
+  rw [quotientModuleLevelToAdicLevelEquiv_eq_factor_ringLevel]
+  change Ideal.Quotient.factor
+      (show (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n ≤
+        ((Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n •
+          (⊤ : Ideal (d.A ⧸ d.q))) by
+        exact le_of_eq (by ext y; simp))
+      (quotientModuleLevelToRingLevelEquiv d n
+        (AdicCompletion.eval d.𝔪 (d.A ⧸ d.q) n
+          (AdicCompletion.map d.𝔪 (quotientLinearMap d) x))) =
+    (completedRingToQuotientCompletion d x).val n
+  rw [quotientModuleLevelToRingLevelEquiv_eval_map]
+  have h :=
+    AdicCompletion.factor_evalₐ_eq_eval
+      (I := Ideal.map (Ideal.Quotient.mk d.q) d.𝔪)
+      (x := completedRingToQuotientCompletion d x)
+      (n := n)
+      (show (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n ≤
+        (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ^ n • ⊤ by
+        exact le_of_eq (by ext y; simp))
+  rw [completedRingToQuotientCompletion_eval] at h
+  simpa [AdicCompletion.eval_apply] using h.symm
+
+theorem completedRingToQuotientCompletion_surjective
+    (d : BadQuotientSourceData) :
+    Function.Surjective (completedRingToQuotientCompletion d) := by
+  intro y
+  obtain ⟨z, hz⟩ :=
+    quotientModuleCompletionToQuotientAdicCompletion_surjective d y
+  obtain ⟨x, hx⟩ := quotient_completion_map_surjective d z
+  refine ⟨x, ?_⟩
+  rw [← quotientModuleCompletionToQuotientAdicCompletion_comp_map d x]
+  rw [hx, hz]
+
+theorem quotient_completion_module_exact
+    (d : BadQuotientSourceData) :
+    Function.Exact
+      (AdicCompletion.map d.𝔪 (d.q.subtype : d.q →ₗ[d.A] d.A))
+      (AdicCompletion.map d.𝔪 (quotientLinearMap d)) := by
+  letI : IsNoetherianRing d.A := d.hNoeth
+  exact
+    AdicCompletion.map_exact
+      (I := d.𝔪)
+      (f := (d.q.subtype : d.q →ₗ[d.A] d.A))
+      (g := quotientLinearMap d)
+      (Submodule.injective_subtype d.q)
+      (by
+        simpa [quotientLinearMap, Ideal.Quotient.mkₐ_eq_mk] using
+          (LinearMap.exact_subtype_mkQ d.q))
+      (quotient_mk_linear_surjective d)
+
+theorem completedRingToQuotientCompletion_ker_le_completedSubmoduleRange
+    (d : BadQuotientSourceData) :
+    RingHom.ker (completedRingToQuotientCompletion d) ≤
+      LinearMap.range
+        (AdicCompletion.map d.𝔪 (d.q.subtype : d.q →ₗ[d.A] d.A)) := by
+  intro x hx
+  have hExact := quotient_completion_module_exact d
+  have hcomp :
+      quotientModuleCompletionToQuotientAdicCompletion d
+          (AdicCompletion.map d.𝔪 (quotientLinearMap d) x) = 0 := by
+    rw [quotientModuleCompletionToQuotientAdicCompletion_comp_map d x]
+    exact hx
+  have hzero :
+      quotientAdicCompletionToQuotientModuleCompletion d
+          (0 : quotientAdicCompletion d) = 0 := by
+    ext n
+    rfl
+  have hxmap :
+      AdicCompletion.map d.𝔪 (quotientLinearMap d) x = 0 := by
+    have h := congrArg (quotientAdicCompletionToQuotientModuleCompletion d) hcomp
+    rw [quotientModuleCompletionToQuotientAdicCompletion_leftInverse d
+      (AdicCompletion.map d.𝔪 (quotientLinearMap d) x)] at h
+    simpa [hzero] using h
+  simpa [LinearMap.mem_range] using (hExact x).mp hxmap
+
+theorem completedIdealTensorImage_le_completed_q
+    (d : BadQuotientSourceData)
+    (t : TensorProduct d.A (AdicCompletion d.𝔪 d.A) d.q) :
+    AdicCompletion.ofTensorProduct d.𝔪 d.A
+        (TensorProduct.AlgebraTensorModule.map
+          (LinearMap.id :
+            AdicCompletion d.𝔪 d.A →ₗ[AdicCompletion d.𝔪 d.A]
+              AdicCompletion d.𝔪 d.A)
+          (d.q.subtype : d.q →ₗ[d.A] d.A) t) ∈
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q := by
+  induction t using TensorProduct.induction_on with
+  | zero =>
+      exact Ideal.zero_mem _
+  | tmul r x =>
+      simp only [TensorProduct.AlgebraTensorModule.map_tmul,
+        LinearMap.id_coe, id_eq, AdicCompletion.ofTensorProduct_tmul]
+      change r * algebraMap d.A (AdicCompletion d.𝔪 d.A) (x : d.A) ∈
+        Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q
+      exact Ideal.mul_mem_left _ r (Ideal.mem_map_of_mem _ x.property)
+  | add x y hx hy =>
+      have hinner :
+          (TensorProduct.AlgebraTensorModule.map
+            (LinearMap.id :
+              AdicCompletion d.𝔪 d.A →ₗ[AdicCompletion d.𝔪 d.A]
+                AdicCompletion d.𝔪 d.A)
+            (d.q.subtype : d.q →ₗ[d.A] d.A)) (x + y) =
+          (TensorProduct.AlgebraTensorModule.map
+            (LinearMap.id :
+              AdicCompletion d.𝔪 d.A →ₗ[AdicCompletion d.𝔪 d.A]
+                AdicCompletion d.𝔪 d.A)
+            (d.q.subtype : d.q →ₗ[d.A] d.A)) x +
+          (TensorProduct.AlgebraTensorModule.map
+            (LinearMap.id :
+              AdicCompletion d.𝔪 d.A →ₗ[AdicCompletion d.𝔪 d.A]
+                AdicCompletion d.𝔪 d.A)
+            (d.q.subtype : d.q →ₗ[d.A] d.A)) y := by
+        exact map_add _ x y
+      rw [hinner]
+      rw [LinearMap.map_add]
+      exact Ideal.add_mem _ hx hy
+
+theorem completedSubmoduleRange_le_completed_q
+    (d : BadQuotientSourceData) :
+    LinearMap.range
+        (AdicCompletion.map d.𝔪 (d.q.subtype : d.q →ₗ[d.A] d.A)) ≤
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q := by
+  letI : IsNoetherianRing d.A := d.hNoeth
+  intro y hy
+  obtain ⟨z, rfl⟩ := (LinearMap.mem_range).mp hy
+  letI : Module.Finite d.A d.q := inferInstance
+  obtain ⟨t, ht⟩ :=
+    AdicCompletion.ofTensorProduct_surjective_of_finite d.𝔪 d.q z
+  rw [← ht]
+  have hnat :=
+    congrFun
+      (congrArg DFunLike.coe
+        (AdicCompletion.ofTensorProduct_naturality d.𝔪
+          (d.q.subtype : d.q →ₗ[d.A] d.A))) t
+  change
+      ((AdicCompletion.map d.𝔪 (d.q.subtype : d.q →ₗ[d.A] d.A)) ∘ₗ
+        AdicCompletion.ofTensorProduct d.𝔪 d.q) t ∈
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q
+  rw [hnat]
+  exact completedIdealTensorImage_le_completed_q d t
+
+theorem completedRingToQuotientCompletion_ker_contains_completed_q
+    (d : BadQuotientSourceData) :
+    Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q ≤
+      RingHom.ker (completedRingToQuotientCompletion d) := by
+  rw [Ideal.map_le_iff_le_comap]
+  intro x hx
+  change
+    completedRingToQuotientCompletion d
+      (algebraMap d.A (AdicCompletion d.𝔪 d.A) x) = 0
+  apply AdicCompletion.ext_evalₐ
+  intro n
+  rw [show algebraMap d.A (AdicCompletion d.𝔪 d.A) x =
+    AdicCompletion.of d.𝔪 d.A x by rfl]
+  rw [completedRingToQuotientCompletion_of_eval]
+  have hxmap : Ideal.Quotient.mk d.q x = 0 :=
+    Ideal.Quotient.eq_zero_iff_mem.mpr hx
+  simpa [hxmap] using
+    (map_zero
+      (AdicCompletion.evalₐ
+        (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) n)).symm
+
+noncomputable def completedQuotientToQuotientCompletion
+    (d : BadQuotientSourceData) :
+    (AdicCompletion d.𝔪 d.A ⧸
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q)
+      →+* quotientAdicCompletion d :=
+  Ideal.Quotient.lift
+    (Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q)
+    (completedRingToQuotientCompletion d)
+    (fun _ hx =>
+      (completedRingToQuotientCompletion_ker_contains_completed_q d hx))
+
+@[simp]
+theorem completedQuotientToQuotientCompletion_mk
+    (d : BadQuotientSourceData) (x : AdicCompletion d.𝔪 d.A) :
+    completedQuotientToQuotientCompletion d
+        (Ideal.Quotient.mk
+          (Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q) x) =
+      completedRingToQuotientCompletion d x := by
+  rfl
+
+structure CompletedQuotientMapSourceFacts
+    (d : BadQuotientSourceData) : Prop where
+  completedRing_surjective :
+    Function.Surjective (completedRingToQuotientCompletion d)
+  completedRing_ker_le_completed_q :
+    RingHom.ker (completedRingToQuotientCompletion d) ≤
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q
+
+theorem completedRingToQuotientCompletion_ker_le_completed_q_source
+    (d : BadQuotientSourceData) :
+    RingHom.ker (completedRingToQuotientCompletion d) ≤
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q := by
+  exact (completedRingToQuotientCompletion_ker_le_completedSubmoduleRange d).trans
+    (completedSubmoduleRange_le_completed_q d)
+
+theorem completedQuotientMapSourceFacts_source
+    (d : BadQuotientSourceData) :
+    CompletedQuotientMapSourceFacts d :=
+  { completedRing_surjective := completedRingToQuotientCompletion_surjective d
+    completedRing_ker_le_completed_q :=
+      completedRingToQuotientCompletion_ker_le_completed_q_source d }
+
+theorem completedRingToQuotientCompletion_surjective_source
+    (d : BadQuotientSourceData) :
+    Function.Surjective (completedRingToQuotientCompletion d) :=
+  completedRingToQuotientCompletion_surjective d
+
+theorem completedQuotientToQuotientCompletion_surjective
+    (d : BadQuotientSourceData) :
+    Function.Surjective (completedQuotientToQuotientCompletion d) := by
+  intro y
+  rcases completedRingToQuotientCompletion_surjective_source d y with ⟨x, rfl⟩
+  exact
+    ⟨Ideal.Quotient.mk
+      (Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q) x,
+      rfl⟩
+
+theorem completedRingToQuotientCompletion_ker_eq_completed_q_source
+    (d : BadQuotientSourceData) :
+    RingHom.ker (completedRingToQuotientCompletion d) =
+      Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q :=
+  le_antisymm
+    (completedRingToQuotientCompletion_ker_le_completed_q_source d)
+    (completedRingToQuotientCompletion_ker_contains_completed_q d)
+
+theorem completedQuotientToQuotientCompletion_injective
+    (d : BadQuotientSourceData) :
+    Function.Injective (completedQuotientToQuotientCompletion d) := by
+  dsimp [completedQuotientToQuotientCompletion]
+  exact
+    RingHom.lift_injective_of_ker_le_ideal
+      (Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q)
+      (fun _ hx => completedRingToQuotientCompletion_ker_contains_completed_q d hx)
+      (completedRingToQuotientCompletion_ker_le_completed_q_source d)
+
+theorem completedQuotientToQuotientCompletion_bijective_source
+    (d : BadQuotientSourceData) :
+    Function.Bijective (completedQuotientToQuotientCompletion d) := by
+  exact
+    ⟨completedQuotientToQuotientCompletion_injective d,
+      completedQuotientToQuotientCompletion_surjective d⟩
+
+noncomputable def quotientCompletionEquiv_source
+    (d : BadQuotientSourceData) :
+    quotientAdicCompletion d ≃+*
+      (AdicCompletion d.𝔪 d.A ⧸
+        Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q) :=
+  (RingEquiv.ofBijective
+    (completedQuotientToQuotientCompletion d)
+    (completedQuotientToQuotientCompletion_bijective_source d)).symm
+
+structure QuotientCompletionAnalyticBridge (d : BadQuotientSourceData) where
+  quotientCompletionEquiv :
+    quotientAdicCompletion d ≃+*
+      (AdicCompletion d.𝔪 d.A ⧸
+        Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q)
+  weakCriterionOnQuotientCompletion :
+    WeaklyQuasiComplete (d.A ⧸ d.q)
+      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔
+        AnalyticallyIrreducible (d.A ⧸ d.q) (quotientAdicCompletion d)
+
+theorem quotient_dimensionOneCriterionOnQuotientCompletion_source
+    (d : BadQuotientSourceData) :
+    WeaklyQuasiComplete (d.A ⧸ d.q)
+      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔
+        AnalyticallyIrreducible (d.A ⧸ d.q) (quotientAdicCompletion d) := by
+  letI : IsNoetherianRing (d.A ⧸ d.q) := d.quotient_isNoetherian
+  letI : IsLocalRing (d.A ⧸ d.q) := d.quotient_isLocal
+  letI : IsDomain (d.A ⧸ d.q) := d.quotient_isDomain
+  exact
+    quotient_dimensionOneCriterionOnQuotientCompletion_of_source d
+      d.quotient_ringKrullDim_eq_one_source
+      (dimensionOne_weaklyQuasiComplete_iff_adicCompletion_source
+        (d.A ⧸ d.q) (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪)
+        d.quotient_adicIdeal_eq_maximalIdeal_source
+        d.quotient_ringKrullDim_eq_one_source)
+
+noncomputable def quotientCompletionAnalyticBridge_source
+    (d : BadQuotientSourceData) :
+    QuotientCompletionAnalyticBridge d :=
+  { quotientCompletionEquiv := quotientCompletionEquiv_source d
+    weakCriterionOnQuotientCompletion :=
+      quotient_dimensionOneCriterionOnQuotientCompletion_source d }
+
+theorem quotient_analyticCriterionOnCompletedQuotient_source
+    (d : BadQuotientSourceData) :
+    WeaklyQuasiComplete (d.A ⧸ d.q)
+      (Ideal.map (Ideal.Quotient.mk d.q) d.𝔪) ↔
+        AnalyticallyIrreducible (d.A ⧸ d.q)
+          (AdicCompletion d.𝔪 d.A ⧸
+            Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q) := by
+  let b := quotientCompletionAnalyticBridge_source d
+  constructor
+  · intro hWeak
+    have hDomain :
+        AnalyticallyIrreducible (d.A ⧸ d.q) (quotientAdicCompletion d) :=
+      b.weakCriterionOnQuotientCompletion.1 hWeak
+    dsimp [AnalyticallyIrreducible] at hDomain ⊢
+    haveI : IsDomain (quotientAdicCompletion d) := hDomain
+    exact MulEquiv.isDomain
+      (quotientAdicCompletion d) b.quotientCompletionEquiv.symm.toMulEquiv
+  · intro hDomain
+    apply b.weakCriterionOnQuotientCompletion.2
+    dsimp [AnalyticallyIrreducible] at hDomain ⊢
+    haveI : IsDomain
+        (AdicCompletion d.𝔪 d.A ⧸
+          Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q) := hDomain
+    exact MulEquiv.isDomain
+      (AdicCompletion d.𝔪 d.A ⧸
+        Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q)
+      b.quotientCompletionEquiv.toMulEquiv
+
+theorem all_quotients_weak_criterion_source
+    (d : BadQuotientSourceData) :
+    QuasiComplete d.A d.𝔪 ↔
+      ∀ J : Ideal d.A,
+        WeaklyQuasiComplete (d.A ⧸ J)
+          (Ideal.map (Ideal.Quotient.mk J) d.𝔪) := by
+  exact quasiComplete_iff_all_quotients_weak d.A d.𝔪
 
 theorem QuotientCompletionWitness.dimensionCriterion
     {d : BadQuotientSourceData} (w : QuotientCompletionWitness d) :
@@ -699,6 +2051,8 @@ structure BadQuotientStructuredSource where
     JensenCompletionWitness data.A data.𝔪 data.ι
   quotientCompletion : QuotientCompletionWitness data
   quasiCriterion : data.QuasiCriterion
+  sourcePrimeContraction :
+    AdicCompletionPrimeContractionCondition data.A data.𝔪
 
 theorem BadQuotientSourceData.to_badQuotient
     (d : BadQuotientSourceData) : badQuotient := by
@@ -715,8 +2069,8 @@ theorem BadQuotientSourceData.to_contractedPrime
 theorem BadQuotientSourceData.to_primeGenerator
     (d : BadQuotientSourceData) : primeGenerator := by
   exact
-    ⟨d.A, d.instA, d.𝔪, d.ι, d.q, d.a, d.hCounter, d.hNoeth, d.hLocal,
-      d.hDomain, d.hWeak, d.hBot, d.hNonzeroContraction, d.hqComap,
+    ⟨d.A, d.instA, d.𝔪, d.ι, d.q, d.a, d.jensenCompletion, d.hCounter,
+      d.hNoeth, d.hLocal, d.hDomain, d.hWeak, d.hBot, d.hNonzeroContraction, d.hqComap,
       d.hqPrime, d.hqNonzero, d.hqPrincipal⟩
 
 theorem badQuotient_dimension_domain :
@@ -752,37 +2106,47 @@ theorem quotient_not_domain_of_not_prime
 theorem badQuotient_sourceData_from_jensen :
     ∃ _ : BadQuotientSourceData, True := by
   rcases primeGenerator_source with
-    ⟨A, instA, 𝔪, ι, q, a, hCounter, hNoeth, hLocal, hDomain, hWeak, hBot,
-      hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩
+    ⟨A, instA, 𝔪, ι, q, a, w, hCounter, hNoeth, hLocal, hDomain, hWeak,
+      hBot, hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩
   letI := instA
   exact
-    ⟨⟨A, 𝔪, ι, q, a, hCounter, hNoeth, hLocal, hDomain, hWeak, hBot,
+    ⟨⟨A, 𝔪, ι, q, a, hCounter, hNoeth, hLocal, hDomain, w, hWeak, hBot,
       hNonzeroContraction, hqComap, hqPrime, hqNonzero, hqPrincipal⟩,
       trivial⟩
 
 noncomputable def quotientCompletionWitness_source
     (d : BadQuotientSourceData)
-    (_w : JensenCompletionWitness d.A d.𝔪 d.ι) :
+    (w : JensenCompletionWitness d.A d.𝔪 d.ι) :
     QuotientCompletionWitness d := by
-  sorry
+  exact
+    { Bhat :=
+        AdicCompletion d.𝔪 d.A ⧸
+          Ideal.map (algebraMap d.A (AdicCompletion d.𝔪 d.A)) d.q
+      instBhat := inferInstance
+      quotientCompletionEquiv := completedQuotientTargetEquivNode d w
+      analyticCriterionOnBhat :=
+        quotient_analyticCriterionOnCompletedQuotient_source d }
 
 theorem badQuotient_quasiCriterion_source
     (d : BadQuotientSourceData)
     (_w : JensenCompletionWitness d.A d.𝔪 d.ι) :
     d.QuasiCriterion := by
-  sorry
+  exact
+    quasiComplete_iff_all_quotients_weak d.A d.𝔪
 
 theorem badQuotient_structured_source :
     ∃ _ : BadQuotientStructuredSource, True := by
   rcases badQuotient_sourceData_from_jensen with ⟨d, _hd⟩
   let w : JensenCompletionWitness d.A d.𝔪 d.ι :=
-    jensenCompletionWitness_source d.A d.𝔪 d.ι d.hNoeth d.hLocal d.hDomain
-      d.hBot d.hNonzeroContraction
+    d.jensenCompletionWitness
   let qw : QuotientCompletionWitness d :=
     quotientCompletionWitness_source d w
   let hQuasi : d.QuasiCriterion :=
     badQuotient_quasiCriterion_source d w
-  exact ⟨⟨d, w, qw, hQuasi⟩, trivial⟩
+  let hPrimeContraction :
+      AdicCompletionPrimeContractionCondition d.A d.𝔪 :=
+    d.weaklyQuasiComplete_to_adicCompletionPrimeContraction_source
+  exact ⟨⟨d, w, qw, hQuasi, hPrimeContraction⟩, trivial⟩
 
 theorem badQuotient_structured_criteria_source :
     ∃ d : BadQuotientSourceData,
@@ -914,7 +2278,7 @@ theorem counterexampleRing_weak_and_bad_quotient :
   refine ⟨A, instA, hNoeth, hLocal, 𝔪, hWeak, ?_⟩
   intro hQuasi
   exact hQuotientNotWeak
-    ((quasiComplete_iff_all_quotients_weak A 𝔪 hQuasiCriterion).1 hQuasi q)
+    ((quasiComplete_iff_all_quotients_weak A 𝔪).1 hQuasi q)
 
 theorem andersonProblem8a :
     ∃ (A : Type) (_inst : CommRing A),

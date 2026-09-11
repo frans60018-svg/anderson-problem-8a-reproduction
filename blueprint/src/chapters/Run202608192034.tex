@@ -1,4 +1,6 @@
 % archon:covers Run202608192034.lean
+% Historical Archon track only. The canonical Anderson/ proof is audited
+% separately by StatementAudit.lean and StrictAxiomAudit.lean.
 \chapter{The Anderson counterexample}
 
 \section{The complete local node}
@@ -137,6 +139,20 @@
   principal ideal needs at most one.
 \end{proof}
 
+\begin{lemma}[Noetherianity transports across a ring equivalence]
+  \label{lem:is_noetherian_ring_of_ring_equiv_source}
+  \lean{Run202608192034.TODO.isNoetherianRing_of_ringEquiv_source}
+  If \(R\cong S\) as rings and \(R\) is Noetherian, then \(S\) is
+  Noetherian.
+\end{lemma}
+
+\begin{proof}
+  Rewrite Noetherianity as the module condition `IsNoetherian R R`.
+  The ring equivalence gives a semilinear equivalence from \(R\) to \(S\),
+  and Mathlib's transfer theorem for Noetherian modules along bijective
+  semilinear maps transports the condition.
+\end{proof}
+
 \begin{lemma}[Complete domain package]
   \label{lem:complete_domain_choice}
   \lean{Run202608192034.TODO.completeDomainChoice}
@@ -147,8 +163,13 @@
 \end{lemma}
 
 \begin{proof}
-  Combine \cref{lem:node_domain,lem:node_complete_cm_dim,lem:node_cardinality,
-  lem:node_prime_height,lem:node_prime_nonprincipal}.
+  The preceding paragraphs give the source-level decomposition.  In Lean v4.29
+  the finite-variable formal-power-series division, Noetherianity, and dimension
+  APIs needed to internalize that decomposition are unavailable, so the theorem
+  invokes the visible standard-facts boundary
+  `nodeRing_standard_facts_external`.  All downstream projections are checked;
+  the exact trust boundary and internalization plan are recorded in
+  `TRUST_BOUNDARY.md`.
 \end{proof}
 
 \section{The Jensen construction}
@@ -477,21 +498,415 @@
   satisfies \(\operatorname{ht}J>\operatorname{depth}T_J=1\).
 \end{proof}
 
-\begin{lemma}[Jensen special case]
-  \label{lem:jensen_special_case}
-  \lean{Run202608192034.TODO.jensenSpecialCase}
-  \uses{cor:jensen_local_generic_fiber,lem:node_jensen_hypotheses,lem:complete_domain_choice}
-  There exists a two-dimensional Noetherian local UFD \(A\) with
-  \(\widehat A\cong T\) such that the only prime ideal of \(T\) contracting
-  to zero in \(A\) is \((0)\).
+\begin{definition}[Jensen initial N-subring seed data]
+  \label{def:jensen_n_subring_seed_data}
+  \lean{Run202608192034.TODO.JensenNSubringSeedData}
+  \uses{def:n_subring}
+  Record the initial data for Jensen's construction: the chosen generic-fiber
+  set \(G=\{(0)\}\), an initial \(N\)-subring \(R_0\subseteq T\), and the
+  initial zero-contraction condition for primes in \(G\).
+\end{definition}
+
+\begin{proof}
+  This is a data structure matching the first setup step of Jensen's proof.
+\end{proof}
+
+\begin{definition}[Jensen saturation data]
+  \label{def:jensen_saturation_data}
+  \lean{Run202608192034.TODO.JensenSaturationData}
+  \uses{def:jensen_n_subring_seed_data,def:jensen_saturation_chain}
+  Record the saturation stage: a chain of \(N\)-subrings, its union \(A\), the
+  preservation of zero contraction on \(G\), and the prime-hitting condition for
+  primes outside \(G\).
+\end{definition}
+
+\begin{proof}
+  This packages the bookkeeping performed by Jensen's recursive construction.
+\end{proof}
+
+\begin{definition}[Jensen UFD output data]
+  \label{def:jensen_ufd_output_data}
+  \lean{Run202608192034.TODO.JensenUFDOutputData}
+  \uses{def:jensen_saturation_data}
+  Record the conclusion that the saturated union \(A\) is a UFD.
+\end{definition}
+
+\begin{proof}
+  This is the UFD output of the saturation argument.
+\end{proof}
+
+\begin{definition}[Jensen completion criterion output data]
+  \label{def:jensen_completion_criterion_output_data}
+  \lean{Run202608192034.TODO.JensenCompletionCriterionOutputData}
+  \uses{def:jensen_saturation_data,lem:jensen_completion_criterion}
+  Record the completion-criterion output: \(A\) is Noetherian and local, the
+  selected ideal is the maximal ideal, \(\widehat A\cong T\), the map
+  \(A\to T\) is compatible with this completion equivalence, and
+  \(\dim A=2\).
+\end{definition}
+
+\begin{proof}
+  This packages the conclusion obtained after the saturation chain solves the
+  required coset and finitely generated ideal equations.
+\end{proof}
+
+\begin{definition}[Jensen generic formal fiber output data]
+  \label{def:jensen_generic_fiber_output_data}
+  \lean{Run202608192034.TODO.JensenGenericFiberOutputData}
+  \uses{def:jensen_saturation_data,def:jensen_completion_criterion_output_data,def:generic_formal_fiber}
+  Record the final generic-formal-fiber output for the selected \(A\): the zero
+  prime contracts to zero and every nonzero prime of \(T\) contracts
+  nontrivially.
+\end{definition}
+
+\begin{proof}
+  This packages only the prime description supplied by Jensen.  The weak
+  quasi-completeness criterion is added later from Anderson/Farley, rather than
+  being attributed to Jensen's construction.
+\end{proof}
+
+\begin{lemma}[Initial N-subring seed source]
+  \label{lem:jensen_n_subring_seed_source}
+  \lean{Run202608192034.TODO.jensen_nSubring_seed_source}
+  \uses{def:jensen_published_construction_data}
+  A certificate for Jensen's published construction contains its initial
+  \(N\)-subring seed for \(G=\{(0)\}\).
 \end{lemma}
 
 \begin{proof}
-  Apply \cref{cor:jensen_local_generic_fiber} using
-  \cref{lem:node_jensen_hypotheses}.  A generic formal fiber local with
-  maximal prime \((0)\) contains no other prime, because \((0)\) is contained
-  in every prime.  Completion preserves Krull dimension, so the resulting
-  ring has dimension \(\dim T=2\).
+  This is a checked field projection.  The construction hidden by the
+  published-source boundary starts from Jensen's localized prime subring and
+  applies the initial \(N\)-subring lemma.
+\end{proof}
+
+\begin{definition}[Jensen saturation task set]
+  \label{def:jensen_saturation_task_enumeration}
+  \lean{Run202608192034.TODO.JensenSaturationTaskEnumeration}
+  \uses{def:jensen_n_subring_seed_data}
+  Record the bookkeeping device that collects the prime-hitting tasks and
+  ideal-solving tasks used by Jensen's recursive saturation construction.
+\end{definition}
+
+\begin{proof}
+  This is data: the prime task set covers the primes outside \(G\), while the
+  ideal tasks record the algebraic equations that must be solved along the
+  chain.
+\end{proof}
+
+\begin{definition}[Jensen recursive saturation chain data]
+  \label{def:jensen_saturation_recursive_chain_data}
+  \lean{Run202608192034.TODO.JensenSaturationRecursiveChainData}
+  \uses{def:jensen_saturation_task_enumeration,def:jensen_saturation_chain,def:jensen_n_subring_seed_data}
+  Record the recursive chain produced from the task enumeration: it starts
+  above the initial \(N\)-subring, preserves avoidance at each finite stage,
+  and eventually hits every prime outside \(G\).
+\end{definition}
+
+\begin{proof}
+  This packages the output expected from the successor-stage construction using
+  prime extension and ideal extension.
+\end{proof}
+
+\begin{definition}[Jensen saturation union data]
+  \label{def:jensen_saturation_union_data}
+  \lean{Run202608192034.TODO.JensenSaturationUnionData}
+  \uses{def:jensen_saturation_recursive_chain_data}
+  Record the union ring \(A\) of the saturation chain, together with the facts
+  that every finite stage maps into \(A\), \(G\)-avoidance survives the union,
+  and primes outside \(G\) still have nonzero contraction.
+\end{definition}
+
+\begin{proof}
+  This is the limit-stage output of Jensen's construction.
+\end{proof}
+
+\begin{lemma}[Saturation task set source]
+  \label{lem:jensen_saturation_task_enumeration_source}
+  \lean{Run202608192034.TODO.jensen_saturation_task_enumeration_source}
+  \uses{def:jensen_saturation_task_enumeration,def:jensen_n_subring_seed_data}
+  For a fixed seed, collect every prime outside \(G\) as a prime-hitting task
+  and every seed ideal as an ideal-solving task.
+\end{lemma}
+
+\begin{proof}
+  Lean constructs these two sets directly and checks the prime-coverage field.
+\end{proof}
+
+\begin{lemma}[Saturation recursive chain source]
+  \label{lem:jensen_saturation_recursive_chain_source}
+  \lean{Run202608192034.TODO.jensen_saturation_recursive_chain_source}
+  \uses{def:jensen_published_construction_data,def:jensen_saturation_recursive_chain_data}
+  A certificate for Jensen's published construction contains the recursive
+  saturation chain, with stagewise avoidance and eventual prime hitting.
+\end{lemma}
+
+\begin{proof}
+  This is a checked field projection from the published construction
+  certificate.  Internally, Jensen obtains the field by iterating the prime-
+  and ideal-extension lemmas.
+\end{proof}
+
+\begin{lemma}[Saturation union source]
+  \label{lem:jensen_saturation_union_source}
+  \lean{Run202608192034.TODO.jensen_saturation_union_source}
+  \uses{def:jensen_saturation_recursive_chain_data,def:jensen_saturation_union_data}
+  The union of the recursive saturation chain is a subring \(A\) preserving
+  \(G\)-avoidance and the eventual prime-hitting property.
+\end{lemma}
+
+\begin{proof}
+  Lean sets \(A=\bigvee_n R_n\).  Monotonicity of the chain makes the family
+  directed, so membership in the supremum comes from a finite stage.  The
+  stagewise zero-contraction property then proves avoidance, while an eventual
+  hitting witness embeds into the supremum and proves nonzero contraction.
+\end{proof}
+
+\begin{lemma}[Recursive chain starts]
+  \label{lem:jensen_saturation_recursive_chain_starts}
+  \lean{Run202608192034.TODO.JensenSaturationRecursiveChainData.starts}
+  \uses{def:jensen_saturation_recursive_chain_data}
+  The recursive saturation chain starts above the initial \(N\)-subring.
+\end{lemma}
+
+\begin{proof}
+  This is the corresponding field projection from the recursive-chain data.
+\end{proof}
+
+\begin{lemma}[Union contains chain]
+  \label{lem:jensen_saturation_union_chain_le}
+  \lean{Run202608192034.TODO.JensenSaturationUnionData.chain_le}
+  \uses{def:jensen_saturation_union_data}
+  Every finite stage of the saturation chain is contained in the union ring.
+\end{lemma}
+
+\begin{proof}
+  This is the corresponding field projection from the union data.
+\end{proof}
+
+\begin{lemma}[Union preserves avoidance]
+  \label{lem:jensen_saturation_union_avoid}
+  \lean{Run202608192034.TODO.JensenSaturationUnionData.avoid}
+  \uses{def:jensen_saturation_union_data}
+  The union ring still has zero contraction for all primes in \(G\).
+\end{lemma}
+
+\begin{proof}
+  This is the corresponding field projection from the union data.
+\end{proof}
+
+\begin{lemma}[Union hits primes outside \(G\)]
+  \label{lem:jensen_saturation_union_hits_outside_g}
+  \lean{Run202608192034.TODO.JensenSaturationUnionData.hitsOutsideG}
+  \uses{def:jensen_saturation_union_data}
+  Every prime outside \(G\) has nonzero contraction to the union ring.
+\end{lemma}
+
+\begin{proof}
+  This is the corresponding field projection from the union data.
+\end{proof}
+
+\begin{definition}[Union data as saturation data]
+  \label{def:jensen_saturation_union_to_saturation_data}
+  \lean{Run202608192034.TODO.JensenSaturationUnionData.toSaturationData}
+  \uses{def:jensen_saturation_union_data,def:jensen_saturation_data,lem:jensen_saturation_recursive_chain_starts,lem:jensen_saturation_union_chain_le,lem:jensen_saturation_union_avoid,lem:jensen_saturation_union_hits_outside_g}
+  Convert the recursive-chain and union bookkeeping package into the
+  saturation data used by the rest of the proof.
+\end{definition}
+
+\begin{proof}
+  Assemble the fields of `JensenSaturationData` from the checked projections.
+\end{proof}
+
+\begin{definition}[Saturation data selected from a recursive chain]
+  \label{def:jensen_saturation_data_of_recursive_chain}
+  \lean{Run202608192034.TODO.jensenSaturationDataOfRecursiveChain}
+  \uses{lem:jensen_saturation_union_source,def:jensen_saturation_union_to_saturation_data}
+  Select the checked directed union of a recursive chain and expose it as the
+  saturation-data package used by the later dependent outputs.
+\end{definition}
+
+\begin{proof}
+  Apply classical choice to \cref{lem:jensen_saturation_union_source}, then
+  apply the checked conversion to saturation data.
+\end{proof}
+
+\begin{definition}[Published Jensen construction certificate]
+  \label{def:jensen_published_construction_data}
+  \lean{Run202608192034.TODO.JensenPublishedConstructionData}
+  \uses{def:jensen_n_subring_seed_data,def:jensen_saturation_task_enumeration,def:jensen_saturation_recursive_chain_data,def:jensen_saturation_data_of_recursive_chain,def:jensen_ufd_output_data,def:jensen_completion_criterion_output_data,def:jensen_generic_fiber_output_data}
+  Package one coherent dependent trace of Jensen's construction: its seed,
+  task enumeration, recursive chain, saturated union, UFD output, completion
+  output, and generic-formal-fiber output.
+\end{definition}
+
+\begin{proof}
+  This is a dependent record.  Lean assumes its nonemptiness through the
+  explicitly named published-source boundary
+  \texttt{jensen\_corollary\_2\_4\_construction\_external}, which is Jensen,
+  Corollary~2.4 specialized to the node ring and \(P=(0)\).  See
+  \texttt{TRUST\_BOUNDARY.md} for the exact audit.
+\end{proof}
+
+\begin{lemma}[Saturation source]
+  \label{lem:jensen_saturation_source}
+  \lean{Run202608192034.TODO.jensen_saturation_source}
+  \uses{def:jensen_published_construction_data,def:jensen_saturation_data_of_recursive_chain}
+  A published construction certificate determines the saturated union \(A\),
+  preserving \(G\)-avoidance and hitting every prime outside \(G\).
+\end{lemma}
+
+\begin{proof}
+  Apply the checked saturation-data constructor to the certificate's recursive
+  chain.
+\end{proof}
+
+\begin{lemma}[UFD output source]
+  \label{lem:jensen_ufd_output_source}
+  \lean{Run202608192034.TODO.jensen_ufd_output_source}
+  \uses{def:jensen_published_construction_data,def:jensen_ufd_output_data}
+  The saturated union produced by Jensen's chain is a UFD.
+\end{lemma}
+
+\begin{proof}
+  This is a checked field projection from the coherent Jensen certificate.
+\end{proof}
+
+\begin{lemma}[Completion output source]
+  \label{lem:jensen_completion_output_source}
+  \lean{Run202608192034.TODO.jensen_completion_output_source}
+  \uses{def:jensen_published_construction_data,def:jensen_completion_criterion_output_data}
+  The saturated union satisfies the completion criterion, so its completion is
+  \(T\), it is Noetherian local, and it has dimension two.
+\end{lemma}
+
+\begin{proof}
+  This is a checked field projection from the coherent Jensen certificate.
+  Jensen obtains it from the coset-surjectivity and ideal-contraction
+  equations built into the saturation process.
+\end{proof}
+
+\begin{lemma}[Generic formal fiber output source]
+  \label{lem:jensen_generic_formal_fiber_output_source}
+  \lean{Run202608192034.TODO.jensen_generic_formal_fiber_output_source}
+  \uses{def:jensen_published_construction_data,def:jensen_generic_fiber_output_data}
+  The selected source has trivial generic formal fiber: zero contracts to zero
+  and every nonzero prime of \(T\) contracts nontrivially.
+\end{lemma}
+
+\begin{proof}
+  This is a checked field projection from the coherent Jensen certificate.
+  In the source proof, \(G=\{(0)\}\), so avoidance and hitting identify the
+  generic formal fiber exactly.
+\end{proof}
+
+\begin{definition}[Jensen selected source]
+  \label{def:jensen_selected_source}
+  \lean{Run202608192034.TODO.JensenSelectedSource}
+  \uses{def:jensen_completion_witness,def:jensen_saturation_data,def:jensen_completion_criterion_output_data,def:jensen_generic_fiber_output_data}
+  Package the actual source ring selected by Jensen's construction: a
+  Noetherian local domain \(A\), its ideal \(\mathfrak m\), the map
+  \(A\to T\), the completion witness \(\widehat A\cong T\), and the
+  generic-formal-fiber contraction condition.
+\end{definition}
+
+\begin{proof}
+  This is a data package.  It separates the construction of Jensen's selected
+  source ring from the later projections of its UFD, completion, dimension, and
+  contraction properties.
+\end{proof}
+
+\begin{lemma}[Jensen selected source exists]
+  \label{lem:jensen_selected_source_exists_source}
+  \lean{Run202608192034.TODO.jensenSelectedSource_exists_source}
+  \uses{def:jensen_published_construction_data,def:jensen_selected_source,def:jensen_saturation_data_of_recursive_chain,lem:farley_completion_criterion,lem:adic_completion_prime_contraction_condition_iff_target}
+  Jensen's published construction certificate assembles into the selected
+  source package used downstream.
+\end{lemma}
+
+\begin{proof}
+  Choose the certificate supplied by the explicit Corollary~2.4 boundary.
+  Anderson's Corollary~2(1) gives the weak-completeness criterion on the actual
+  adic completion, and the checked prime-contraction transport lemma carries it
+  across \(\widehat A\cong T\).  Assemble this with the certificate's dependent
+  UFD, completion, and generic-formal-fiber fields into
+  `JensenCompletionWitness` and `JensenSelectedSource`.
+\end{proof}
+
+\begin{lemma}[Jensen selected ring exists]
+  \label{lem:jensen_selected_ring_exists_source}
+  \lean{Run202608192034.TODO.jensen_selected_ring_exists_source}
+  \uses{lem:jensen_selected_source_exists_source}
+  The selected source package contains a Noetherian local domain \(A\) and a map
+  \(A\to T\).
+\end{lemma}
+
+\begin{proof}
+  Project \(A\), \(\mathfrak m\), the map \(A\to T\), and the Noetherian,
+  local, and domain fields from \cref{lem:jensen_selected_source_exists_source}.
+\end{proof}
+
+\begin{lemma}[Jensen selected completion equivalence]
+  \label{lem:jensen_selected_ring_completion_equiv_source}
+  \lean{Run202608192034.TODO.jensen_selected_ring_completion_equiv_source}
+  \uses{lem:jensen_selected_source_exists_source,def:jensen_completion_witness}
+  The selected source package carries the completion equivalence
+  \(\widehat A\cong T\) together with the compatible map \(A\to T\).
+\end{lemma}
+
+\begin{proof}
+  Project the `JensenCompletionWitness` field from the selected source package.
+\end{proof}
+
+\begin{lemma}[Jensen selected ring is a UFD]
+  \label{lem:jensen_selected_ring_ufd_source}
+  \lean{Run202608192034.TODO.jensen_selected_ring_ufd_source}
+  \uses{lem:jensen_selected_source_exists_source,def:jensen_completion_witness}
+  The selected source ring is a UFD.
+\end{lemma}
+
+\begin{proof}
+  Project the UFD field stored in the selected source package's completion
+  witness.
+\end{proof}
+
+\begin{lemma}[Jensen selected generic formal fiber]
+  \label{lem:jensen_selected_ring_generic_fiber_source}
+  \lean{Run202608192034.TODO.jensen_selected_ring_generic_fiber_source}
+  \uses{lem:jensen_selected_source_exists_source}
+  In the selected source ring, the zero prime of \(T\) contracts to zero, and
+  every nonzero prime of \(T\) contracts nontrivially.
+\end{lemma}
+
+\begin{proof}
+  Project the two contraction fields from the selected source package.
+\end{proof}
+
+\begin{lemma}[Jensen special case source package]
+  \label{lem:jensen_special_case_source}
+  \lean{Run202608192034.TODO.jensenSpecialCase_source}
+  \uses{lem:jensen_selected_ring_exists_source,lem:jensen_selected_ring_completion_equiv_source,lem:jensen_selected_ring_ufd_source,lem:jensen_selected_ring_generic_fiber_source}
+  There exists a two-dimensional Noetherian local UFD \(A\) with
+  \(\widehat A\cong T\) such that the only prime ideal of \(T\) contracting
+  to zero in \(A\) is \((0)\), and this selected source ring carries the
+  completion witness used downstream.
+\end{lemma}
+
+\begin{proof}
+  Assemble the selected ring, completion witness, UFD output, and contraction
+  statement from the selected source package projections.
+\end{proof}
+
+\begin{lemma}[Jensen special case]
+  \label{lem:jensen_special_case}
+  \lean{Run202608192034.TODO.jensenSpecialCase}
+  \uses{lem:jensen_special_case_source}
+  The source package gives the counterexample-ring candidate used in the rest of
+  the proof.
+\end{lemma}
+
+\begin{proof}
+  Project the selected ring, map, contraction statement, and completion witness
+  from \cref{lem:jensen_special_case_source}.
 \end{proof}
 
 \section{The bad quotient}
@@ -582,14 +997,14 @@
 \begin{lemma}[Jensen's selected ring is a UFD]
   \label{lem:jensen_special_case_ufd_source}
   \lean{Run202608192034.TODO.jensenSpecialCase_isUFD_source}
-  \uses{lem:jensen_special_case,lem:jensen_union_ufd}
+  \uses{def:jensen_completion_witness}
   The ring \(A\) selected from Jensen's construction is a UFD.
 \end{lemma}
 
 \begin{proof}
-  This is the UFD part of Jensen's theorem: the saturated union is a UFD, and
-  the completion criterion upgrades the same union to the Noetherian local ring
-  used in the counterexample.
+  This is now a projection from the Jensen completion witness.  The witness
+  records the UFD output of the saturated-union construction together with the
+  completion equivalence and weak-completeness criterion.
 \end{proof}
 
 \begin{lemma}[Weak-completeness criterion for the selected ring]
@@ -737,7 +1152,7 @@
 \begin{lemma}[Source theorem for the prime generator]
   \label{lem:prime_generator_source}
   \lean{Run202608192034.TODO.primeGenerator_source}
-  \uses{def:prime_generator,lem:jensen_special_case,lem:jensen_completion_witness_source,lem:counterexample_weak_criterion_source,lem:contracted_prime_height_one_source,lem:height_one_prime_principal_ufd_source}
+  \uses{def:prime_generator,lem:jensen_special_case,lem:counterexample_weak_criterion_source,lem:contracted_prime_height_one_source,lem:height_one_prime_principal_ufd_source,lem:jensen_special_case_ufd_source}
   The Jensen construction and the UFD height-one-prime argument supply the
   prime-generator package used later.
 \end{lemma}
@@ -834,21 +1249,280 @@
   data package.
 \end{proof}
 
+\begin{lemma}[The bad quotient is Noetherian]
+  \label{lem:bad_quotient_source_data_quotient_is_noetherian}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_isNoetherian}
+  \uses{def:bad_quotient_source_data}
+  The quotient ring \(A/q\) is Noetherian.
+\end{lemma}
+
+\begin{proof}
+  This follows from the stored Noetherian hypothesis on \(A\) and Mathlib's
+  Noetherian quotient instance.
+\end{proof}
+
+\begin{lemma}[The bad quotient is a domain]
+  \label{lem:bad_quotient_source_data_quotient_is_domain}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_isDomain}
+  \uses{def:bad_quotient_source_data}
+  The quotient ring \(A/q\) is a domain.
+\end{lemma}
+
+\begin{proof}
+  Since \(q\) is prime, this is `Ideal.Quotient.isDomain_iff_prime`.
+\end{proof}
+
+\begin{lemma}[The bad quotient is nontrivial]
+  \label{lem:bad_quotient_source_data_quotient_nontrivial}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_nontrivial}
+  \uses{def:bad_quotient_source_data}
+  The quotient ring \(A/q\) is nontrivial.
+\end{lemma}
+
+\begin{proof}
+  A prime ideal is proper, so the quotient by \(q\) is nontrivial.
+\end{proof}
+
+\begin{lemma}[The quotient map is local]
+  \label{lem:bad_quotient_source_data_quotient_mk_is_local_hom}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_mk_isLocalHom}
+  \uses{lem:bad_quotient_source_data_quotient_nontrivial}
+  The quotient map \(A\to A/q\) is a local homomorphism.
+\end{lemma}
+
+\begin{proof}
+  Use `IsLocalHom.of_surjective` for the surjective quotient map.
+\end{proof}
+
+\begin{lemma}[The bad quotient is local]
+  \label{lem:bad_quotient_source_data_quotient_is_local}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_isLocal}
+  \uses{lem:bad_quotient_source_data_quotient_nontrivial,lem:bad_quotient_source_data_quotient_mk_is_local_hom}
+  The quotient ring \(A/q\) is local.
+\end{lemma}
+
+\begin{proof}
+  Apply `IsLocalRing.of_surjective` to the quotient map.
+\end{proof}
+
+\begin{lemma}[The bad quotient is a Noetherian local domain]
+  \label{lem:bad_quotient_source_data_quotient_noetherian_local_domain}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_noetherian_local_domain}
+  \uses{lem:bad_quotient_source_data_quotient_is_noetherian,lem:bad_quotient_source_data_quotient_is_local,lem:bad_quotient_source_data_quotient_is_domain}
+  The quotient ring \(A/q\) is a Noetherian local domain.
+\end{lemma}
+
+\begin{proof}
+  Combine the separately proved Noetherian, local, and domain facts.
+\end{proof}
+
+\begin{lemma}[Recover the Jensen completion witness from bad quotient data]
+  \label{lem:bad_quotient_source_data_jensen_completion_witness}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.jensenCompletionWitness}
+  \uses{def:bad_quotient_source_data,def:jensen_completion_witness}
+  The bad quotient source package determines the Jensen completion witness
+  \(\widehat A\cong T\) for the chosen map \(A\to T\).
+\end{lemma}
+
+\begin{proof}
+  Project the stored Jensen completion witness from the bad quotient source
+  data.
+\end{proof}
+
+\begin{lemma}[The Jensen completion is Noetherian]
+  \label{lem:adic_completion_is_noetherian_ring_from_jensen}
+  \lean{Run202608192034.TODO.adicCompletion_isNoetherianRing_from_jensen}
+  \uses{def:jensen_completion_witness,lem:node_complete_cm_dim,lem:is_noetherian_ring_of_ring_equiv_source}
+  If Jensen's construction identifies \(\widehat A\) with the chosen node
+  ring \(T\), then \(\widehat A\) is Noetherian.
+\end{lemma}
+
+\begin{proof}
+  The complete node ring \(T\) is Noetherian by the node-ring package.
+  Transport this Noetherianity backward across the inverse of the Jensen
+  completion equivalence \(\widehat A\cong T\).
+\end{proof}
+
+\begin{lemma}[The source ring is two-dimensional]
+  \label{lem:bad_quotient_source_data_source_ring_krull_dim_eq_two}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.source_ringKrullDim_eq_two}
+  \uses{lem:bad_quotient_source_data_jensen_completion_witness}
+  The Jensen source ring \(A\) has Krull dimension two.
+\end{lemma}
+
+\begin{proof}
+  This is the dimension field of the Jensen completion witness: the selected
+  \(A\) has completion \(T\), and \(T\) is the two-dimensional node ring.
+\end{proof}
+
+\begin{lemma}[The source completion is Noetherian]
+  \label{lem:bad_quotient_source_data_adic_completion_is_noetherian_ring}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.adicCompletion_isNoetherianRing}
+  \uses{lem:bad_quotient_source_data_jensen_completion_witness,lem:adic_completion_is_noetherian_ring_from_jensen}
+  For the bad quotient source data, the completion
+  \(\widehat A^{\,\mathfrak m}\) is Noetherian.
+\end{lemma}
+
+\begin{proof}
+  Apply the Jensen completion Noetherianity lemma to the completion witness
+  recovered from the source data.
+\end{proof}
+
+\begin{lemma}[The contracted prime has height one in the source ring]
+  \label{lem:bad_quotient_source_data_q_height_one_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.q_height_one_source}
+  \uses{lem:bad_quotient_source_data_jensen_completion_witness,lem:contracted_prime_height_one_source}
+  The contracted prime \(q=Q\cap A\) has height one.
+\end{lemma}
+
+\begin{proof}
+  Reuse the already proved contracted-prime height calculation, using the
+  Jensen completion witness recovered from the source data.
+\end{proof}
+
+\begin{lemma}[The chosen generator lies in the contracted prime]
+  \label{lem:bad_quotient_source_data_generator_mem_q}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.generator_mem_q}
+  \uses{def:bad_quotient_source_data}
+  The chosen generator \(a\) lies in \(q\).
+\end{lemma}
+
+\begin{proof}
+  Rewrite \(q=(a)\) and use membership of a generator in its principal ideal.
+\end{proof}
+
+\begin{lemma}[The chosen generator is nonzero]
+  \label{lem:bad_quotient_source_data_generator_ne_zero}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.generator_ne_zero}
+  \uses{def:bad_quotient_source_data}
+  The chosen generator \(a\) is nonzero.
+\end{lemma}
+
+\begin{proof}
+  If \(a=0\), then \(q=(a)=0\), contradicting the stored nonzero property of
+  \(q\).
+\end{proof}
+
+\begin{lemma}[The chosen generator is a non-zero-divisor]
+  \label{lem:bad_quotient_source_data_generator_mem_non_zero_divisors}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.generator_mem_nonZeroDivisors}
+  \uses{lem:bad_quotient_source_data_generator_ne_zero}
+  The chosen generator \(a\) belongs to the non-zero-divisors of \(A\).
+\end{lemma}
+
+\begin{proof}
+  Since \(A\) is a domain, every nonzero element is a non-zero-divisor.
+\end{proof}
+
+\begin{lemma}[The chosen generator lies in the maximal ideal]
+  \label{lem:bad_quotient_source_data_generator_mem_maximal_ideal}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.generator_mem_maximalIdeal}
+  \uses{lem:bad_quotient_source_data_generator_mem_q}
+  The chosen generator \(a\) lies in the maximal ideal of the local ring \(A\).
+\end{lemma}
+
+\begin{proof}
+  The proper prime ideal \(q\) is contained in the maximal ideal of the local
+  ring \(A\), and \(a\in q\).
+\end{proof}
+
+\begin{lemma}[Quotient by the generator lowers dimension by one]
+  \label{lem:bad_quotient_source_data_quotient_span_generator_dimension_add_one}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_span_generator_dimension_add_one}
+  \uses{lem:bad_quotient_source_data_generator_mem_non_zero_divisors,lem:bad_quotient_source_data_generator_mem_maximal_ideal}
+  The dimension of \(A/(a)\) satisfies
+  \[
+    \dim(A/(a))+1=\dim A.
+  \]
+\end{lemma}
+
+\begin{proof}
+  Apply Mathlib's dimension-drop theorem for quotienting a Noetherian local
+  ring by a non-zero-divisor lying in the maximal ideal.
+\end{proof}
+
+\begin{lemma}[The quotient dimension adds to two]
+  \label{lem:bad_quotient_source_data_quotient_dimension_add_one_eq_two_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_dimension_add_one_eq_two_source}
+  \uses{lem:bad_quotient_source_data_quotient_span_generator_dimension_add_one,lem:bad_quotient_source_data_source_ring_krull_dim_eq_two}
+  The dimension of \(A/q\) satisfies
+  \[
+    \dim(A/q)+1=2.
+  \]
+\end{lemma}
+
+\begin{proof}
+  Rewrite \(q=(a)\) in the previous dimension-drop lemma, then use
+  \(\dim A=2\).
+\end{proof}
+
+\begin{lemma}[WithBot ENat cancellation at two]
+  \label{lem:with_bot_enat_eq_one_of_add_one_eq_two}
+  \lean{Run202608192034.TODO.withBotENat_eq_one_of_add_one_eq_two}
+  If \(x+1=2\) in \(\bot\)-extended \(\mathbb N_\infty\), then \(x=1\).
+\end{lemma}
+
+\begin{proof}
+  Rewrite \(2\) as \(1+1\) and use the order-theoretic cancellation lemma for
+  adding one on both sides.
+\end{proof}
+
+\begin{lemma}[The bad quotient has dimension one]
+  \label{lem:bad_quotient_source_data_quotient_ring_krull_dim_eq_one_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_ringKrullDim_eq_one_source}
+  \uses{lem:bad_quotient_source_data_quotient_dimension_add_one_eq_two_source,lem:with_bot_enat_eq_one_of_add_one_eq_two}
+  The quotient \(A/q\) has Krull dimension one.
+\end{lemma}
+
+\begin{proof}
+  Apply the extended-natural-number cancellation lemma to
+  \(\dim(A/q)+1=2\).
+\end{proof}
+
+\begin{definition}[Dimension-one facts for the bad quotient]
+  \label{def:quotient_dimension_one_facts}
+  \lean{Run202608192034.TODO.QuotientDimensionOneFacts}
+  \uses{lem:bad_quotient_source_data_quotient_noetherian_local_domain,lem:bad_quotient_source_data_quotient_ring_krull_dim_eq_one_source}
+  Record the exact hypotheses needed before applying the one-dimensional
+  quotient criterion: \(A/q\) is Noetherian, local, a domain, and has Krull
+  dimension one.
+\end{definition}
+
+\begin{proof}
+  This is a structure definition isolating the local algebra facts used by the
+  one-dimensional criterion.
+\end{proof}
+
+\begin{lemma}[Dimension-one facts from the dimension calculation]
+  \label{lem:bad_quotient_source_data_quotient_dimension_one_facts_of_dim}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotientDimensionOneFacts_of_dim}
+  \uses{def:quotient_dimension_one_facts,lem:bad_quotient_source_data_quotient_noetherian_local_domain,lem:bad_quotient_source_data_quotient_ring_krull_dim_eq_one_source}
+  Once the source proof gives \(\dim(A/q)=1\), all one-dimensional quotient
+  facts are available.
+\end{lemma}
+
+\begin{proof}
+  Fill the structure using the checked Noetherian, local, and domain facts,
+  and the supplied dimension equality.
+\end{proof}
+
 \begin{definition}[Jensen completion witness]
   \label{def:jensen_completion_witness}
   \lean{Run202608192034.TODO.JensenCompletionWitness}
-  \uses{lem:jensen_special_case,lem:farley_completion_criterion}
+  \uses{lem:farley_completion_criterion}
   Record the stronger Jensen output needed later: an abstract completion
   equivalence \(\widehat A^{\,\mathfrak m}\cong T\), compatibility with the
-  embedded map \(A\to T\), and the weak quasi-completeness criterion expressed
-  through this completion.
+  embedded map \(A\to T\), the UFD property of the selected source ring, the
+  fact that the chosen adic ideal is the maximal ideal of the local ring \(A\),
+  and the weak quasi-completeness criterion expressed through this completion.
 \end{definition}
 
 \begin{proof}
   This is a source data structure isolating the part of Jensen's construction
   that identifies the completion of \(A\) with the chosen complete local ring
   \(T\).  In Lean the completion is the standard Mathlib object
-  `AdicCompletion \(\mathfrak m\) A`.
+  `AdicCompletion \(\mathfrak m\) A`; the maximal-ideal equality records the
+  paper's implicit notation \((A,\mathfrak m)\).
 \end{proof}
 
 \begin{definition}[Quotient completion witness]
@@ -864,6 +1538,957 @@
   This is the source interface for the theorem that completion commutes with
   quotient by the principal ideal \(aA\), after transporting
   \(\widehat A\cong T\).
+\end{proof}
+
+\begin{definition}[The quotient map as a linear map]
+  \label{def:quotient_linear_map}
+  \lean{Run202608192034.TODO.quotientLinearMap}
+  \uses{def:bad_quotient_source_data}
+  View the canonical quotient map \(A\to A/q\) as an \(A\)-linear map, so that
+  Mathlib's module-level adic-completion functoriality can be applied.
+\end{definition}
+
+\begin{proof}
+  This is the linear map underlying the algebra homomorphism
+  `Ideal.Quotient.mkₐ`.
+\end{proof}
+
+\begin{lemma}[The quotient map is surjective]
+  \label{lem:quotient_mk_linear_surjective}
+  \lean{Run202608192034.TODO.quotient_mk_linear_surjective}
+  \uses{def:quotient_linear_map}
+  The linear version of the quotient map \(A\to A/q\) is surjective.
+\end{lemma}
+
+\begin{proof}
+  This is exactly `Ideal.Quotient.mk_surjective`, after unfolding the linear
+  map.
+\end{proof}
+
+\begin{lemma}[Completion preserves the quotient-map surjection]
+  \label{lem:quotient_completion_map_surjective}
+  \lean{Run202608192034.TODO.quotient_completion_map_surjective}
+  \uses{def:quotient_linear_map,lem:quotient_mk_linear_surjective}
+  The completed map induced by \(A\to A/q\) is surjective.
+\end{lemma}
+
+\begin{proof}
+  Apply Mathlib's `AdicCompletion.map_surjective` to the surjective quotient
+  linear map.
+\end{proof}
+
+\begin{lemma}[The two quotient filtrations agree]
+  \label{lem:quotient_module_filtration_eq_restrict_scalars}
+  \lean{Run202608192034.TODO.quotient_module_filtration_eq_restrictScalars}
+  \uses{def:bad_quotient_source_data}
+  The \(A\)-module filtration on \(A/q\) induced by \(\mathfrak m^n\) agrees
+  with the restriction of scalars of the ideal
+  \((\mathfrak m(A/q))^n\).
+\end{lemma}
+
+\begin{proof}
+  Rewrite the scalar action of an ideal on the top submodule as ideal image,
+  identify the algebra map \(A\to A/q\) with the quotient map, and use
+  `Ideal.map_pow`.
+\end{proof}
+
+\begin{definition}[Finite-level module-to-ring quotient equivalence]
+  \label{def:quotient_module_level_equiv}
+  \lean{Run202608192034.TODO.quotientModuleLevelEquiv}
+  \uses{lem:quotient_module_filtration_eq_restrict_scalars}
+  At each finite level, quotienting \(A/q\) by the \(A\)-module filtration
+  \(\mathfrak m^n(A/q)\) is linearly equivalent to quotienting by the same
+  ideal viewed after restriction of scalars from \(A/q\).
+\end{definition}
+
+\begin{proof}
+  Apply `Submodule.Quotient.equiv` to the equality of submodules from
+  \cref{lem:quotient_module_filtration_eq_restrict_scalars}.
+\end{proof}
+
+\begin{lemma}[The finite-level equivalence on representatives]
+  \label{lem:quotient_module_level_equiv_mk}
+  \lean{Run202608192034.TODO.quotientModuleLevelEquiv_mk}
+  \uses{def:quotient_module_level_equiv}
+  The finite-level equivalence sends the class of \(x\in A/q\) to the class of
+  the same representative \(x\).
+\end{lemma}
+
+\begin{proof}
+  This is definitional for the quotient equivalence built from the identity
+  linear equivalence.
+\end{proof}
+
+\begin{definition}[Finite-level comparison to the ring quotient]
+  \label{def:quotient_module_level_to_ring_level_equiv}
+  \lean{Run202608192034.TODO.quotientModuleLevelToRingLevelEquiv}
+  \uses{def:quotient_module_level_equiv}
+  This is the same finite-level comparison, with the target written as the
+  ordinary ideal quotient over the ring \(A/q\).
+\end{definition}
+
+\begin{proof}
+  It is the previous equivalence after Lean unfolds ideals as submodules of
+  their underlying ring.
+\end{proof}
+
+\begin{lemma}[The module filtration agrees with the adic filtration]
+  \label{lem:quotient_module_filtration_eq_adic_restrict_scalars}
+  \lean{Run202608192034.TODO.quotient_module_filtration_eq_adic_restrictScalars}
+  \uses{lem:quotient_module_filtration_eq_restrict_scalars}
+  The \(A\)-module filtration on \(A/q\) agrees with the restricted scalar
+  version of the \(A/q\)-adic filtration.
+\end{lemma}
+
+\begin{proof}
+  Combine the already established filtration equality with the fact that an
+  ideal acting on the top submodule of its own ring gives the ideal itself.
+\end{proof}
+
+\begin{definition}[Finite-level comparison to adic levels]
+  \label{def:quotient_module_level_to_adic_level_equiv}
+  \lean{Run202608192034.TODO.quotientModuleLevelToAdicLevelEquiv}
+  \uses{lem:quotient_module_filtration_eq_adic_restrict_scalars}
+  At finite level \(n\), the \(A\)-module completion quotient of \(A/q\) is
+  linearly equivalent to the \(n\)-th quotient used in the intrinsic
+  \(A/q\)-adic completion.
+\end{definition}
+
+\begin{proof}
+  Apply `Submodule.Quotient.equiv` to the equality of restricted scalar
+  submodules.
+\end{proof}
+
+\begin{lemma}[Compatibility with the ring-level factor map]
+  \label{lem:quotient_module_level_to_adic_level_equiv_eq_factor_ring_level}
+  \lean{Run202608192034.TODO.quotientModuleLevelToAdicLevelEquiv_eq_factor_ringLevel}
+  \uses{def:quotient_module_level_to_adic_level_equiv,def:quotient_module_level_to_ring_level_equiv}
+  The finite-level comparison to adic levels agrees with first passing through
+  the ring-level quotient and then applying the canonical factor map.
+\end{lemma}
+
+\begin{proof}
+  Prove the statement by quotient induction on representatives; both sides
+  reduce to the same quotient class.
+\end{proof}
+
+\begin{lemma}[The completed contracted prime is principal]
+  \label{lem:completed_q_eq_span_a}
+  \lean{Run202608192034.TODO.completed_q_eq_span_a}
+  \uses{def:bad_quotient_source_data}
+  Since \(q=aA\), its extension to \(\widehat A\) is generated by the image of
+  \(a\).
+\end{lemma}
+
+\begin{proof}
+  Rewrite by the stored equality \(q=(a)\), then use `Ideal.map_span` and the
+  singleton image simplification.
+\end{proof}
+
+\begin{lemma}[Transporting the completed principal ideal to \(T\)]
+  \label{lem:completion_equiv_maps_completed_q}
+  \lean{Run202608192034.TODO.completionEquiv_maps_completed_q}
+  \uses{def:jensen_completion_witness,lem:completed_q_eq_span_a}
+  The Jensen completion equivalence sends \(q\widehat A\) to the principal
+  ideal \(aT\subseteq T\).
+\end{lemma}
+
+\begin{proof}
+  Use `completed_q_eq_span_a` and the compatibility equation recorded in the
+  Jensen completion witness, namely that the selected embedding \(A\to T\) is
+  the standard completion map followed by \(\widehat A\cong T\).
+\end{proof}
+
+\begin{definition}[The quotient target transported to \(T/aT\)]
+  \label{def:completed_quotient_target_equiv_node}
+  \lean{Run202608192034.TODO.completedQuotientTargetEquivNode}
+  \uses{def:jensen_completion_witness,lem:completion_equiv_maps_completed_q}
+  The completion equivalence \(\widehat A\cong T\) induces a quotient
+  equivalence \(\widehat A/q\widehat A\cong T/aT\).
+\end{definition}
+
+\begin{proof}
+  Apply Mathlib's quotient equivalence attached to a ring equivalence and an
+  equality of mapped ideals.
+\end{proof}
+
+\begin{definition}[The actual quotient adic completion]
+  \label{def:quotient_adic_completion}
+  \lean{Run202608192034.TODO.quotientAdicCompletion}
+  \uses{def:bad_quotient_source_data}
+  The completion of \(B=A/q\) is represented as the adic completion over the
+  quotient ring \(A/q\) itself, with respect to the ideal induced by
+  \(\mathfrak m\).
+\end{definition}
+
+\begin{proof}
+  The Lean definition fixes the hidden base-ring and module parameters of
+  `AdicCompletion` explicitly, avoiding confusion with the completion of
+  \(A/q\) merely as an \(A\)-module.
+\end{proof}
+
+\begin{lemma}[The quotient adic completion is a ring]
+  \label{lem:quotient_adic_completion_comm_ring}
+  \lean{Run202608192034.TODO.quotientAdicCompletion.instCommRing}
+  \uses{def:quotient_adic_completion}
+  The quotient completion \( \widehat{A/q}\) has its natural commutative ring
+  structure.
+\end{lemma}
+
+\begin{proof}
+  This is Mathlib's `AdicCompletion.instCommRing`, applied with \(A/q\) as the
+  base ring.
+\end{proof}
+
+\begin{definition}[From module completion to quotient adic completion]
+  \label{def:quotient_module_completion_to_quotient_adic_completion}
+  \lean{Run202608192034.TODO.quotientModuleCompletionToQuotientAdicCompletion}
+  \uses{def:quotient_adic_completion,def:quotient_module_level_to_adic_level_equiv}
+  The finite-level comparison maps assemble into a map from the completion of
+  \(A/q\) as an \(A\)-module to the intrinsic adic completion of \(A/q\).
+\end{definition}
+
+\begin{proof}
+  Send a compatible family levelwise through
+  \cref{def:quotient_module_level_to_adic_level_equiv}; compatibility follows
+  by reducing the transition-map identity to representatives.
+\end{proof}
+
+\begin{definition}[From quotient adic completion to module completion]
+  \label{def:quotient_adic_completion_to_quotient_module_completion}
+  \lean{Run202608192034.TODO.quotientAdicCompletionToQuotientModuleCompletion}
+  \uses{def:quotient_adic_completion,def:quotient_module_level_to_adic_level_equiv}
+  The inverse levelwise comparison maps assemble into a map from the intrinsic
+  quotient adic completion back to the \(A\)-module completion.
+\end{definition}
+
+\begin{proof}
+  Send a compatible family levelwise through the inverse finite-level
+  equivalence; the transition-map check again reduces to representatives.
+\end{proof}
+
+\begin{lemma}[The comparison has a left inverse]
+  \label{lem:quotient_module_completion_to_quotient_adic_completion_left_inverse}
+  \lean{Run202608192034.TODO.quotientModuleCompletionToQuotientAdicCompletion_leftInverse}
+  \uses{def:quotient_module_completion_to_quotient_adic_completion,def:quotient_adic_completion_to_quotient_module_completion}
+  Going from module completion to quotient adic completion and back is the
+  identity.
+\end{lemma}
+
+\begin{proof}
+  Use extensionality of adic completions and the left inverse law for each
+  finite-level linear equivalence.
+\end{proof}
+
+\begin{lemma}[The comparison has a right inverse]
+  \label{lem:quotient_module_completion_to_quotient_adic_completion_right_inverse}
+  \lean{Run202608192034.TODO.quotientModuleCompletionToQuotientAdicCompletion_rightInverse}
+  \uses{def:quotient_module_completion_to_quotient_adic_completion,def:quotient_adic_completion_to_quotient_module_completion}
+  Going from quotient adic completion to module completion and back is the
+  identity.
+\end{lemma}
+
+\begin{proof}
+  Use extensionality of adic completions and the right inverse law for each
+  finite-level linear equivalence.
+\end{proof}
+
+\begin{definition}[The comparison equivalence of the two completions]
+  \label{def:quotient_module_completion_equiv_quotient_adic_completion}
+  \lean{Run202608192034.TODO.quotientModuleCompletionEquivQuotientAdicCompletion}
+  \uses{lem:quotient_module_completion_to_quotient_adic_completion_left_inverse,lem:quotient_module_completion_to_quotient_adic_completion_right_inverse}
+  The two Lean objects
+  `AdicCompletion \(\mathfrak m\) (A/q)` and
+  `quotientAdicCompletion` are equivalent.
+\end{definition}
+
+\begin{proof}
+  Package the two comparison maps and their inverse laws as an equivalence.
+\end{proof}
+
+\begin{lemma}[The comparison map is surjective]
+  \label{lem:quotient_module_completion_to_quotient_adic_completion_surjective}
+  \lean{Run202608192034.TODO.quotientModuleCompletionToQuotientAdicCompletion_surjective}
+  \uses{lem:quotient_module_completion_to_quotient_adic_completion_right_inverse}
+  The map from the module completion of \(A/q\) to the intrinsic quotient adic
+  completion is surjective.
+\end{lemma}
+
+\begin{proof}
+  Surjectivity follows from the explicit right inverse.
+\end{proof}
+
+\begin{lemma}[Applying the dimension-one criterion source]
+  \label{lem:quotient_dimension_one_facts_dimension_one_criterion_of_source}
+  \lean{Run202608192034.TODO.QuotientDimensionOneFacts.dimensionOneCriterion_of_source}
+  \uses{def:quotient_dimension_one_facts,def:quotient_adic_completion,lem:dimension_one_weak_criterion}
+  Given the recorded one-dimensional quotient facts and the cited analytic
+  criterion, weak quasi-completeness of \(A/q\) is equivalent to analytic
+  irreducibility of its actual adic completion.
+\end{lemma}
+
+\begin{proof}
+  Apply the project-level wrapper for the Anderson/Farley dimension-one
+  criterion to the supplied source criterion.
+\end{proof}
+
+\begin{lemma}[The quotient criterion from a dimension calculation]
+  \label{lem:quotient_dimension_one_criterion_on_quotient_completion_of_source}
+  \lean{Run202608192034.TODO.quotient_dimensionOneCriterionOnQuotientCompletion_of_source}
+  \uses{lem:bad_quotient_source_data_quotient_dimension_one_facts_of_dim,lem:quotient_dimension_one_facts_dimension_one_criterion_of_source}
+  If the source proof supplies \(\dim(A/q)=1\) and the one-dimensional analytic
+  criterion, then the required quotient-completion criterion follows.
+\end{lemma}
+
+\begin{proof}
+  Build the dimension-one fact package from the dimension equality, then apply
+  the criterion wrapper.
+\end{proof}
+
+\begin{lemma}[The chosen adic ideal is the maximal ideal]
+  \label{lem:bad_quotient_source_data_adic_ideal_eq_maximal_ideal_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.adicIdeal_eq_maximalIdeal_source}
+  \uses{def:bad_quotient_source_data}
+  The ideal \(\mathfrak m\) carried by the bad-quotient source data is the
+  maximal ideal of the local ring \(A\).
+\end{lemma}
+
+\begin{proof}
+  This is now a checked projection from the Jensen completion witness.  The
+  source proof of that witness records the paper's implicit notation
+  \((A,\mathfrak m)\).
+\end{proof}
+
+\begin{lemma}[Project-specific Hausdorff quotient of the completion]
+  \label{lem:bad_quotient_source_data_adic_completion_quotient_hausdorff_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.adicCompletion_quotient_hausdorff_source}
+  \uses{lem:bad_quotient_source_data_adic_completion_is_noetherian_ring,lem:adic_completion_quotient_hausdorff_of_noetherian_completion}
+  For the Jensen source data, every quotient \(\widehat A/P\) is Hausdorff
+  for the \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  Use the Jensen-specific Noetherianity of \(\widehat A\), then apply the
+  Basic-level quotient-Hausdorff theorem conditional on Noetherianity of the
+  completion.
+\end{proof}
+
+\begin{lemma}[Project-specific completion-neighborhood intersection]
+  \label{lem:bad_quotient_source_data_adic_completion_neighborhood_iinf_le_prime_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.adicCompletion_neighborhood_iInf_le_prime_source}
+  \uses{lem:bad_quotient_source_data_adic_completion_quotient_hausdorff_source,lem:adic_completion_neighborhood_iinf_le_prime_of_hausdorff}
+  For the Jensen source data,
+  \(\bigcap_n(P+\mathfrak m^n\widehat A)\subseteq P\).
+\end{lemma}
+
+\begin{proof}
+  Install the project-specific quotient-Hausdorff instance and apply the
+  checked Basic-level Hausdorff-to-intersection lemma.
+\end{proof}
+
+\begin{lemma}[Project-specific contracted-chain intersection containment]
+  \label{lem:bad_quotient_source_data_bad_prime_contraction_chain_iinf_le_comap_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.badPrimeContractionChain_iInf_le_comap_source}
+  \uses{lem:mem_bad_prime_contraction_chain,lem:bad_quotient_source_data_adic_completion_neighborhood_iinf_le_prime_source}
+  For the Jensen source data,
+  \(\bigcap_n I_n\subseteq P\cap A\) for Farley's contraction chain.
+\end{lemma}
+
+\begin{proof}
+  Send an element of \(\bigcap I_n\) into \(\widehat A\), use the membership
+  characterization of \(I_n\), and then apply the project-specific
+  completion-neighborhood intersection containment.
+\end{proof}
+
+\begin{lemma}[Project-specific contracted-chain intersection equality]
+  \label{lem:bad_quotient_source_data_bad_prime_contraction_chain_iinf_eq_comap_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.badPrimeContractionChain_iInf_eq_comap_source}
+  \uses{lem:bad_quotient_source_data_bad_prime_contraction_chain_iinf_le_comap_source,lem:comap_le_bad_prime_contraction_chain_iinf}
+  For the Jensen source data, Farley's contraction chain satisfies
+  \(\bigcap_n I_n=P\cap A\).
+\end{lemma}
+
+\begin{proof}
+  Combine the project-specific containment with the previously checked
+  general reverse containment.
+\end{proof}
+
+\begin{lemma}[Project-specific contracted-chain intersection is zero]
+  \label{lem:bad_quotient_source_data_bad_prime_contraction_chain_iinf_eq_bot_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.badPrimeContractionChain_iInf_eq_bot_source}
+  \uses{lem:bad_quotient_source_data_bad_prime_contraction_chain_iinf_eq_comap_source}
+  If a completion prime \(P\) has zero contraction, then Farley's contraction
+  chain has zero intersection.
+\end{lemma}
+
+\begin{proof}
+  Rewrite the project-specific chain intersection as \(P\cap A\), then use the
+  zero-contraction hypothesis.
+\end{proof}
+
+\begin{lemma}[Project-specific bad completion prime gives a bad chain]
+  \label{lem:bad_quotient_source_data_adic_completion_bad_prime_to_bad_chain_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.adicCompletion_badPrime_to_badChain_source}
+  \uses{lem:bad_quotient_source_data_bad_prime_contraction_chain_iinf_eq_bot_source,lem:bad_prime_contraction_chain_antitone,lem:bad_prime_contraction_chain_avoids_fixed_power,lem:bad_quotient_source_data_adic_ideal_eq_maximal_ideal_source}
+  For the selected Jensen source data, a bad completion prime produces
+  Farley's forbidden descending chain.
+\end{lemma}
+
+\begin{proof}
+  Use the same explicit chain \(I_n=(P+\mathfrak m^n\widehat A)\cap A\).
+  The antitonicity and fixed-power avoidance are the checked Basic lemmas; the
+  zero-intersection part now uses the project-specific Hausdorff quotient
+  route instead of the remaining generic source theorem.
+\end{proof}
+
+\begin{lemma}[Project-specific weak completeness gives prime contraction]
+  \label{lem:bad_quotient_source_data_weakly_quasi_complete_to_adic_completion_prime_contraction_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.weaklyQuasiComplete_to_adicCompletionPrimeContraction_source}
+  \uses{lem:bad_quotient_source_data_adic_completion_bad_prime_to_bad_chain_source,lem:not_weakly_quasi_complete_iff_bad_chain,lem:not_adic_completion_prime_contraction_condition_iff_bad_prime}
+  For the selected Jensen source data, weak quasi-completeness implies the
+  adic-completion prime-contraction condition.
+\end{lemma}
+
+\begin{proof}
+  Argue by contradiction.  Failure of prime contraction gives a bad completion
+  prime; the project-specific previous lemma gives a bad descending chain; the
+  checked negation lemma says this contradicts the stored weak
+  quasi-completeness of \(A\).
+\end{proof}
+
+\begin{lemma}[Maximal ideals map to maximal ideals under the quotient map]
+  \label{lem:bad_quotient_source_data_quotient_adic_ideal_eq_maximal_ideal_of_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_adicIdeal_eq_maximalIdeal_of_source}
+  \uses{lem:bad_quotient_source_data_adic_ideal_eq_maximal_ideal_source,lem:bad_quotient_source_data_quotient_is_local}
+  If \(\mathfrak m\) is the maximal ideal of \(A\), then its image in \(A/q\)
+  is the maximal ideal of the quotient local ring.
+\end{lemma}
+
+\begin{proof}
+  The quotient map \(A\to A/q\) is a surjective local homomorphism.  Apply
+  Mathlib's `IsLocalRing.map_maximalIdeal_of_surjective`, then rewrite the
+  source maximal ideal by the supplied equality.
+\end{proof}
+
+\begin{lemma}[The quotient adic ideal is the quotient maximal ideal]
+  \label{lem:bad_quotient_source_data_quotient_adic_ideal_eq_maximal_ideal_source}
+  \lean{Run202608192034.TODO.BadQuotientSourceData.quotient_adicIdeal_eq_maximalIdeal_source}
+  \uses{lem:bad_quotient_source_data_adic_ideal_eq_maximal_ideal_source,lem:bad_quotient_source_data_quotient_adic_ideal_eq_maximal_ideal_of_source}
+  The ideal \(\mathfrak m(A/q)\) used for the adic completion of \(A/q\) is
+  the maximal ideal of the quotient local ring.
+\end{lemma}
+
+\begin{proof}
+  Apply the checked quotient transport lemma to the recorded source equality
+  \(\mathfrak m=\operatorname{maximalIdeal}(A)\).
+\end{proof}
+
+\begin{lemma}[Powers of the quotient maximal ideal]
+  \label{lem:quotient_map_sup_power}
+  \lean{Run202608192034.TODO.quotient_map_sup_power}
+  \uses{def:bad_quotient_source_data}
+  For every \(n\), the image of \(q+\mathfrak m^n\) in \(A/q\) is the
+  \(n\)-th power of the image of \(\mathfrak m\).
+\end{lemma}
+
+\begin{proof}
+  Use `Ideal.map_sup`, the fact that \(q\) maps to zero in \(A/q\), and
+  `Ideal.map_pow`.
+\end{proof}
+
+\begin{definition}[Finite-level quotient equivalence for \(q+\mathfrak m^n\)]
+  \label{def:quotient_power_quotient_equiv}
+  \lean{Run202608192034.TODO.quotientPowerQuotientEquiv}
+  \uses{lem:quotient_sup_quotient_equiv,lem:quotient_map_sup_power}
+  For every \(n\), there is a natural equivalence
+  \[
+    A/(q+\mathfrak m^n)\cong
+      (A/q)/(\mathfrak m(A/q))^n.
+  \]
+\end{definition}
+
+\begin{proof}
+  Apply the general quotient-by-sum equivalence to \(I=q\) and
+  \(J=\mathfrak m^n\), then rewrite the image of \(\mathfrak m^n\) as the
+  \(n\)-th power of the image of \(\mathfrak m\).
+\end{proof}
+
+\begin{lemma}[Finite-level equivalence on representatives]
+  \label{lem:quotient_power_quotient_equiv_mk}
+  \lean{Run202608192034.TODO.quotientPowerQuotientEquiv_mk}
+  \uses{def:quotient_power_quotient_equiv}
+  The finite-level equivalence sends the class of \(x\in A\) modulo
+  \(q+\mathfrak m^n\) to the class of the class of \(x\) in \(A/q\).
+\end{lemma}
+
+\begin{proof}
+  This is the representative formula for the general quotient-by-sum
+  equivalence, followed by the power rewrite.
+\end{proof}
+
+\begin{definition}[Finite components of the map to the quotient completion]
+  \label{def:completed_ring_to_quotient_finite}
+  \lean{Run202608192034.TODO.completedRingToQuotientFinite}
+  \uses{def:quotient_power_quotient_equiv}
+  For every \(n\), the completed ring \(\widehat A\) maps naturally to
+  \((A/q)/(\mathfrak m(A/q))^n\).
+\end{definition}
+
+\begin{proof}
+  First evaluate \(\widehat A\) modulo \(\mathfrak m^n\), then pass from
+  \(A/\mathfrak m^n\) to \(A/(q+\mathfrak m^n)\), and finally use the
+  finite-level quotient equivalence.
+\end{proof}
+
+\begin{lemma}[Finite components on representatives]
+  \label{lem:completed_ring_to_quotient_finite_of}
+  \lean{Run202608192034.TODO.completedRingToQuotientFinite_of}
+  \uses{def:completed_ring_to_quotient_finite}
+  The finite component sends the image of \(x\in A\) in \(\widehat A\) to the
+  class of \(x\) in \((A/q)/(\mathfrak m(A/q))^n\).
+\end{lemma}
+
+\begin{proof}
+  This follows from the representative formula for `AdicCompletion.evalₐ` and
+  the finite-level quotient equivalence.
+\end{proof}
+
+\begin{lemma}[Finite comparison on elements from \(A\)]
+  \label{lem:quotient_module_level_to_ring_level_equiv_eval_map_of}
+  \lean{Run202608192034.TODO.quotientModuleLevelToRingLevelEquiv_eval_map_of}
+  \uses{lem:completed_ring_to_quotient_finite_of,lem:quotient_module_level_equiv_mk}
+  For an element \(x\in A\), evaluating the completed module map and then
+  applying the finite comparison gives the same finite quotient class as
+  `completedRingToQuotientFinite`.
+\end{lemma}
+
+\begin{proof}
+  Rewrite the completion map and evaluation on elements from \(A\), then use
+  the representative formulas for the finite-level comparison and finite map.
+\end{proof}
+
+\begin{lemma}[Finite comparison for all completed elements]
+  \label{lem:quotient_module_level_to_ring_level_equiv_eval_map}
+  \lean{Run202608192034.TODO.quotientModuleLevelToRingLevelEquiv_eval_map}
+  \uses{def:completed_ring_to_quotient_finite,def:quotient_module_level_to_ring_level_equiv}
+  For every element of \(\widehat A\), evaluating the completed module quotient
+  map and applying the finite comparison agrees with
+  `completedRingToQuotientFinite`.
+\end{lemma}
+
+\begin{proof}
+  Prove the identity by induction on the Cauchy-sequence representative of an
+  element of the adic completion; the finite-level statement reduces to the
+  representative formula.
+\end{proof}
+
+\begin{lemma}[Finite components are surjective]
+  \label{lem:completed_ring_to_quotient_finite_surjective}
+  \lean{Run202608192034.TODO.completedRingToQuotientFinite_surjective}
+  \uses{def:completed_ring_to_quotient_finite,def:quotient_power_quotient_equiv}
+  Each finite component
+  \(\widehat A\to (A/q)/(\mathfrak m(A/q))^n\) is surjective.
+\end{lemma}
+
+\begin{proof}
+  Pull a target element back along the finite quotient equivalence, lift it
+  through the quotient map, and then use the surjectivity of evaluation from
+  the adic completion at finite level.
+\end{proof}
+
+\begin{lemma}[Finite components are compatible]
+  \label{lem:completed_ring_to_quotient_finite_compatible}
+  \lean{Run202608192034.TODO.completedRingToQuotientFinite_compatible}
+  \uses{def:completed_ring_to_quotient_finite}
+  The finite maps \(\widehat A\to (A/q)/(\mathfrak m(A/q))^n\) commute with
+  the transition maps in the quotient completion inverse system.
+\end{lemma}
+
+\begin{proof}
+  It suffices to check a Cauchy sequence representative of an element of
+  \(\widehat A\).  The Cauchy condition says the \(m\)-th and \(n\)-th terms
+  differ by an element of \(\mathfrak m^m\); mapping to \(A/q\) puts the
+  difference in \((\mathfrak m(A/q))^m\).
+\end{proof}
+
+\begin{definition}[The natural map to the quotient completion]
+  \label{def:completed_ring_to_quotient_completion}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion}
+  \uses{lem:completed_ring_to_quotient_finite_compatible}
+  The compatible finite components induce a natural ring homomorphism
+  \[
+    \widehat A\to \widehat{A/q}.
+  \]
+\end{definition}
+
+\begin{proof}
+  Apply `AdicCompletion.liftRingHom` to the compatible family of finite-level
+  ring maps.
+\end{proof}
+
+\begin{lemma}[Evaluating the natural map to the quotient completion]
+  \label{lem:completed_ring_to_quotient_completion_eval}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_eval}
+  \uses{def:completed_ring_to_quotient_completion}
+  Evaluation of the natural map \(\widehat A\to\widehat{A/q}\) at level \(n\)
+  recovers the \(n\)-th finite component.
+\end{lemma}
+
+\begin{proof}
+  This is the evaluation formula for `AdicCompletion.liftRingHom`.
+\end{proof}
+
+\begin{lemma}[The natural map on elements from \(A\)]
+  \label{lem:completed_ring_to_quotient_completion_of_eval}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_of_eval}
+  \uses{lem:completed_ring_to_quotient_completion_eval,lem:completed_ring_to_quotient_finite_of}
+  If \(x\in A\), then the level-\(n\) evaluation of its image in
+  \(\widehat{A/q}\) is the class of \(x\) modulo \(q\) and
+  \((\mathfrak m(A/q))^n\).
+\end{lemma}
+
+\begin{proof}
+  Combine the evaluation formula with the finite-level representative formula.
+\end{proof}
+
+\begin{lemma}[The two completion maps agree]
+  \label{lem:quotient_module_completion_to_quotient_adic_completion_comp_map}
+  \lean{Run202608192034.TODO.quotientModuleCompletionToQuotientAdicCompletion_comp_map}
+  \uses{lem:quotient_module_level_to_adic_level_equiv_eq_factor_ring_level,lem:quotient_module_level_to_ring_level_equiv_eval_map,lem:completed_ring_to_quotient_completion_eval}
+  The comparison map from module completion to intrinsic quotient completion,
+  composed with the completed quotient map, is the natural map
+  \(\widehat A\to\widehat{A/q}\).
+\end{lemma}
+
+\begin{proof}
+  Use adic-completion extensionality.  At level \(n\), rewrite the adic-level
+  comparison through the ring-level factor map, use the finite comparison
+  identity, and identify the result with the evaluation of
+  `completedRingToQuotientCompletion`.
+\end{proof}
+
+\begin{lemma}[The natural map to the quotient completion is surjective]
+  \label{lem:completed_ring_to_quotient_completion_surjective}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_surjective}
+  \uses{lem:quotient_completion_map_surjective,lem:quotient_module_completion_to_quotient_adic_completion_surjective,lem:quotient_module_completion_to_quotient_adic_completion_comp_map}
+  The natural map \(\widehat A\to\widehat{A/q}\) is surjective.
+\end{lemma}
+
+\begin{proof}
+  Given a point of the intrinsic quotient completion, lift it through the
+  comparison equivalence to the module completion, then lift that through the
+  completed quotient map \( \widehat A\to\widehat{A/q}\) at the module level.
+\end{proof}
+
+\begin{lemma}[Exactness after completing the quotient sequence]
+  \label{lem:quotient_completion_module_exact}
+  \lean{Run202608192034.TODO.quotient_completion_module_exact}
+  \uses{lem:quotient_mk_linear_surjective,def:quotient_linear_map}
+  Completing the exact sequence \(q\to A\to A/q\) remains exact at the completed
+  middle term.
+\end{lemma}
+
+\begin{proof}
+  Use `LinearMap.exact_subtype_mkQ` for the exactness of
+  \(q\to A\to A/q\), then apply Mathlib's
+  `AdicCompletion.map_exact` over the Noetherian ring \(A\).
+\end{proof}
+
+\begin{lemma}[The kernel lies in the completed submodule image]
+  \label{lem:completed_ring_to_quotient_completion_ker_le_completed_submodule_range}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_ker_le_completedSubmoduleRange}
+  \uses{lem:quotient_completion_module_exact,lem:quotient_module_completion_to_quotient_adic_completion_comp_map,lem:quotient_module_completion_to_quotient_adic_completion_left_inverse}
+  The kernel of the parent map
+  \(\widehat A\to\widehat{A/q}\) is contained in the range of the completed
+  inclusion \(\widehat q\to\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  If an element maps to zero in the intrinsic quotient completion, use the
+  comparison equivalence to see that it maps to zero under the completed
+  \(A\)-module quotient map.  Exactness of the completed sequence then puts it
+  in the range of the completed inclusion of \(q\).
+\end{proof}
+
+\begin{lemma}[\(q\widehat A\) is in the kernel]
+  \label{lem:completed_ring_to_quotient_completion_kernel_contains_completed_q}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_ker_contains_completed_q}
+  \uses{lem:completed_ring_to_quotient_completion_of_eval}
+  The extended ideal \(q\widehat A\) is contained in the kernel of
+  \(\widehat A\to\widehat{A/q}\).
+\end{lemma}
+
+\begin{proof}
+  Check the claim on generators coming from \(q\).  At every finite level their
+  image in \(A/q\) is zero, hence the element is zero in the quotient
+  completion by extensionality of adic completions.
+\end{proof}
+
+\begin{definition}[The descended map from the completed quotient]
+  \label{def:completed_quotient_to_quotient_completion}
+  \lean{Run202608192034.TODO.completedQuotientToQuotientCompletion}
+  \uses{lem:completed_ring_to_quotient_completion_kernel_contains_completed_q}
+  The containment \(q\widehat A\subseteq\ker(\widehat A\to\widehat{A/q})\)
+  gives a descended map
+  \[
+    \widehat A/q\widehat A\to\widehat{A/q}.
+  \]
+\end{definition}
+
+\begin{proof}
+  Apply the universal property of quotient rings.
+\end{proof}
+
+\begin{lemma}[The descended map on representatives]
+  \label{lem:completed_quotient_to_quotient_completion_mk}
+  \lean{Run202608192034.TODO.completedQuotientToQuotientCompletion_mk}
+  \uses{def:completed_quotient_to_quotient_completion}
+  On a representative \(x\in\widehat A\), the descended map is the natural map
+  \(\widehat A\to\widehat{A/q}\).
+\end{lemma}
+
+\begin{proof}
+  This follows by unfolding the quotient lift.
+\end{proof}
+
+\begin{definition}[Source facts for the completion-quotient map]
+  \label{def:completed_quotient_map_source_facts}
+  \lean{Run202608192034.TODO.CompletedQuotientMapSourceFacts}
+  \uses{def:completed_ring_to_quotient_completion,lem:completed_ring_to_quotient_completion_kernel_contains_completed_q}
+  Record the two exactness facts needed for completion commuting with quotient:
+  the natural map \(\widehat A\to\widehat{A/q}\) is surjective, and its kernel
+  is contained in \(q\widehat A\).
+\end{definition}
+
+\begin{proof}
+  This structure isolates the two nontrivial halves of the exactness theorem
+  before they are used to prove bijectivity of the descended map.
+\end{proof}
+
+\begin{lemma}[Completion-quotient source facts]
+  \label{lem:completed_quotient_map_source_facts_source}
+  \lean{Run202608192034.TODO.completedQuotientMapSourceFacts_source}
+  \uses{def:completed_quotient_map_source_facts,lem:completed_ring_to_quotient_completion_surjective,lem:completed_ring_to_quotient_completion_ker_le_completed_q_source}
+  Package the now-checked surjectivity of
+  \(\widehat A\to\widehat{A/q}\) with the remaining source kernel
+  containment.
+\end{lemma}
+
+\begin{proof}
+  Fill the surjectivity field using
+  \cref{lem:completed_ring_to_quotient_completion_surjective}; the only
+  remaining source input is the reverse kernel containment.
+\end{proof}
+
+\begin{lemma}[The natural completion-to-quotient-completion map is surjective]
+  \label{lem:completed_ring_to_quotient_completion_surjective_source}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_surjective_source}
+  \uses{lem:completed_ring_to_quotient_completion_surjective}
+  The natural map \(\widehat A\to\widehat{A/q}\) is surjective.
+\end{lemma}
+
+\begin{proof}
+  This is the checked surjectivity theorem, kept under the earlier source-name
+  interface for downstream compatibility.
+\end{proof}
+
+\begin{lemma}[The descended map is surjective]
+  \label{lem:completed_quotient_to_quotient_completion_surjective}
+  \lean{Run202608192034.TODO.completedQuotientToQuotientCompletion_surjective}
+  \uses{def:completed_quotient_to_quotient_completion,lem:completed_ring_to_quotient_completion_surjective_source}
+  The descended map
+  \[
+    \widehat A/q\widehat A\to\widehat{A/q}
+  \]
+  is surjective.
+\end{lemma}
+
+\begin{proof}
+  Lift a preimage along \(\widehat A\to\widehat{A/q}\), then pass it to the
+  quotient \(\widehat A/q\widehat A\).
+\end{proof}
+
+\begin{lemma}[The tensor image lies in the extended ideal]
+  \label{lem:completed_ideal_tensor_image_le_completed_q}
+  \lean{Run202608192034.TODO.completedIdealTensorImage_le_completed_q}
+  \uses{def:quotient_linear_map}
+  The image of the tensor presentation
+  \(\widehat A\otimes_A q\to \widehat A\) lands in the extended ideal
+  \(q\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  Use tensor induction.  The pure tensor case is
+  \(r\otimes x\mapsto r\cdot x\), which lies in the ideal generated by the
+  image of \(q\); zero and addition follow from the ideal laws and linearity.
+\end{proof}
+
+\begin{lemma}[The completed submodule image lies in the extended ideal]
+  \label{lem:completed_submodule_range_le_completed_q}
+  \lean{Run202608192034.TODO.completedSubmoduleRange_le_completed_q}
+  \uses{lem:completed_ideal_tensor_image_le_completed_q}
+  The range of the completed inclusion
+  \(\widehat q\to\widehat A\) is contained in \(q\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  Since \(q\) is a finitely generated \(A\)-module over the Noetherian ring
+  \(A\), Mathlib's tensor presentation of adic completion is surjective on
+  \(\widehat q\).  Naturality of that tensor presentation reduces the claim to
+  \cref{lem:completed_ideal_tensor_image_le_completed_q}.
+\end{proof}
+
+\begin{lemma}[The reverse kernel containment]
+  \label{lem:completed_ring_to_quotient_completion_ker_le_completed_q_source}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_ker_le_completed_q_source}
+  \uses{lem:completed_ring_to_quotient_completion_ker_le_completed_submodule_range,lem:completed_submodule_range_le_completed_q}
+  The kernel of \(\widehat A\to\widehat{A/q}\) is contained in
+  \(q\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  Exactness gives containment in the range of the completed inclusion
+  \(\widehat q\to\widehat A\), and
+  \cref{lem:completed_submodule_range_le_completed_q} identifies that range
+  with a subideal of the algebraic extended ideal \(q\widehat A\).
+\end{proof}
+
+\begin{lemma}[The natural map has kernel exactly \(q\widehat A\)]
+  \label{lem:completed_ring_to_quotient_completion_ker_eq_completed_q_source}
+  \lean{Run202608192034.TODO.completedRingToQuotientCompletion_ker_eq_completed_q_source}
+  \uses{lem:completed_ring_to_quotient_completion_kernel_contains_completed_q,lem:completed_ring_to_quotient_completion_ker_le_completed_q_source}
+  The kernel of \(\widehat A\to\widehat{A/q}\) is exactly
+  \(q\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  Combine the previously checked containment \(q\widehat A\subseteq\ker\)
+  with the reverse source containment.
+\end{proof}
+
+\begin{lemma}[The descended map is injective]
+  \label{lem:completed_quotient_to_quotient_completion_injective}
+  \lean{Run202608192034.TODO.completedQuotientToQuotientCompletion_injective}
+  \uses{def:completed_quotient_to_quotient_completion,lem:completed_ring_to_quotient_completion_ker_le_completed_q_source}
+  The descended map
+  \[
+    \widehat A/q\widehat A\to\widehat{A/q}
+  \]
+  is injective.
+\end{lemma}
+
+\begin{proof}
+  Apply the quotient-lift injectivity criterion: a lift out of
+  \(\widehat A/q\widehat A\) is injective once the kernel of the parent map is
+  contained in \(q\widehat A\).
+\end{proof}
+
+\begin{lemma}[The descended quotient-completion map is bijective]
+  \label{lem:completed_quotient_to_quotient_completion_bijective_source}
+  \lean{Run202608192034.TODO.completedQuotientToQuotientCompletion_bijective_source}
+  \uses{lem:completed_quotient_to_quotient_completion_surjective,lem:completed_quotient_to_quotient_completion_injective}
+  The natural map
+  \[
+    \widehat A/q\widehat A\to\widehat{A/q}
+  \]
+  is bijective.
+\end{lemma}
+
+\begin{proof}
+  Combine the separately proved surjectivity and injectivity of the descended
+  map.
+\end{proof}
+
+\begin{definition}[The quotient-completion equivalence]
+  \label{def:quotient_completion_equiv_source}
+  \lean{Run202608192034.TODO.quotientCompletionEquiv_source}
+  \uses{lem:completed_quotient_to_quotient_completion_bijective_source}
+  The first field of the bridge is the ring equivalence
+  \[
+    \widehat{A/q}\cong \widehat A/q\widehat A
+  \]
+  obtained from the bijective descended map.
+\end{definition}
+
+\begin{proof}
+  Apply `RingEquiv.ofBijective` to the descended map and reverse the resulting
+  equivalence.
+\end{proof}
+
+\begin{definition}[Quotient completion analytic bridge]
+  \label{def:quotient_completion_analytic_bridge}
+  \lean{Run202608192034.TODO.QuotientCompletionAnalyticBridge}
+  \uses{def:quotient_adic_completion,def:quotient_completion_equiv_source}
+  The remaining quotient-completion source package has two fields: the
+  ring equivalence
+  \[
+    \widehat{A/q}\cong \widehat A/q\widehat A
+  \]
+  and the one-dimensional analytic criterion for \(A/q\) stated using the
+  actual quotient completion.
+\end{definition}
+
+\begin{proof}
+  This is a structure definition which records the two source facts separately.
+\end{proof}
+
+\begin{lemma}[Dimension-one criterion on the actual quotient completion]
+  \label{lem:quotient_dimension_one_criterion_on_quotient_completion_source}
+  \lean{Run202608192034.TODO.quotient_dimensionOneCriterionOnQuotientCompletion_source}
+  \uses{lem:quotient_dimension_one_criterion_on_quotient_completion_of_source,lem:dimension_one_weak_criterion_adic_completion_source,lem:bad_quotient_source_data_quotient_adic_ideal_eq_maximal_ideal_source}
+  The one-dimensional criterion applies directly to \(A/q\) with its actual
+  adic completion \(\widehat{A/q}\).
+\end{lemma}
+
+\begin{proof}
+  The dimension-one calculation is supplied by
+  \cref{lem:bad_quotient_source_data_quotient_ring_krull_dim_eq_one_source}.
+  The quotient Noetherian, local, and domain instances were already checked.
+  The quotient ideal is identified with the quotient maximal ideal before
+  applying the Basic-level criterion.
+  Apply the general Anderson--Farley criterion for one-dimensional adic
+  completions to \(A/q\).
+\end{proof}
+
+\begin{lemma}[Quotient completion analytic bridge source]
+  \label{lem:quotient_completion_analytic_bridge_source}
+  \lean{Run202608192034.TODO.quotientCompletionAnalyticBridge_source}
+  \uses{def:bad_quotient_source_data,def:quotient_completion_analytic_bridge,def:quotient_completion_equiv_source,lem:quotient_dimension_one_criterion_on_quotient_completion_source}
+  The paper's completion-quotient step and one-dimensional quotient criterion
+  provide the bridge package for \(A/q\).
+\end{lemma}
+
+\begin{proof}
+  Combine the separately named quotient-completion equivalence and the
+  one-dimensional criterion on the actual quotient completion.
+\end{proof}
+
+\begin{lemma}[Analytic criterion on the completed quotient target]
+  \label{lem:quotient_analytic_criterion_on_completed_quotient_source}
+  \lean{Run202608192034.TODO.quotient_analyticCriterionOnCompletedQuotient_source}
+  \uses{def:bad_quotient_source_data,lem:quotient_completion_analytic_bridge_source,def:completed_quotient_target_equiv_node}
+  For the one-dimensional quotient \(A/q\), weak quasi-completeness is
+  equivalent to analytic irreducibility of the completion target
+  \(\widehat A/q\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  Apply the quotient completion analytic bridge, then transport the domain
+  condition across the stored ring equivalence.
+\end{proof}
+
+\begin{lemma}[All quotient rings weak criterion source]
+  \label{lem:all_quotients_weak_criterion_source}
+  \lean{Run202608192034.TODO.all_quotients_weak_criterion_source}
+  \uses{def:bad_quotient_source_data,lem:quotient_weak_characterization}
+  The selected ring \(A\) satisfies the cited criterion that quasi-completeness
+  is equivalent to weak quasi-completeness of all quotient rings.
+\end{lemma}
+
+\begin{proof}
+  This is now a direct specialization of the general quotient characterization
+  proved from the definitions in
+  \cref{lem:quotient_weak_characterization}.
 \end{proof}
 
 \begin{lemma}[Transporting the dimension-one criterion]
@@ -884,15 +2509,17 @@
 \begin{definition}[Structured bad-quotient source]
   \label{def:bad_quotient_structured_source}
   \lean{Run202608192034.TODO.BadQuotientStructuredSource}
-  \uses{def:bad_quotient_source_data,def:jensen_completion_witness,def:quotient_completion_witness,def:bad_quotient_quasi_criterion_field}
+  \uses{def:bad_quotient_source_data,def:jensen_completion_witness,def:quotient_completion_witness,def:bad_quotient_quasi_criterion_field,def:adic_completion_prime_contraction_condition}
   Package the bad quotient data together with Jensen's completion witness, the
-  quotient-completion bridge, and the quotient criterion for quasi-completeness.
+  quotient-completion bridge, the quotient criterion for quasi-completeness,
+  and the selected source ring's adic-completion prime-contraction condition.
 \end{definition}
 
 \begin{proof}
   This structure separates the paper's order into three layers: construct the
   ring \(A\), identify its completion with \(T\), and then identify the
-  completion of \(A/aA\) with \(T/aT\).
+  completion of \(A/aA\) with \(T/aT\).  It now also records the
+  project-specific Farley first-direction output for the selected source ring.
 \end{proof}
 
 \begin{lemma}[Source data recovers the contracted prime]
@@ -937,52 +2564,49 @@
 \begin{lemma}[Jensen completion equivalence source]
   \label{lem:jensen_completion_witness_source}
   \lean{Run202608192034.TODO.jensenCompletionWitness_source}
-  \uses{lem:bad_quotient_source_data_from_jensen,lem:jensen_completion_criterion}
+  \uses{def:jensen_completion_witness}
   The Jensen construction identifies the completion of the selected ring
   \(A\) with the prescribed complete local ring \(T\).
 \end{lemma}
 
 \begin{proof}
-  This is the strengthened form of Jensen's completion conclusion: besides
-  the embedded map \(A\to T\), it records an equivalence from the standard
-  adic completion `AdicCompletion \(\mathfrak m\) A` to \(T\), proves that
-  the embedded map is the transported completion map, and stores the transported
-  Farley weak-completeness criterion.
+  The witness is now supplied explicitly by the selected source package or by
+  downstream data structures; this lemma simply returns that witness.
 \end{proof}
 
 \begin{lemma}[Quotient completion source]
   \label{lem:quotient_completion_witness_source}
   \lean{Run202608192034.TODO.quotientCompletionWitness_source}
-  \uses{lem:jensen_completion_witness_source,def:quotient_completion_witness,lem:dimension_one_weak_criterion}
+  \uses{lem:jensen_completion_witness_source,def:quotient_completion_witness,def:completed_quotient_target_equiv_node,lem:quotient_analytic_criterion_on_completed_quotient_source}
   Completion commutes with quotient by \(q=aA\), giving a completion target for
   \(A/q\) equivalent to \(T/aT\).
 \end{lemma}
 
 \begin{proof}
-  Use exactness of completion over the Noetherian local ring \(A\), then
-  transport the quotient of \(\widehat A\) across the equivalence
-  \(\widehat A\cong T\).  The result is the completion target appearing in the
-  dimension-one analytic irreducibility criterion.
+  The formal proof now takes the target to be
+  \(\widehat A/q\widehat A\), uses the checked quotient equivalence to
+  \(T/aT\), and stores the remaining one-dimensional analytic criterion as a
+  separate source lemma.
 \end{proof}
 
 \begin{lemma}[Bad-quotient quasi-completeness criterion source]
   \label{lem:bad_quotient_quasi_criterion_source}
   \lean{Run202608192034.TODO.badQuotient_quasiCriterion_source}
-  \uses{lem:bad_quotient_source_data_from_jensen,lem:quotient_weak_characterization}
+  \uses{lem:bad_quotient_source_data_from_jensen,lem:all_quotients_weak_criterion_source}
   The selected ring \(A\) satisfies the Anderson/Farley criterion:
   \(A\) is quasi-complete exactly when every quotient \(A/J\) is weakly
   quasi-complete.
 \end{lemma}
 
 \begin{proof}
-  This is the cited quotient characterization, specialized to the Jensen ring
-  \(A\) and its maximal ideal \(\mathfrak m_A\).
+  Apply the project-level wrapper for the cited quotient characterization to
+  the specialized criterion.
 \end{proof}
 
 \begin{lemma}[Source theorem for the structured bad quotient]
   \label{lem:bad_quotient_structured_source}
   \lean{Run202608192034.TODO.badQuotient_structured_source}
-  \uses{def:bad_quotient_structured_source,lem:bad_quotient_source_data_from_jensen,lem:jensen_completion_witness_source,lem:quotient_completion_witness_source,lem:bad_quotient_quasi_criterion_source,lem:source_data_to_contracted_prime,lem:source_data_to_prime_generator}
+  \uses{def:bad_quotient_structured_source,lem:bad_quotient_source_data_from_jensen,lem:bad_quotient_source_data_jensen_completion_witness,lem:quotient_completion_witness_source,lem:bad_quotient_quasi_criterion_source,lem:bad_quotient_source_data_weakly_quasi_complete_to_adic_completion_prime_contraction_source,lem:source_data_to_contracted_prime,lem:source_data_to_prime_generator}
   The source construction supplies the complete structured package for the bad
   quotient.
 \end{lemma}
@@ -990,7 +2614,9 @@
 \begin{proof}
   Choose the source data supplied by Jensen and the UFD generator step.  Attach
   the Jensen completion witness, the quotient-completion witness, and the
-  quotient criterion.  The resulting tuple is the structured source package.
+  quotient criterion.  The selected source prime-contraction condition is
+  supplied by the project-specific Farley first-direction theorem.  The
+  resulting tuple is the structured source package.
 \end{proof}
 
 \begin{lemma}[Source data gives a bad quotient]

@@ -1,4 +1,6 @@
 % archon:covers Run202608192034/Basic.lean
+% Historical Archon track only. The canonical Anderson/ proof is audited
+% separately by StatementAudit.lean and StrictAxiomAudit.lean.
 \chapter{Quasi-completeness and completion criteria}
 
 \begin{definition}[Quasi-complete local ring]
@@ -74,6 +76,34 @@
   This is a definition.
 \end{proof}
 
+\begin{lemma}[Quotient by a quotient is quotient by a sum]
+  \label{lem:quotient_sup_quotient_equiv}
+  \lean{Run202608192034.TODO.quotientSupQuotientEquiv}
+  If \(I,J\subseteq R\) are ideals, then there is a natural ring equivalence
+  \[
+    R/(I+J)\cong (R/I)/(J(R/I)).
+  \]
+\end{lemma}
+
+\begin{proof}
+  Use the quotient map \(R\to R/I\) and the induced map from \(R/(I+J)\) to
+  \((R/I)/(J(R/I))\).  Its kernel is zero because the preimage of \(J(R/I)\)
+  is \(I+J\), using `Ideal.comap_map_of_surjective`; it is surjective because
+  \(R\to R/I\) is surjective.  Apply `RingEquiv.ofBijective`.
+\end{proof}
+
+\begin{lemma}[The quotient-by-sum equivalence on representatives]
+  \label{lem:quotient_sup_quotient_equiv_mk}
+  \lean{Run202608192034.TODO.quotientSupQuotientEquiv_mk}
+  \uses{lem:quotient_sup_quotient_equiv}
+  Under the equivalence \(R/(I+J)\cong (R/I)/(J(R/I))\), the class of
+  \(x\in R\) maps to the class of the class of \(x\) in \(R/I\).
+\end{lemma}
+
+\begin{proof}
+  This follows by unfolding the induced quotient map.
+\end{proof}
+
 \begin{lemma}[Quotient characterization of quasi-completeness]
   \label{lem:quotient_weak_characterization}
   \lean{Run202608192034.TODO.quasiComplete_iff_all_quotients_weak}
@@ -129,29 +159,980 @@
   formulation.
 \end{proof}
 
-\begin{lemma}[Dimension-one analytic criterion]
-  \label{lem:dimension_one_weak_criterion}
-  \lean{Run202608192034.TODO.dimensionOne_weaklyQuasiComplete_iff}
-  \uses{lem:farley_completion_criterion,def:analytically_irreducible}
+\begin{definition}[Adic completion prime-contraction condition]
+  \label{def:adic_completion_prime_contraction_condition}
+  \lean{Run202608192034.TODO.AdicCompletionPrimeContractionCondition}
+  \uses{def:generic_formal_fiber}
+  For a ring \(A\), an ideal \(\mathfrak m\), and the actual
+  \(\mathfrak m\)-adic completion \(\widehat A\), this is the condition that
+  every nonzero prime ideal \(P\subseteq\widehat A\) has nonzero contraction
+  to \(A\).
+\end{definition}
+
+\begin{proof}
+  This is a named Lean definition packaging the prime-contraction side of
+  \cref{lem:farley_completion_criterion} for the concrete target
+  \(\widehat A=\operatorname{AdicCompletion}_{\mathfrak m}(A)\).
+\end{proof}
+
+\begin{lemma}[Transporting prime contraction across a completion equivalence]
+  \label{lem:adic_completion_prime_contraction_condition_iff_target}
+  \lean{Run202608192034.TODO.adicCompletionPrimeContractionCondition_iff_target}
+  \uses{def:adic_completion_prime_contraction_condition}
+  If \(e:\widehat A\cong T\) and
+  \(\iota=e\circ(A\to\widehat A)\), then the nonzero-prime contraction
+  condition in \(\widehat A\) is equivalent to the corresponding condition in
+  \(T\).
+\end{lemma}
+
+\begin{proof}
+  Map a completion prime forward along \(e\), and comap a target prime
+  backward.  Ring equivalences preserve primality and the bottom ideal, while
+  \(\operatorname{comap}_e(\operatorname{map}_e P)=P\) and
+  \(\operatorname{map}_e(\operatorname{comap}_e Q)=Q\).  Map compatibility
+  then identifies the two contractions to \(A\).
+\end{proof}
+
+\begin{definition}[Bad weak-completeness chain]
+  \label{def:weakly_quasi_complete_bad_chain}
+  \lean{Run202608192034.TODO.WeaklyQuasiCompleteBadChain}
+  \uses{def:weakly_quasi_complete}
+  A bad chain is a decreasing sequence of ideals \(I_n\) with
+  \(\bigcap_n I_n=0\), together with a fixed power \(\mathfrak m^k\), \(k>0\),
+  such that no \(I_s\) is contained in \(\mathfrak m^k\).
+\end{definition}
+
+\begin{proof}
+  This is the explicit negation witness for weak quasi-completeness.  It is
+  introduced to make Farley's proof follow the source order: failure of weak
+  quasi-completeness is represented by an actual descending chain.
+\end{proof}
+
+\begin{definition}[Bad completion prime]
+  \label{def:adic_completion_bad_prime}
+  \lean{Run202608192034.TODO.AdicCompletionBadPrime}
+  \uses{def:adic_completion_prime_contraction_condition}
+  A bad completion prime is a nonzero prime
+  \(P\subseteq\operatorname{AdicCompletion}_{\mathfrak m}(A)\) whose
+  contraction to \(A\) is zero.
+\end{definition}
+
+\begin{proof}
+  This packages the obstruction to the prime-contraction condition.  In
+  Farley's language, it is a nonzero point of the generic formal fiber.
+\end{proof}
+
+\begin{definition}[Adic power image in the completion]
+  \label{def:adic_completion_power_image}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage}
+  \uses{def:adic_completion_prime_contraction_condition}
+  For each \(n\), this is the image of \(\mathfrak m^n\) in the actual
+  adic completion \(\widehat A\).
+\end{definition}
+
+\begin{proof}
+  This is a Lean definition:
+  \(\operatorname{map}(A\to\widehat A)(\mathfrak m^n)\).
+\end{proof}
+
+\begin{definition}[Contraction chain attached to a bad prime]
+  \label{def:bad_prime_contraction_chain}
+  \lean{Run202608192034.TODO.badPrimeContractionChain}
+  \uses{def:adic_completion_power_image}
+  Given a completion prime \(P\subseteq\widehat A\), define
+  \[
+    I_n=(P+\mathfrak m^n\widehat A)\cap A.
+  \]
+  This is Farley's natural descending chain associated to \(P\).
+\end{definition}
+
+\begin{proof}
+  In Lean this is
+  \(\operatorname{comap}(A\to\widehat A)(P\sqcup
+  \operatorname{map}(A\to\widehat A)(\mathfrak m^n))\).
+\end{proof}
+
+\begin{lemma}[Membership in the contraction chain]
+  \label{lem:mem_bad_prime_contraction_chain}
+  \lean{Run202608192034.TODO.mem_badPrimeContractionChain}
+  \uses{def:bad_prime_contraction_chain}
+  An element \(x\in A\) lies in \(I_n\) exactly when its image in
+  \(\widehat A\) lies in \(P+\mathfrak m^n\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is checked by unfolding the definition of ideal comap.
+\end{proof}
+
+\begin{lemma}[Adic power images are antitone]
+  \label{lem:adic_completion_power_image_antitone}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_antitone}
+  \uses{def:adic_completion_power_image}
+  If \(m\le n\), then the image of \(\mathfrak m^n\) in \(\widehat A\) is
+  contained in the image of \(\mathfrak m^m\).
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean from Mathlib's
+  \texttt{Ideal.pow\_le\_pow\_right} and monotonicity of ideal map.
+\end{proof}
+
+\begin{lemma}[The bad-prime contraction chain is descending]
+  \label{lem:bad_prime_contraction_chain_antitone}
+  \lean{Run202608192034.TODO.badPrimeContractionChain_antitone}
+  \uses{def:bad_prime_contraction_chain,lem:adic_completion_power_image_antitone}
+  The ideals \(I_n=(P+\mathfrak m^n\widehat A)\cap A\) form a descending
+  chain.
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean by applying the antitonicity of
+  \(\mathfrak m^n\widehat A\), monotonicity of supremum with fixed \(P\), and
+  monotonicity of ideal comap.
+\end{proof}
+
+\begin{lemma}[The adic power lies in the contraction chain]
+  \label{lem:power_le_bad_prime_contraction_chain}
+  \lean{Run202608192034.TODO.power_le_badPrimeContractionChain}
+  \uses{def:bad_prime_contraction_chain}
+  For every \(n\), one has \(\mathfrak m^n\subseteq I_n\).
+\end{lemma}
+
+\begin{proof}
+  This is checked directly: elements of \(\mathfrak m^n\) map into
+  \(\mathfrak m^n\widehat A\), hence into \(P+\mathfrak m^n\widehat A\).
+\end{proof}
+
+\begin{lemma}[Prime contraction lies in every chain term]
+  \label{lem:comap_le_bad_prime_contraction_chain}
+  \lean{Run202608192034.TODO.comap_le_badPrimeContractionChain}
+  \uses{def:bad_prime_contraction_chain}
+  The contraction \(P\cap A\) is contained in every
+  \(I_n=(P+\mathfrak m^n\widehat A)\cap A\).
+\end{lemma}
+
+\begin{proof}
+  This is checked directly from \(P\subseteq P+\mathfrak m^n\widehat A\) and
+  monotonicity of ideal comap.
+\end{proof}
+
+\begin{lemma}[Prime contraction lies in the chain intersection]
+  \label{lem:comap_le_bad_prime_contraction_chain_iinf}
+  \lean{Run202608192034.TODO.comap_le_badPrimeContractionChain_iInf}
+  \uses{lem:comap_le_bad_prime_contraction_chain}
+  The contraction \(P\cap A\) is contained in \(\bigcap_n I_n\).
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean by applying the previous containment for every
+  \(n\).
+\end{proof}
+
+\begin{lemma}[The first completed power is proper]
+  \label{lem:adic_completion_power_image_one_ne_top}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_ne_top}
+  \uses{def:adic_completion_power_image}
+  If \(\mathfrak m\) is the maximal ideal of \(A\), then its image
+  \(\mathfrak m\widehat A\) is a proper ideal of \(\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean.  If \(1\in\mathfrak m\widehat A\), then applying
+  the finite projection
+  \(\widehat A\to A/\mathfrak m\) sends the top ideal to zero.  Hence
+  \(1=0\) in \(A/\mathfrak m\), so \(1\in\mathfrak m\), contradicting that
+  \(\mathfrak m\) is the local maximal ideal.
+\end{proof}
+
+\begin{lemma}[Hausdorff quotient from a Noetherian local completion]
+  \label{lem:adic_completion_quotient_hausdorff_of_noetherian_local_completion}
+  \lean{Run202608192034.TODO.adicCompletion_quotient_hausdorff_of_noetherian_local_completion}
+  \uses{lem:adic_completion_power_image_one_ne_top}
+  If \(\widehat A\) is Noetherian local, then every quotient
+  \(\widehat A/P\) is Hausdorff for the \(\mathfrak m\widehat A\)-adic
+  topology.
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean from Mathlib's Krull-intersection theorem for finite
+  modules over Noetherian local rings, packaged as
+  \texttt{IsHausdorff.of\_isLocalRing}, together with the preceding properness
+  of \(\mathfrak m\widehat A\).
+\end{proof}
+
+\begin{lemma}[Hausdorff quotient from a Jacobson containment]
+  \label{lem:adic_completion_quotient_hausdorff_of_noetherian_jacobson_completion}
+  \lean{Run202608192034.TODO.adicCompletion_quotient_hausdorff_of_noetherian_jacobson_completion}
+  \uses{def:adic_completion_power_image}
+  If \(\widehat A\) is Noetherian and
+  \[
+    \mathfrak m\widehat A\subseteq \operatorname{Jac}(\widehat A),
+  \]
+  then every quotient \(\widehat A/P\) is Hausdorff for the
+  \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  This is checked directly from Mathlib's Krull-intersection theorem in the
+  form \texttt{IsHausdorff.of\_le\_jacobson}.  It isolates the remaining
+  completion-structure work into Noetherianity plus the Jacobson containment.
+\end{proof}
+
+\begin{lemma}[Adic completeness gives the Jacobson containment]
+  \label{lem:adic_completion_power_image_one_le_jacobson_of_is_adic_complete}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_le_jacobson_of_isAdicComplete}
+  \uses{def:adic_completion_power_image}
+  If \(\widehat A\) is complete for the
+  \(\mathfrak m\widehat A\)-adic topology, then
+  \(\mathfrak m\widehat A\subseteq\operatorname{Jac}(\widehat A)\).
+\end{lemma}
+
+\begin{proof}
+  This is checked directly from Mathlib's
+  \texttt{IsAdicComplete.le\_jacobson\_bot}.  It shows that the Jacobson
+  containment remaining in \cref{lem:adic_completion_quotient_hausdorff} can be
+  obtained from `mAhat`-adic completeness.
+\end{proof}
+
+\begin{lemma}[Hausdorff quotient of the completion]
+  \label{lem:adic_completion_quotient_hausdorff}
+  \lean{Run202608192034.TODO.adicCompletion_quotient_hausdorff_source}
+  \uses{lem:adic_completion_quotient_hausdorff_of_noetherian_local_completion,lem:adic_completion_quotient_hausdorff_of_noetherian_jacobson_completion,lem:adic_completion_power_image_one_le_jacobson_of_is_adic_complete,lem:adic_completion_quotient_hausdorff_of_noetherian_original_precomplete,lem:adic_completion_quotient_hausdorff_of_noetherian_completion,lem:adic_completion_power_image_one_is_adic_complete_source,lem:adic_completion_is_precomplete_original_source,lem:adic_completion_power_image_one_is_adic_complete_of_original_precomplete,lem:adic_completion_is_local_ring_of_original_precomplete,lem:adic_completion_power_image_one_is_maximal,lem:adic_completion_power_image_one_is_hausdorff}
+  % SOURCE: references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63,
+  DOI 10.4134/BKMS.b140895.}
+  The quotient \(\widehat A/P\) is Hausdorff for the topology induced by
+  \(\mathfrak m\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This standard closed-ideal/Krull-intersection fact is the explicit auxiliary
+  boundary `adicCompletion_quotient_hausdorff_external`.  The surrounding Lean
+  lemmas prove the result once Noetherianity of the completion is available,
+  and they prove all remaining completeness, localness, maximality, and
+  Jacobson-containment steps.  Mathlib v4.29 does not provide the general
+  theorem that a Noetherian ring's adic completion is Noetherian.  This
+  auxiliary boundary is not in the final theorem's dependency closure.
+\end{proof}
+
+\begin{lemma}[Neighborhood intersection from Hausdorff quotient]
+  \label{lem:adic_completion_neighborhood_iinf_le_prime_of_hausdorff}
+  \lean{Run202608192034.TODO.adicCompletion_neighborhood_iInf_le_prime_of_hausdorff}
+  \uses{def:adic_completion_power_image,lem:adic_completion_quotient_hausdorff}
+  If \(\widehat A/P\) is Hausdorff for the \(\mathfrak m\widehat A\)-adic
+  topology, then
+  \[
+    \bigcap_n(P+\mathfrak m^n\widehat A)\subseteq P.
+  \]
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean.  An element in every \(P+\mathfrak m^n\widehat A\)
+  maps in \(\widehat A/P\) into every power of \(\mathfrak m\widehat A\).  The
+  Hausdorff condition forces its image in the quotient to be zero, hence the
+  original element lies in \(P\).
+\end{proof}
+
+\begin{lemma}[Completion-neighborhood Krull-intersection containment]
+  \label{lem:adic_completion_neighborhood_iinf_le_prime}
+  \lean{Run202608192034.TODO.adicCompletion_neighborhood_iInf_le_prime_source}
+  \uses{lem:adic_completion_quotient_hausdorff,lem:adic_completion_neighborhood_iinf_le_prime_of_hausdorff}
+  % SOURCE: references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63,
+  DOI 10.4134/BKMS.b140895.}
+  Under the Noetherian local hypotheses,
+  \[
+    \bigcap_n(P+\mathfrak m^n\widehat A)\subseteq P.
+  \]
+\end{lemma}
+
+\begin{proof}
+  This is now a checked wrapper around the Hausdorff quotient input and the
+  preceding Lean bridge.
+\end{proof}
+
+\begin{lemma}[Krull-intersection reverse containment for the bad-prime chain]
+  \label{lem:bad_prime_contraction_chain_iinf_le_comap}
+  \lean{Run202608192034.TODO.badPrimeContractionChain_iInf_le_comap}
+  \uses{def:bad_prime_contraction_chain,lem:adic_completion_neighborhood_iinf_le_prime}
+  The intersection of the contracted chain
+  \(I_n=(P+\mathfrak m^n\widehat A)\cap A\) is contained in \(P\cap A\).
+\end{lemma}
+
+\begin{proof}
+  This is now checked in Lean.  If \(x\) lies in all contracted ideals, then
+  its image in \(\widehat A\) lies in every \(P+\mathfrak m^n\widehat A\);
+  the completion-neighborhood Krull-intersection input puts that image in
+  \(P\), hence \(x\in P\cap A\).
+\end{proof}
+
+\begin{lemma}[Intersection of the bad-prime contraction chain]
+  \label{lem:bad_prime_contraction_chain_iinf_eq_comap}
+  \lean{Run202608192034.TODO.badPrimeContractionChain_iInf_eq_comap}
+  \uses{lem:bad_prime_contraction_chain_iinf_le_comap,lem:comap_le_bad_prime_contraction_chain_iinf}
+  The intersection of \(I_n=(P+\mathfrak m^n\widehat A)\cap A\) is exactly
+  \(P\cap A\).
+\end{lemma}
+
+\begin{proof}
+  This is now a checked Lean wrapper: one inclusion is formal lattice
+  reasoning, and the other is the remaining Krull-intersection source input.
+\end{proof}
+
+\begin{lemma}[Zero intersection for a bad-prime contraction chain]
+  \label{lem:bad_prime_contraction_chain_iinf_eq_bot}
+  \lean{Run202608192034.TODO.badPrimeContractionChain_iInf_eq_bot}
+  \uses{lem:bad_prime_contraction_chain_iinf_eq_comap,def:adic_completion_bad_prime}
+  If \(P\cap A=0\), then the associated contraction chain has zero
+  intersection.
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean from
+  \cref{lem:bad_prime_contraction_chain_iinf_eq_comap} and the zero
+  contraction hypothesis.
+\end{proof}
+
+\begin{lemma}[Nonzero completion elements leave some power image]
+  \label{lem:adic_completion_nonzero_not_mem_power_image}
+  \lean{Run202608192034.TODO.adicCompletion_nonzero_not_mem_powerImage_source}
+  \uses{def:adic_completion_power_image}
+  If \(0\ne y\in\widehat A\), then there is some \(k>0\) such that
+  \(y\notin \mathfrak m^k\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is now checked in Lean.  The proof uses Mathlib's Hausdorff instance
+  for \(\operatorname{AdicCompletion}_{\mathfrak m}(A)\), together with
+  \texttt{Ideal.smul\_top\_eq\_map} to identify the Hausdorff filtration
+  \(\mathfrak m^n\cdot\widehat A\) with the ideal image of
+  \(\mathfrak m^n\) in \(\widehat A\).
+\end{proof}
+
+\begin{definition}[Finite quotient linear map]
+  \label{def:quotient_power_linear_map}
+  \lean{Run202608192034.TODO.quotientPowerLinearMap}
+  For each \(t\), let
+  \[
+    A\to A/\mathfrak m^t
+  \]
+  be the quotient map, regarded as an \(A\)-linear map.
+\end{definition}
+
+\begin{proof}
+  This is the linear map underlying the usual quotient algebra map
+  \(A\to A/\mathfrak m^t\).
+\end{proof}
+
+\begin{lemma}[Finite quotient map is surjective]
+  \label{lem:quotient_power_linear_map_surjective}
+  \lean{Run202608192034.TODO.quotientPowerLinearMap_surjective}
+  \uses{def:quotient_power_linear_map}
+  The map \(A\to A/\mathfrak m^t\) is surjective.
+\end{lemma}
+
+\begin{proof}
+  This is checked directly from the quotient representative theorem
+  `Ideal.Quotient.mk\_surjective`.
+\end{proof}
+
+\begin{lemma}[Exactness after completing the finite quotient sequence]
+  \label{lem:adic_completion_power_quotient_exact}
+  \lean{Run202608192034.TODO.adicCompletion_power_quotient_exact}
+  \uses{def:quotient_power_linear_map,lem:quotient_power_linear_map_surjective}
+  Completing the exact sequence
+  \[
+    \mathfrak m^t\hookrightarrow A\to A/\mathfrak m^t
+  \]
+  gives an exact pair
+  \[
+    \widehat{\mathfrak m^t}\to\widehat A
+      \to \widehat{A/\mathfrak m^t}.
+  \]
+\end{lemma}
+
+\begin{proof}
+  This is now checked using Mathlib's Noetherian exactness theorem
+  `AdicCompletion.map\_exact`, applied to the submodule inclusion
+  \(\mathfrak m^t\hookrightarrow A\) and the quotient map.
+\end{proof}
+
+\begin{lemma}[Tensor image of the completed power lies in the extended power]
+  \label{lem:adic_completion_power_tensor_image_le_power_image}
+  \lean{Run202608192034.TODO.adicCompletion_powerTensorImage_le_powerImage}
+  \uses{def:adic_completion_power_image}
+  The tensor presentation map
+  \[
+    \widehat A\otimes_A\mathfrak m^t\to\widehat A
+  \]
+  has image contained in \(\mathfrak m^t\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is checked by tensor induction.  On pure tensors, the image is
+  \(r\cdot a\) with \(a\in\mathfrak m^t\), hence lies in the extended ideal;
+  the zero and additive cases follow from ideal laws.
+\end{proof}
+
+\begin{lemma}[Completed power image lies in the extended power]
+  \label{lem:adic_completion_power_submodule_range_le_power_image}
+  \lean{Run202608192034.TODO.adicCompletion_powerSubmoduleRange_le_powerImage}
+  \uses{lem:adic_completion_power_tensor_image_le_power_image}
+  The range of the completed inclusion
+  \(\widehat{\mathfrak m^t}\to\widehat A\) is contained in
+  \(\mathfrak m^t\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is checked using the surjective tensor presentation
+  `AdicCompletion.ofTensorProduct\_surjective\_of\_finite` for the finite
+  \(A\)-module \(\mathfrak m^t\), together with naturality of
+  `AdicCompletion.ofTensorProduct`.
+\end{proof}
+
+\begin{lemma}[Finite projection zero implies completed quotient map zero]
+  \label{lem:adic_completion_map_quotient_power_eq_zero_of_eval_zero}
+  \lean{Run202608192034.TODO.adicCompletion_map_quotientPower_eq_zero_of_evalₐ_eq_zero}
+  \uses{def:quotient_power_linear_map}
+  If \(x\in\widehat A\) maps to zero in \(A/\mathfrak m^t\), then its image in
+  the completion of \(A/\mathfrak m^t\) is zero.
+\end{lemma}
+
+\begin{proof}
+  This is checked coordinatewise in the inverse-limit definition of
+  `AdicCompletion`.  For levels \(n\le t\), compatibility with transition maps
+  propagates the zero \(t\)-th coordinate downward.  For \(t\le n\), a
+  representative whose \(t\)-th image is zero already lies in
+  \(\mathfrak m^t\), hence maps to zero in \(A/\mathfrak m^t\).
+\end{proof}
+
+\begin{lemma}[Kernel of a finite adic projection]
+  \label{lem:adic_completion_eval_kernel_le_power_image}
+  \lean{Run202608192034.TODO.adicCompletion_evalₐ_kernel_le_powerImage_source}
+  \uses{lem:adic_completion_power_quotient_exact,lem:adic_completion_power_submodule_range_le_power_image,lem:adic_completion_map_quotient_power_eq_zero_of_eval_zero}
+  For every finite level \(t\), the kernel of the canonical projection
+  \[
+    \widehat A\to A/\mathfrak m^t
+  \]
+  is contained in the extended power image
+  \(\mathfrak m^t\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is now checked in Lean.  If \(x\) maps to zero at finite level \(t\),
+  the preceding coordinate lemma shows that \(x\) maps to zero in
+  \(\widehat{A/\mathfrak m^t}\).  Exactness of the completed quotient sequence
+  puts \(x\) in the range of
+  \(\widehat{\mathfrak m^t}\to\widehat A\), and the tensor-presentation lemma
+  identifies that range with a subideal of \(\mathfrak m^t\widehat A\).
+\end{proof}
+
+\begin{lemma}[Completed power image is the finite projection kernel]
+  \label{lem:adic_completion_power_image_eq_eval_kernel}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_eq_evalₐ_kernel}
+  \uses{def:adic_completion_power_image,lem:adic_completion_eval_kernel_le_power_image}
+  For every \(t\), the extended ideal
+  \(\mathfrak m^t\widehat A\) is exactly the kernel of the finite-level
+  projection \(\widehat A\to A/\mathfrak m^t\).
+\end{lemma}
+
+\begin{proof}
+  The forward containment is checked directly from the formula for
+  \texttt{AdicCompletion.eval\_a} on elements coming from \(A\).  The reverse
+  containment is the completed exactness argument in
+  \cref{lem:adic_completion_eval_kernel_le_power_image}.
+\end{proof}
+
+\begin{lemma}[First completed power is the first projection kernel]
+  \label{lem:adic_completion_power_image_one_eq_eval_kernel}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_eq_evalₐ_kernel}
+  \uses{lem:adic_completion_power_image_eq_eval_kernel}
+  The extended ideal \(\mathfrak m\widehat A\) is the kernel of the first
+  finite-level projection \(\widehat A\to A/\mathfrak m\).
+\end{lemma}
+
+\begin{proof}
+  This is the preceding all-level kernel equality specialized to \(t=1\).
+\end{proof}
+
+\begin{lemma}[Powers of the completed first image]
+  \label{lem:adic_completion_power_image_one_pow}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_pow}
+  \uses{def:adic_completion_power_image}
+  For every \(t\), \((\mathfrak m\widehat A)^t=\mathfrak m^t\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is checked by unfolding the extended ideal and using that ideal maps
+  commute with powers.
+\end{proof}
+
+\begin{lemma}[Ideal action on the top submodule]
+  \label{lem:ideal_smul_top_eq_self}
+  \lean{Run202608192034.TODO.ideal_smul_top_eq_self}
+  For any commutative ring \(B\) and ideal \(J\), the submodule
+  \(J\cdot B\) is just \(J\) itself.
+\end{lemma}
+
+\begin{proof}
+  One containment is ideal absorption under multiplication; the other writes
+  \(x\in J\) as \(x\cdot 1\).
+\end{proof}
+
+\begin{lemma}[Completed and original finite neighborhoods agree]
+  \label{lem:adic_completion_power_image_one_pow_smul_top_restrict_scalars}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_pow_smul_top_restrictScalars}
+  \uses{lem:adic_completion_power_image_one_pow,lem:ideal_smul_top_eq_self}
+  After restricting scalars from \(\widehat A\) to \(A\), the neighborhood
+  \((\mathfrak m\widehat A)^t\widehat A\) is the same submodule as
+  \(\mathfrak m^t\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is a checked bookkeeping lemma: combine
+  \((\mathfrak m\widehat A)^t=\mathfrak m^t\widehat A\) with Mathlib's
+  identification of \(I\)-multiples of the top module with the mapped ideal.
+\end{proof}
+
+\begin{definition}[Finite-level quotient comparison]
+  \label{def:adic_completion_quotient_power_image_equiv}
+  \lean{Run202608192034.TODO.adicCompletionQuotientPowerImageEquiv}
+  \uses{lem:adic_completion_power_image_eq_eval_kernel}
+  The kernel equality gives a checked ring equivalence
+  \[
+    \widehat A/\mathfrak m^t\widehat A \simeq A/\mathfrak m^t.
+  \]
+\end{definition}
+
+\begin{proof}
+  This equivalence is checked in Lean using quotient-by-equal-ideal
+  equivalences and the first isomorphism theorem for the surjective finite
+  projection \(\widehat A\to A/\mathfrak m^t\).
+\end{proof}
+
+\begin{definition}[Finite-level quotient comparison for powers of \(\mathfrak m\widehat A\)]
+  \label{def:adic_completion_quotient_power_equiv}
+  \lean{Run202608192034.TODO.adicCompletionQuotientPowerEquiv}
+  \uses{lem:adic_completion_power_image_one_pow,def:adic_completion_quotient_power_image_equiv}
+  Combining the previous comparison with
+  \((\mathfrak m\widehat A)^t=\mathfrak m^t\widehat A\) gives
+  \[
+    \widehat A/(\mathfrak m\widehat A)^t \simeq A/\mathfrak m^t.
+  \]
+\end{definition}
+
+\begin{proof}
+  This is the previous finite-level quotient comparison after rewriting
+  \((\mathfrak m\widehat A)^t\) as \(\mathfrak m^t\widehat A\).
+\end{proof}
+
+\begin{lemma}[The first completed power is maximal]
+  \label{lem:adic_completion_power_image_one_is_maximal}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_isMaximal}
+  \uses{lem:adic_completion_power_image_one_eq_eval_kernel}
+  If \(\mathfrak m\) is the maximal ideal of \(A\), then
+  \(\mathfrak m\widehat A\) is a maximal ideal of \(\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean.  The previous lemma identifies
+  \(\mathfrak m\widehat A\) with the kernel of the surjective map
+  \(\widehat A\to A/\mathfrak m\), and the target is a field because
+  \(\mathfrak m\) is maximal.
+\end{proof}
+
+\begin{lemma}[The completed ring is Hausdorff for the completed maximal ideal]
+  \label{lem:adic_completion_power_image_one_is_hausdorff}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_isHausdorff}
+  \uses{def:adic_completion_power_image}
+  The completion \(\widehat A\) is Hausdorff for the
+  \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  This is checked in Lean by transporting Mathlib's Hausdorff instance for
+  \(\operatorname{AdicCompletion}_{\mathfrak m}(A)\) along
+  \(\mathfrak m\widehat A=\operatorname{map}(A\to\widehat A)(\mathfrak m)\).
+\end{proof}
+
+\begin{lemma}[Finite-level evaluation kills the matching adic neighborhood]
+  \label{lem:adic_completion_eval_eq_of_smod_eq}
+  \lean{Run202608192034.TODO.adicCompletion_eval_eq_of_smodEq}
+  The finite projection
+  \(\widehat A\to A/\mathfrak m^n\) is constant on cosets modulo
+  \(\mathfrak m^n\widehat A\), viewed as an \(A\)-submodule of
+  \(\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  The proof is by induction on membership in
+  \(\mathfrak m^n\cdot\widehat A\).  A scalar from \(\mathfrak m^n\) kills
+  every element after projection to \(A/\mathfrak m^n\), and the kernel is
+  closed under addition.
+\end{proof}
+
+\begin{lemma}[The adic completion is precomplete for the original ideal]
+  \label{lem:adic_completion_is_precomplete_original_source}
+  \lean{Run202608192034.TODO.adicCompletion_isPrecomplete_original_source}
+  \uses{lem:adic_completion_eval_eq_of_smod_eq,lem:adic_completion_eval_kernel_le_power_image}
+  If \(A\) is Noetherian, then \(\widehat A\), as an \(A\)-module, is
+  precomplete for the original \(\mathfrak m\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  Given a Cauchy sequence \(f_n\) in \(\widehat A\), define the candidate
+  limit \(L\) by taking its \(n\)-th finite coordinate to be the image of
+  \(f_n\) in \(A/\mathfrak m^n\).  The previous lemma proves these coordinates
+  are compatible.  The difference \(f_n-L\) has zero \(n\)-th coordinate, and
+  the checked finite-level kernel containment places it in
+  \(\mathfrak m^n\widehat A\).
+\end{proof}
+
+\begin{lemma}[Precompleteness transfers to the completed maximal ideal]
+  \label{lem:adic_completion_power_image_one_is_precomplete_of_original_precomplete}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_isPrecomplete_of_original_precomplete}
+  \uses{lem:adic_completion_power_image_one_pow_smul_top_restrict_scalars}
+  If \(\widehat A\) is precomplete for the original \(\mathfrak m\)-adic
+  module structure, then it is precomplete for the
+  \(\mathfrak m\widehat A\)-adic structure.
+\end{lemma}
+
+\begin{proof}
+  This is checked by rewriting the Cauchy and convergence neighborhoods via
+  \cref{lem:adic_completion_power_image_one_pow_smul_top_restrict_scalars}.
+\end{proof}
+
+\begin{lemma}[The completed maximal ideal is precomplete]
+  \label{lem:adic_completion_power_image_one_is_precomplete_source}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_isPrecomplete_source}
+  \uses{lem:adic_completion_is_precomplete_original_source,lem:adic_completion_power_image_one_is_precomplete_of_original_precomplete}
+  If \(A\) is Noetherian, then \(\widehat A\) is precomplete for the
+  \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  Use the original \(\mathfrak m\)-adic precompleteness of \(\widehat A\) and
+  the checked transfer lemma comparing original and completed neighborhoods.
+\end{proof}
+
+\begin{lemma}[Adic completeness transfers to the completed maximal ideal]
+  \label{lem:adic_completion_power_image_one_is_adic_complete_of_original_precomplete}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_isAdicComplete_of_original_precomplete}
+  \uses{lem:adic_completion_power_image_one_is_hausdorff,lem:adic_completion_power_image_one_is_precomplete_of_original_precomplete}
+  Under the same original precompleteness hypothesis, \(\widehat A\) is
+  complete for the \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  This combines the already checked Hausdorffness with the preceding
+  precompleteness-transfer lemma.
+\end{proof}
+
+\begin{lemma}[The completed maximal-ideal topology is complete]
+  \label{lem:adic_completion_power_image_one_is_adic_complete_source}
+  \lean{Run202608192034.TODO.adicCompletionPowerImage_one_isAdicComplete_source}
+  \uses{lem:adic_completion_power_image_one_is_hausdorff,lem:adic_completion_is_precomplete_original_source,lem:adic_completion_power_image_one_is_precomplete_of_original_precomplete}
+  If \(A\) is Noetherian, then \(\widehat A\) is complete for the
+  \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  Use the newly checked original precompleteness of \(\widehat A\), transfer
+  it to the completed maximal-ideal filtration, and combine with the checked
+  Hausdorffness of \(\widehat A\).
+\end{proof}
+
+\begin{lemma}[The completion is local under original precompleteness]
+  \label{lem:adic_completion_is_local_ring_of_original_precomplete}
+  \lean{Run202608192034.TODO.adicCompletion_isLocalRing_of_original_precomplete}
+  \uses{lem:adic_completion_power_image_one_is_maximal,lem:adic_completion_power_image_one_is_adic_complete_of_original_precomplete}
+  If \(\mathfrak m\) is the maximal ideal of \(A\) and \(\widehat A\) is
+  precomplete for the original \(\mathfrak m\)-adic structure, then
+  \(\widehat A\) is a local ring.
+\end{lemma}
+
+\begin{proof}
+  This is checked from Mathlib's theorem that a ring complete with respect to
+  a maximal ideal is local.
+\end{proof}
+
+\begin{lemma}[The completion is local]
+  \label{lem:adic_completion_is_local_ring_source}
+  \lean{Run202608192034.TODO.adicCompletion_isLocalRing_source}
+  \uses{lem:adic_completion_power_image_one_is_maximal,lem:adic_completion_power_image_one_is_adic_complete_source}
+  If \(A\) is Noetherian local and \(\mathfrak m\) is its maximal ideal, then
+  \(\widehat A\) is local.
+\end{lemma}
+
+\begin{proof}
+  Apply Mathlib's theorem that a ring complete with respect to a maximal ideal
+  is local, using the checked maximality of \(\mathfrak m\widehat A\) and the
+  checked completed-topology completeness.
+\end{proof}
+
+\begin{lemma}[Hausdorff quotient from Noetherianity and original precompleteness]
+  \label{lem:adic_completion_quotient_hausdorff_of_noetherian_original_precomplete}
+  \lean{Run202608192034.TODO.adicCompletion_quotient_hausdorff_of_noetherian_original_precomplete}
+  \uses{lem:adic_completion_quotient_hausdorff_of_noetherian_jacobson_completion,lem:adic_completion_power_image_one_le_jacobson_of_is_adic_complete,lem:adic_completion_power_image_one_is_adic_complete_of_original_precomplete}
+  If \(\widehat A\) is Noetherian and precomplete for the original
+  \(\mathfrak m\)-adic structure, then every quotient \(\widehat A/P\) is
+  Hausdorff for the \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  The preceding completeness-transfer lemma gives `mAhat`-adic completeness,
+  Mathlib gives the Jacobson containment, and
+  \cref{lem:adic_completion_quotient_hausdorff_of_noetherian_jacobson_completion}
+  applies Krull intersection to the quotient.
+\end{proof}
+
+\begin{lemma}[Hausdorff quotient from Noetherianity of the completion]
+  \label{lem:adic_completion_quotient_hausdorff_of_noetherian_completion}
+  \lean{Run202608192034.TODO.adicCompletion_quotient_hausdorff_of_noetherian_completion}
+  \uses{lem:adic_completion_quotient_hausdorff_of_noetherian_jacobson_completion,lem:adic_completion_power_image_one_le_jacobson_of_is_adic_complete,lem:adic_completion_power_image_one_is_adic_complete_source}
+  If \(A\) is Noetherian and \(\widehat A\) is Noetherian, then every
+  quotient \(\widehat A/P\) is Hausdorff for the
+  \(\mathfrak m\widehat A\)-adic topology.
+\end{lemma}
+
+\begin{proof}
+  The completed-topology completeness gives the Jacobson containment
+  \(\mathfrak m\widehat A\subseteq\operatorname{Jac}(\widehat A)\).  The
+  Noetherian-Jacobson quotient-Hausdorff lemma then applies.
+\end{proof}
+
+\begin{lemma}[Finite-level approximation in the completion]
+  \label{lem:adic_completion_exists_approx_mod_power_image}
+  \lean{Run202608192034.TODO.adicCompletion_exists_approx_mod_powerImage_source}
+  \uses{lem:adic_completion_eval_kernel_le_power_image}
+  For every \(y\in\widehat A\) and every finite level \(t\), there is
+  \(a\in A\) such that
+  \(y-a\in \mathfrak m^t\widehat A\).
+\end{lemma}
+
+\begin{proof}
+  This is now a checked Lean wrapper.  The finite-level projection
+  \(\widehat A\to A/\mathfrak m^t\) is surjective by construction of
+  \(\widehat A\); choose a representative \(a\in A\) of the image of
+  \(y\).  The difference \(y-a\) lies in the projection kernel, and
+  \cref{lem:adic_completion_eval_kernel_le_power_image} puts this kernel in
+  \(\mathfrak m^t\widehat A\).
+\end{proof}
+
+\begin{lemma}[An approximable nonzero completion element forces fixed-power avoidance]
+  \label{lem:bad_prime_contraction_chain_avoids_fixed_power_of_element}
+  \lean{Run202608192034.TODO.badPrimeContractionChain_avoids_fixed_power_of_element}
+  \uses{def:bad_prime_contraction_chain,lem:adic_completion_power_image_antitone}
+  Suppose \(y\in P\), \(y\notin\mathfrak m^k\widehat A\), and \(y\) can be
+  approximated modulo every \(\mathfrak m^t\widehat A\) by an element of
+  \(A\).  Then the chain
+  \(I_s=(P+\mathfrak m^s\widehat A)\cap A\) is not eventually contained in
+  \(\mathfrak m^k\); in fact no \(I_s\subseteq\mathfrak m^k\).
+\end{lemma}
+
+\begin{proof}
+  This is now checked in Lean.  Given \(s\), approximate \(y\) modulo
+  \(\mathfrak m^{\max(s,k)}\widehat A\) by \(a\in A\).  Then
+  \(a\in I_s\).  If \(a\in\mathfrak m^k\), the approximation error and
+  \(a\) both lie in \(\mathfrak m^k\widehat A\), forcing
+  \(y\in\mathfrak m^k\widehat A\), contradiction.
+\end{proof}
+
+\begin{lemma}[Fixed-power avoidance for the bad-prime chain]
+  \label{lem:bad_prime_contraction_chain_avoids_fixed_power}
+  \lean{Run202608192034.TODO.badPrimeContractionChain_avoids_fixed_power_source}
+  \uses{def:bad_prime_contraction_chain,def:adic_completion_bad_prime,lem:adic_completion_nonzero_not_mem_power_image,lem:adic_completion_exists_approx_mod_power_image,lem:bad_prime_contraction_chain_avoids_fixed_power_of_element}
+  % SOURCE: references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63,
+  DOI 10.4134/BKMS.b140895.}
+  If \(P\) is a nonzero completion prime with zero contraction, then the
+  associated chain avoids some fixed power of \(\mathfrak m\).
+\end{lemma}
+
+\begin{proof}
+  This is now a checked Lean wrapper.  Lean chooses a nonzero
+  \(y\in P\), applies
+  \cref{lem:adic_completion_nonzero_not_mem_power_image} to find the
+  obstructing power \(\mathfrak m^k\), and then applies
+  \cref{lem:bad_prime_contraction_chain_avoids_fixed_power_of_element}.  The
+  remaining source input for this step is exactly the finite-level
+  approximation lemma
+  \cref{lem:adic_completion_exists_approx_mod_power_image}.
+\end{proof}
+
+\begin{lemma}[Failure of weak quasi-completeness is a bad chain]
+  \label{lem:not_weakly_quasi_complete_iff_bad_chain}
+  \lean{Run202608192034.TODO.not_weaklyQuasiComplete_iff_badChain}
+  \uses{def:weakly_quasi_complete,def:weakly_quasi_complete_bad_chain}
+  For any ring \(A\) and ideal \(\mathfrak m\),
+  \(\neg\operatorname{WeaklyQuasiComplete}(A,\mathfrak m)\) is equivalent to
+  the existence of a bad weak-completeness chain.
+\end{lemma}
+
+\begin{proof}
+  This is a checked Lean proof by unfolding the definition of weak
+  quasi-completeness and pushing negations through the quantifiers.
+\end{proof}
+
+\begin{lemma}[Failure of prime contraction is a bad completion prime]
+  \label{lem:not_adic_completion_prime_contraction_condition_iff_bad_prime}
+  \lean{Run202608192034.TODO.not_adicCompletionPrimeContractionCondition_iff_badPrime}
+  \uses{def:adic_completion_prime_contraction_condition,def:adic_completion_bad_prime}
+  The negation of the adic-completion prime-contraction condition is
+  equivalent to the existence of a bad completion prime.
+\end{lemma}
+
+\begin{proof}
+  This is a checked Lean proof by unfolding
+  \(\operatorname{AdicCompletionPrimeContractionCondition}\) and pushing
+  negations through the universal quantifiers.
+\end{proof}
+
+\begin{lemma}[A bad completion prime gives a bad chain]
+  \label{lem:adic_completion_bad_prime_to_bad_chain}
+  \lean{Run202608192034.TODO.adicCompletion_badPrime_to_badChain_source}
+  \uses{def:adic_completion_bad_prime,def:weakly_quasi_complete_bad_chain,lem:bad_prime_contraction_chain_antitone,lem:bad_prime_contraction_chain_iinf_eq_bot,lem:bad_prime_contraction_chain_avoids_fixed_power}
+  % SOURCE: references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63,
+  DOI 10.4134/BKMS.b140895.}
+  For a Noetherian local domain \(A\), a nonzero completion prime with zero
+  contraction produces a bad descending chain of ideals in \(A\).
+\end{lemma}
+
+\begin{proof}
+  This is now a checked Lean wrapper around the explicit chain
+  \(I_n=(P+\mathfrak m^n\widehat A)\cap A\).  Lean checks the descending-chain
+  property directly; the remaining source inputs are the
+  completion-neighborhood Krull-intersection containment and the finite-level
+  approximation/kernel-identification statement for adic completion.
+\end{proof}
+
+\begin{lemma}[A bad chain gives a bad completion prime]
+  \label{lem:weakly_quasi_complete_bad_chain_to_adic_completion_bad_prime}
+  \lean{Run202608192034.TODO.weaklyQuasiComplete_badChain_to_adicCompletion_badPrime_source}
+  \uses{def:weakly_quasi_complete_bad_chain,def:adic_completion_bad_prime}
+  % SOURCE: references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63,
+  DOI 10.4134/BKMS.b140895.}
+  For a Noetherian local domain \(A\), a bad descending chain of ideals
+  produces a nonzero prime of the adic completion whose contraction to \(A\)
+  is zero.
+\end{lemma}
+
+\begin{proof}
+  Lean derives this implication from the two checked negation equivalences and
+  the explicit source boundary `anderson_corollary2_part1_external`, namely
+  Anderson, Corollary~2(1), which Farley quotes as Proposition~1.  The reverse
+  bad-prime-to-chain construction is formalized independently above.
+\end{proof}
+
+\begin{lemma}[Weak quasi-completeness implies prime contraction]
+  \label{lem:weakly_quasi_complete_to_adic_completion_prime_contraction}
+  \lean{Run202608192034.TODO.weaklyQuasiComplete_to_adicCompletion_primeContraction_source}
+  \uses{def:weakly_quasi_complete,def:adic_completion_prime_contraction_condition,lem:not_weakly_quasi_complete_iff_bad_chain,lem:not_adic_completion_prime_contraction_condition_iff_bad_prime,lem:adic_completion_bad_prime_to_bad_chain}
+  Under Farley's hypotheses, weak quasi-completeness implies the
+  adic-completion prime-contraction condition.
+\end{lemma}
+
+\begin{proof}
+  This part is checked in Lean from the preceding source construction.  If
+  prime contraction failed, there would be a bad completion prime; Farley's
+  first construction turns it into a bad chain, contradicting weak
+  quasi-completeness.
+\end{proof}
+
+\begin{lemma}[Prime contraction implies weak quasi-completeness]
+  \label{lem:adic_completion_prime_contraction_to_weakly_quasi_complete}
+  \lean{Run202608192034.TODO.adicCompletion_primeContraction_to_weaklyQuasiComplete_source}
+  \uses{def:weakly_quasi_complete,def:adic_completion_prime_contraction_condition,lem:not_weakly_quasi_complete_iff_bad_chain,lem:not_adic_completion_prime_contraction_condition_iff_bad_prime,lem:weakly_quasi_complete_bad_chain_to_adic_completion_bad_prime}
+  Under Farley's hypotheses, the adic-completion prime-contraction condition
+  implies weak quasi-completeness.
+\end{lemma}
+
+\begin{proof}
+  This part is checked in Lean from the preceding source construction.  If
+  weak quasi-completeness failed, there would be a bad chain; Farley's second
+  construction turns it into a bad completion prime, contradicting prime
+  contraction.
+\end{proof}
+
+\begin{lemma}[Farley's criterion for the actual adic completion]
+  \label{lem:weakly_quasi_complete_iff_adic_completion_prime_contraction}
+  \lean{Run202608192034.TODO.weaklyQuasiComplete_iff_adicCompletion_primeContraction_source}
+  \uses{lem:weakly_quasi_complete_to_adic_completion_prime_contraction,lem:adic_completion_prime_contraction_to_weakly_quasi_complete}
+  % SOURCE: references/farley_2016_fulltext.txt, lines 61--63.
+  \textit{Source: J.~D. Farley, Proposition~1,
+  references/farley\_2016\_fulltext.txt, lines 61--63,
+  DOI 10.4134/BKMS.b140895.}
+  For a Noetherian local domain \(A\), with the adic ideal identified as the
+  maximal ideal, weak quasi-completeness is equivalent to the
+  prime-contraction condition for its actual adic completion.
+\end{lemma}
+
+\begin{proof}
+  This is a checked Lean wrapper.  One implication uses the fully expanded
+  bad-prime contraction-chain construction; the other uses the cited
+  Corollary~2(1) boundary through the checked negation lemmas.
+\end{proof}
+
+\begin{lemma}[Dimension-one prime-contraction/analytic-irreducibility bridge]
+  \label{lem:dimension_one_adic_completion_prime_contraction_iff_analytic_irreducible}
+  \lean{Run202608192034.TODO.dimensionOne_adicCompletion_primeContraction_iff_analyticIrreducible_source}
+  \uses{def:adic_completion_prime_contraction_condition,def:analytically_irreducible}
   % SOURCE: references/anderson_2014_fulltext.txt, lines 307--339.
   \textit{Source: D.~D. Anderson, Corollary~2,
   references/anderson\_2014\_fulltext.txt, lines 307--339,
   DOI 10.1007/978-1-4939-0925-4\_2.}
-  A one-dimensional Noetherian local domain is weakly quasi-complete if and
-  only if it is analytically irreducible.
+  In a one-dimensional Noetherian local domain, for the maximal-adic
+  completion, the adic-completion prime-contraction condition is equivalent to
+  the adic completion being a domain.
 \end{lemma}
 
 \begin{proof}
-  Completion is faithfully flat, local, and dimension-preserving.  If
-  \(\widehat A\) is a domain and \(P\neq(0)\) is prime in \(\widehat A\), then
-  \(P\) has positive height; since \(\dim\widehat A=1\), it is the maximal
-  ideal.  Its contraction is therefore the nonzero maximal ideal of \(A\), and
-  \cref{lem:farley_completion_criterion} proves weak quasi-completeness.
+  Lean composes the explicit Anderson Corollary~2(1) and Corollary~2(3)
+  boundaries.  The displayed minimal-prime/going-down argument records the
+  mathematical proof that would be needed to internalize this bridge.
+\end{proof}
 
-  If \(\widehat A\) is not a domain, choose a minimal prime \(P\) of
-  \(\widehat A\).  It is nonzero, because the zero ideal is not prime.
-  Faithful flatness and going-down show that \(P\cap A\) is a minimal prime of
-  the domain \(A\), hence is zero.  The completion-prime criterion then shows
-  that \(A\) is not weakly quasi-complete.  This proves the equivalence with
-  \cref{def:analytically_irreducible}.
+\begin{lemma}[Dimension-one analytic criterion for adic completions]
+  \label{lem:dimension_one_weak_criterion_adic_completion_source}
+  \lean{Run202608192034.TODO.dimensionOne_weaklyQuasiComplete_iff_adicCompletion_source}
+  \uses{def:weakly_quasi_complete,def:analytically_irreducible}
+  % SOURCE: references/anderson_2014_fulltext.txt, lines 307--339.
+  \textit{Source: D.~D. Anderson, Corollary~2,
+  references/anderson\_2014\_fulltext.txt, lines 307--339,
+  DOI 10.1007/978-1-4939-0925-4\_2.}
+  If \(A\) is a one-dimensional Noetherian local domain and the chosen adic
+  ideal is the maximal ideal, then \(A\) is weakly quasi-complete if and only
+  if its adic completion \(\widehat A\) is a domain.
+\end{lemma}
+
+\begin{proof}
+  This wrapper directly invokes the explicit published-source boundary
+  `anderson_corollary2_part3_external`.  Using the source theorem directly
+  keeps the auxiliary generic Hausdorff and Corollary~2(1) boundaries outside
+  the final Anderson 8(a) dependency closure.
+\end{proof}
+
+\begin{lemma}[Dimension-one analytic criterion]
+  \label{lem:dimension_one_weak_criterion}
+  \lean{Run202608192034.TODO.dimensionOne_weaklyQuasiComplete_iff}
+  \uses{lem:dimension_one_weak_criterion_adic_completion_source}
+  % SOURCE: references/anderson_2014_fulltext.txt, lines 307--339.
+  \textit{Source: D.~D. Anderson, Corollary~2,
+  references/anderson\_2014\_fulltext.txt, lines 307--339,
+  DOI 10.1007/978-1-4939-0925-4\_2.}
+  This wrapper records the same criterion for a supplied completion target
+  \(A^\wedge\).
+\end{lemma}
+
+\begin{proof}
+  In Lean this declaration is a transport wrapper: once the source supplies
+  the relevant analytic-irreducibility criterion for the chosen completion
+  target, the theorem returns that equivalence directly.
 \end{proof}
